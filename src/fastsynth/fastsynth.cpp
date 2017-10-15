@@ -56,7 +56,7 @@ void instrument_expressions(
           {
             i.type=ASSIGN;
             function_application_exprt e(c.lhs().type());
-            e.operands()=c.arguments();
+            e.arguments()=c.arguments();
             e.function()=symbol_exprt(identifier);
             i.code=code_assignt(c.lhs(), e);
           }
