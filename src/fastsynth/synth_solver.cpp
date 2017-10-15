@@ -21,7 +21,9 @@ bvt synth_solvert::convert_bitvector(const exprt &expr)
     symbol_exprt constant_value(const_id, expr.type());
     instruction.add_option(constant_value);
 
-    for(const auto &arg : e.operands())
+    const auto &arguments=e.arguments();
+
+    for(const auto &arg : arguments)
       if(arg.type()==e.type())
         instruction.add_option(arg);
       else
