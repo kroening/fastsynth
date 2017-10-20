@@ -87,9 +87,17 @@ int main(int argc, const char *argv[])
     std::cerr << "Usage error\n";
     return 1;
   }
-  
+
   goto_modelt goto_model;
-  initialize_goto_model(goto_model, cmdline, mh);
+
+  try
+  {
+    goto_model=initialize_goto_model(cmdline, mh);
+  }
+  catch(...)
+  {
+    return 1;
+  }
   
   auto expressions=find_expressions(goto_model);
   
