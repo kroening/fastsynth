@@ -6,6 +6,7 @@
 #include <util/cout_message.h>
 #include <util/config.h>
 #include <util/arith_tools.h>
+#include <util/std_types.h>
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
@@ -57,7 +58,7 @@ void instrument_expressions(
             i.type=ASSIGN;
             function_application_exprt e(c.lhs().type());
             e.arguments()=c.arguments();
-            e.function()=symbol_exprt(identifier);
+            e.function()=symbol_exprt(identifier, code_typet());
             i.code=code_assignt(c.lhs(), e);
           }
         }
