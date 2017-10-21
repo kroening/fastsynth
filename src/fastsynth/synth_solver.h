@@ -23,11 +23,11 @@ public:
   {
     struct instructiont
     {
-      explicit instructiont(unsigned _pc):pc(_pc)
+      explicit instructiont(std::size_t _pc):pc(_pc)
       {
       }
       
-      unsigned pc;
+      std::size_t pc;
       
       struct optiont
       {
@@ -44,41 +44,8 @@ public:
       
       symbol_exprt result_symbol;
 
-      exprt result_constraint(const irep_idt &identifier)
-      {
-        std::size_t sel_count=0;
-        
-        for(auto &o : options)
-        {
-          irep_idt sel_id=id2string(identifier)+"_s"+
-            std::to_string(pc)+"_"+std::to_string(sel_count);
-          o.sel=symbol_exprt(sel_id, bool_typet());
-        }
-        
-        // make the last one 'true'
-        if(!options.empty())
-          options.back().sel=true_exprt();
-
-        exprt result_expr=nil_exprt();
-        exprt selector=nil_exprt();
-
-        for(const auto &o : options)        
-        {
-          if(result_expr.is_nil())
-            result_expr=o.expr;
-          else
-            result_expr=if_exprt(selector, result_expr, o.expr);
-
-          selector=o.sel;
-          sel_count++;
-        }
-
-        result_symbol=symbol_exprt(
-          id2string(identifier)+"_r"+std::to_string(pc),
-          result_expr.type());
-
-        return equal_exprt(result_symbol, result_expr);
-      }
+      // constraint on the result of the function application
+      exprt result_constraint(const irep_idt &identifier);
     };
   
     std::vector<instructiont> instructions;
