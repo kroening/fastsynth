@@ -2,41 +2,73 @@
 
 #include <langapi/language_util.h>
 
-exprt synth_solvert::e_datat::instructiont::result_constraint(
-  const irep_idt &identifier)
+exprt synth_solvert::e_datat::instructiont::result(
+  const std::vector<exprt> &arguments)
 {
-  std::size_t sel_count=0;
+  if(parameter_sel.empty())
+    return constant_val;
 
-  for(auto &o : options)
+  exprt result_expr=constant_val;
+  exprt selector=constant_sel;
+
+  assert(arguments.size()==parameter_sel.size());
+
+  for(std::size_t i=0; i<parameter_sel.size(); i++)
   {
-    irep_idt sel_id=id2string(identifier)+"_s"+
-      std::to_string(pc)+"_"+std::to_string(sel_count);
-    o.sel=symbol_exprt(sel_id, bool_typet());
+    result_expr=if_exprt(selector, result_expr, arguments[i]);
+    selector=parameter_sel[i];
   }
 
-  // make the last one 'true'
-  if(!options.empty())
-    options.back().sel=true_exprt();
+  return result_expr;
+}
 
-  exprt result_expr=nil_exprt();
-  exprt selector=nil_exprt();
+void synth_solvert::e_datat::setup(
+  const function_application_exprt &e)
+{
+  if(setup_done) return;
+  setup_done=true;
 
-  for(const auto &o : options)
+  function_symbol=e.function();
+  const irep_idt &identifier=function_symbol.get_identifier();
+
+  instructions.reserve(1);
+
+  for(std::size_t pc=0; pc<1; pc++)
   {
-    if(result_expr.is_nil())
-      result_expr=o.expr;
-    else
-      result_expr=if_exprt(selector, result_expr, o.expr);
+    instructions.push_back(instructiont(pc));
+    auto &instruction=instructions[pc];
 
-    selector=o.sel;
-    sel_count++;
+    // constant
+    irep_idt const_sel_id=id2string(identifier)+"_"+std::to_string(pc)+"_csel";
+    irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
+    instruction.constant_sel=symbol_exprt(const_sel_id, bool_typet());
+    instruction.constant_val=symbol_exprt(const_val_id, e.type());
+
+    // one of the arguments
+    const auto &arguments=e.arguments();
+    instruction.parameter_sel.resize(arguments.size());
+
+    for(std::size_t i=0; i<arguments.size(); i++)
+    {
+      irep_idt param_sel_id=id2string(identifier)+"_"+
+               std::to_string(pc)+"_p"+std::to_string(i)+"sel";
+      instruction.parameter_sel[i]=symbol_exprt(param_sel_id, bool_typet());
+    }
   }
+}
 
-  result_symbol=symbol_exprt(
-    id2string(identifier)+"_r"+std::to_string(pc),
-    result_expr.type());
+exprt synth_solvert::e_datat::result(
+  const std::vector<exprt> &arguments)
+{
+  std::vector<exprt> results;
+  results.resize(instructions.size());
 
-  return equal_exprt(result_symbol, result_expr);
+  for(std::size_t pc=0; pc<instructions.size(); pc++)
+    results[pc]=instructions[pc].result(arguments);
+
+  assert(!results.empty());
+
+  return results.back();
 }
 
 bvt synth_solvert::convert_bitvector(const exprt &expr)
@@ -44,58 +76,31 @@ bvt synth_solvert::convert_bitvector(const exprt &expr)
   if(expr.id()==ID_function_application)
   {
     const auto &e=to_function_application_expr(expr);
-    const irep_idt identifier=
-      e.function().get_identifier();
 
-    e_datat &e_data=e_data_map[e];
+    e_datat &e_data=e_data_map[e.function()];
+    e_data.setup(e);
 
-    std::size_t pc=0;
+    exprt final_result=e_data.result(e.arguments());
     
-    e_data.instructions.push_back(e_datat::instructiont(pc));
-    auto &instruction=e_data.instructions.back();
-    
-    irep_idt const_id=id2string(identifier)+"_c"+std::to_string(pc);
-    symbol_exprt constant_value(const_id, expr.type());
-    instruction.add_option(constant_value);
+    status() << "Application: " << from_expr(ns, "", final_result) << eom;
 
-    const auto &arguments=e.arguments();
-
-    for(const auto &arg : arguments)
-      if(arg.type()==e.type())
-        instruction.add_option(arg);
-      else
-        instruction.add_option(typecast_exprt(arg, e.type()));
-
-    exprt constraint=instruction.result_constraint(identifier);
-    set_to_true(constraint);
-
-    status() << "Constraint: " << from_expr(ns, "", constraint) << eom;
-
-    assert(!e_data.instructions.empty());
-
-    symbol_exprt final_result=
-      e_data.instructions.back().result_symbol;
-    
     return BASEt::convert_bitvector(final_result);
   }
   else
     return BASEt::convert_bitvector(expr);
 }
 
-std::map<function_application_exprt, exprt> synth_solvert::get_expressions() const
+std::map<symbol_exprt, exprt> synth_solvert::get_expressions() const
 {
-  std::map<function_application_exprt, exprt> result;
+  std::map<symbol_exprt, exprt> result;
 
   for(const auto &e : e_data_map)
-    result[e.first]=
-      get_expression(e.first, e.second);
+    result[e.first]=get_expression(e.second);
 
   return result;
 }
 
-exprt synth_solvert::get_expression(
-  const function_application_exprt &e,
-  const e_datat &e_data) const
+exprt synth_solvert::get_expression(const e_datat &e_data) const
 {
   std::vector<exprt> results;
   results.resize(e_data.instructions.size(), nil_exprt());
@@ -106,21 +111,32 @@ exprt synth_solvert::get_expression(
     const auto &instruction=e_data.instructions[pc];
     exprt &result=results[pc];
 
-    for(const auto &o : instruction.options)
+    // constant?
+
+    if(e_data.parameter_types.empty() ||
+       get(instruction.constant_sel).is_true())
     {
-      exprt sel_value=get(o.sel);
-      if(sel_value.is_true())
-      {
-        result=get(o.expr);
-        break;
-      }
+      result=get(instruction.constant_val);
+    }
+    else
+    {
+      result=nil_exprt();
+
+      for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
+        if(get(instruction.parameter_sel[i]).is_true())
+        {
+          result=exprt(ID_parameter, e_data.parameter_types[i]);
+          result.set(ID_identifier, i);
+          break;
+        }
     }
     
-    status() << from_expr(ns, "", instruction.result_symbol)
-             << " := "
-             << from_expr(ns, "", result)
-             << eom;
   }
+
+  status() << from_expr(ns, "", e_data.function_symbol)
+           << " := "
+           << from_expr(ns, "", results.back())
+           << eom;
 
   return results.back();
 }

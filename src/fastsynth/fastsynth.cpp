@@ -126,7 +126,7 @@ int main(int argc, const char *argv[])
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
     for(const auto &e : cegis.expressions)
-      message.result() << e.first.function().get_identifier() << " -> "
+      message.result() << e.first.get_identifier() << " -> "
                        << from_expr(ns, "", e.second) << messaget::eom;
     break;
     

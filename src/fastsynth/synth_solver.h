@@ -9,54 +9,59 @@ public:
     bv_pointerst(_ns, _prop)
   {
   }
-  
+
   std::string decision_procedure_text() const override
   {
     return "CEGIS synthesis with "+prop.solver_text();
   }
-  
+
   bvt convert_bitvector(const exprt &) override;
 
   resultt dec_solve() override;
- 
+
+  std::map<symbol_exprt, exprt> get_expressions() const;
+
+protected:
   struct e_datat
   {
+  public:
+    e_datat():setup_done(false) { }
+
     struct instructiont
     {
       explicit instructiont(std::size_t _pc):pc(_pc)
       {
       }
-      
+
       std::size_t pc;
+
+      // constant
+      symbol_exprt constant_sel;
+      symbol_exprt constant_val;
+
+      // parameter
+      std::vector<symbol_exprt> parameter_sel;
       
-      struct optiont
-      {
-        exprt expr, sel;
-      };
-
-      std::vector<optiont> options;
-
-      void add_option(const exprt &expr)
-      {
-        options.push_back(optiont());
-        options.back().expr=expr;
-      }
-      
-      symbol_exprt result_symbol;
-
-      // constraint on the result of the function application
-      exprt result_constraint(const irep_idt &identifier);
+      // result of the instruction
+      // for a set of arguments
+      exprt result(const std::vector<exprt> &arguments);
     };
   
     std::vector<instructiont> instructions;
+
+    // result of the function application
+    // for a set of arguments
+    exprt result(const std::vector<exprt> &arguments);
+
+    void setup(const function_application_exprt &);
+    std::vector<typet> parameter_types;
+    symbol_exprt function_symbol;
+
+  protected:
+    bool setup_done;
   };
-  
-  std::map<function_application_exprt, e_datat> e_data_map;
 
-  exprt get_expression(
-    const function_application_exprt &,
-    const e_datat &) const; 
-
-  std::map<function_application_exprt, exprt> get_expressions() const;  
+  std::map<symbol_exprt, e_datat> e_data_map;
+  exprt get_expression(const e_datat &) const;
 };
 

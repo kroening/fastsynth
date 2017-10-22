@@ -21,7 +21,7 @@ decision_proceduret::resultt cegist::operator()(
     status() << "** CEGIS iteration " << iteration << eom;
     
     for(const auto &e : expressions)
-      debug() << e.first.function().get_identifier()
+      debug() << e.first.get_identifier()
               << " -> " << from_expr(ns, "", e.second) << eom;
 
     status() << "** Verification phase" << eom;
@@ -62,7 +62,7 @@ decision_proceduret::resultt cegist::operator()(
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // got candidate
       {
-        std::map<function_application_exprt, exprt> old_expressions;
+        std::map<symbol_exprt, exprt> old_expressions;
         old_expressions.swap(expressions);
         expressions=synth_solver.get_expressions();
         if(old_expressions==expressions)
