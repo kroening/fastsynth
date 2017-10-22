@@ -18,17 +18,18 @@ decision_proceduret::resultt cegist::operator()(
   while(true)
   {
     iteration++;
-    status() << "CEGIS iteration " << iteration << eom;
+    status() << "** CEGIS iteration " << iteration << eom;
     
     for(const auto &e : expressions)
-      debug() << e.first.function().get_identifier()
+      debug() << e.first.get_identifier()
               << " -> " << from_expr(ns, "", e.second) << eom;
 
-    status() << "Verification phase" << eom;
+    status() << "** Verification phase" << eom;
 
     satcheckt verify_satcheck;
-    verify_solvert verify_solver(ns, verify_satcheck);
     verify_satcheck.set_message_handler(get_message_handler());
+
+    verify_solvert verify_solver(ns, verify_satcheck);
     verify_solver.set_message_handler(get_message_handler());
     verify_solver.expressions=expressions;
 
@@ -47,11 +48,12 @@ decision_proceduret::resultt cegist::operator()(
       return decision_proceduret::resultt::D_ERROR;
     }
     
-    status() << "Synthesis phase" << eom;
+    status() << "** Synthesis phase" << eom;
 
     satcheckt synth_satcheck;
-    synth_solvert synth_solver(ns, synth_satcheck);
     synth_satcheck.set_message_handler(get_message_handler());
+
+    synth_solvert synth_solver(ns, synth_satcheck);
     synth_solver.set_message_handler(get_message_handler());
 
     convert_negation(equation, synth_solver);
@@ -60,7 +62,7 @@ decision_proceduret::resultt cegist::operator()(
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // got candidate
       {
-        std::map<function_application_exprt, exprt> old_expressions;
+        std::map<symbol_exprt, exprt> old_expressions;
         old_expressions.swap(expressions);
         expressions=synth_solver.get_expressions();
         if(old_expressions==expressions)
