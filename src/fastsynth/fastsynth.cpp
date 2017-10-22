@@ -130,6 +130,9 @@ int main(int argc, const char *argv[])
                        << from_expr(ns, "", e.second) << messaget::eom;
     break;
     
-  default:;
+  default:
+    return 1;
   }
+
+  return 0;
 }
