@@ -6,6 +6,7 @@
 #include <util/cout_message.h>
 #include <util/config.h>
 #include <util/arith_tools.h>
+#include <util/std_types.h>
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
@@ -57,7 +58,7 @@ void instrument_expressions(
             i.type=ASSIGN;
             function_application_exprt e(c.lhs().type());
             e.arguments()=c.arguments();
-            e.function()=symbol_exprt(identifier);
+            e.function()=symbol_exprt(identifier, code_typet());
             i.code=code_assignt(c.lhs(), e);
           }
         }
@@ -87,9 +88,17 @@ int main(int argc, const char *argv[])
     std::cerr << "Usage error\n";
     return 1;
   }
-  
+
   goto_modelt goto_model;
-  initialize_goto_model(goto_model, cmdline, mh);
+
+  try
+  {
+    goto_model=initialize_goto_model(cmdline, mh);
+  }
+  catch(...)
+  {
+    return 1;
+  }
   
   auto expressions=find_expressions(goto_model);
   
@@ -117,10 +126,13 @@ int main(int argc, const char *argv[])
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
     for(const auto &e : cegis.expressions)
-      message.result() << e.first.function().get_identifier() << " -> "
+      message.result() << e.first.get_identifier() << " -> "
                        << from_expr(ns, "", e.second) << messaget::eom;
     break;
     
-  default:;
+  default:
+    return 1;
   }
+
+  return 0;
 }

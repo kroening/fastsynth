@@ -14,7 +14,7 @@ public:
   decision_proceduret::resultt operator()(
     symex_target_equationt &);
   
-  std::map<function_application_exprt, exprt> expressions;
+  std::map<symbol_exprt, exprt> expressions;
 
 protected:
   const namespacet &ns;

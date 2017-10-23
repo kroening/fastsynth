@@ -19,9 +19,11 @@ public:
 
   resultt dec_solve() override;
   
-  std::map<function_application_exprt, exprt> expressions;
-  
-  typedef std::vector<exprt> argumentst;
-  argumentst get_arguments(const function_application_exprt &) const;
+  std::map<symbol_exprt, exprt> expressions;
+
+protected:
+  static exprt instantiate(
+    const exprt &,
+    const function_application_exprt &);
 };
 
