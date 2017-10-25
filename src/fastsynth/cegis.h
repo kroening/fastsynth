@@ -19,6 +19,15 @@ public:
 protected:
   const namespacet &ns;
   
+  struct counterexamplet
+  {
+    // map function applications to values
+    std::map<function_application_exprt, exprt> values;
+  };
+
+  using counterexamplest=std::vector<counterexamplet>;
+  counterexamplest counterexamples;
+
   void convert_negation(
     symex_target_equationt &,
     prop_convt &);
