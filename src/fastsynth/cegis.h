@@ -19,11 +19,8 @@ public:
 protected:
   const namespacet &ns;
   
-  struct counterexamplet
-  {
-    // map function applications to values
-    std::map<function_application_exprt, exprt> values;
-  };
+  // map function applications to values
+  using counterexamplet=std::map<function_application_exprt, exprt>;
 
   using counterexamplest=std::vector<counterexamplet>;
   counterexamplest counterexamples;

@@ -18,12 +18,16 @@ public:
   bvt convert_bitvector(const exprt &) override;
 
   resultt dec_solve() override;
-  
+
   std::map<symbol_exprt, exprt> expressions;
+
+  std::map<function_application_exprt, exprt> get_counterexample();
 
 protected:
   static exprt instantiate(
     const exprt &,
     const function_application_exprt &);
+
+  std::set<function_application_exprt> applications;
 };
 

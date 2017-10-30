@@ -38,6 +38,7 @@ decision_proceduret::resultt cegist::operator()(
     switch(verify_solver())
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
+      counterexamples.push_back(verify_solver.get_counterexample());
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution

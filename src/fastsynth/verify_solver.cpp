@@ -7,6 +7,8 @@ bvt verify_solvert::convert_bitvector(const exprt &expr)
   if(expr.id()==ID_function_application)
   {
     const auto &e=to_function_application_expr(expr);
+    applications.insert(e);
+
     auto e_it=expressions.find(e.function());
     
     exprt result=e_it==expressions.end()?
