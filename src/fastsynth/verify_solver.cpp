@@ -35,3 +35,8 @@ decision_proceduret::resultt verify_solvert::dec_solve()
   return BASEt::dec_solve();
 }
 
+std::map<function_application_exprt, exprt> verify_solvert::get_counterexample()
+{
+  return {};
+}
+
