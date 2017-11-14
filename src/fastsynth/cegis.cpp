@@ -53,6 +53,11 @@ decision_proceduret::resultt cegist::operator()(
         std::map<symbol_exprt, exprt> old_expressions;
         old_expressions.swap(expressions);
 
+        #if 0
+        synth_solver.print_assignment(debug());
+        debug() << eom;
+        #endif
+
         expressions=synth_encoding.get_expressions(synth_solver);
         if(old_expressions==expressions)
         {
