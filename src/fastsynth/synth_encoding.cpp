@@ -106,12 +106,23 @@ exprt synth_encodingt::operator()(const exprt &expr)
 {
   if(expr.id()==ID_function_application)
   {
-    const auto &e=to_function_application_expr(expr);
+    auto tmp=to_function_application_expr(expr);
 
-    e_datat &e_data=e_data_map[e.function()];
-    exprt final_result=e_data(e);
+    // apply recursively to arguments
+    for(auto &op : tmp.arguments())
+      op=(*this)(op);
+
+    e_datat &e_data=e_data_map[tmp.function()];
+    exprt final_result=e_data(tmp);
 
     return final_result;
+  }
+  else if(expr.id()==ID_symbol)
+  {
+    // add the suffix
+    symbol_exprt tmp=to_symbol_expr(expr);
+    tmp.set_identifier(id2string(tmp.get_identifier())+suffix);
+    return tmp;
   }
   else
   {
