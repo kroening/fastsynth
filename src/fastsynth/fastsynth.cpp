@@ -66,6 +66,24 @@ void instrument_expressions(
     }
 }
 
+void show_formula(
+  const symex_target_equationt &src,
+  const namespacet &ns)
+{
+  for(const auto &step : src.SSA_steps)
+  {
+    if(step.is_assignment() ||
+       step.is_assume())
+    {
+      std::cout << "P: " << from_expr(ns, "", step.cond_expr) << '\n';
+    }
+    else if(step.is_assert())
+    {
+      std::cout << "A: " << from_expr(ns, "", step.cond_expr) << '\n';
+    }
+  }
+}
+
 int main(int argc, const char *argv[])
 {
   console_message_handlert mh;
@@ -115,8 +133,7 @@ int main(int argc, const char *argv[])
   goto_symex(goto_model.goto_functions);
 
   #if 0
-  equation.output(std::cout);
-  return 0;
+  show_formula(equation, ns);
   #endif
   
   cegist cegis(ns);
