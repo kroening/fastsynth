@@ -2,6 +2,7 @@
 #include <util/decision_procedure.h>
 
 class synth_encodingt;
+class verify_encodingt;
 class symex_target_equationt;
 class prop_convt;
 
@@ -26,6 +27,11 @@ protected:
 
   using counterexamplest=std::vector<counterexamplet>;
   counterexamplest counterexamples;
+
+  void convert(
+    symex_target_equationt &,
+    verify_encodingt &,
+    prop_convt &);
 
   void convert_negation(
     symex_target_equationt &,

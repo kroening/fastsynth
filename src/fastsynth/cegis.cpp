@@ -92,10 +92,13 @@ decision_proceduret::resultt cegist::operator()(
 
     equation.convert(verify_solver);
 
+    // convert(equation, verify_encoding, verify_solver);
+
     switch(verify_solver())
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
       counterexamples.push_back(verify_solver.get_counterexample());
+      // counterexamples.push_back(verify_encoding.get_counterexample(verify_solver));
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
@@ -144,6 +147,54 @@ void cegist::convert_negation(
        step.is_assume())
     {
       exprt encoded=synth_encoding(step.cond_expr);
+      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
+      step.cond_literal=const_literal(true);
+    }
+  }
+}
+
+void cegist::convert(
+  symex_target_equationt &equation,
+  verify_encodingt &verify_encoding,
+  prop_convt &prop_conv)
+{
+  // guards
+  for(auto &step : equation.SSA_steps)
+    step.guard_literal=prop_conv.convert(verify_encoding(step.guard));
+
+  // assignments
+  for(const auto &step : equation.SSA_steps)
+    if(step.is_assignment())
+    {
+      exprt encoded=verify_encoding(step.cond_expr);
+      debug() << "pa: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
+    }
+
+  // decls
+  for(const auto &step : equation.SSA_steps)
+    if(step.is_decl())
+      prop_conv.convert(verify_encoding(step.cond_expr));
+
+  // gotos
+  for(auto &step : equation.SSA_steps)
+    if(step.is_goto())
+      step.cond_literal=prop_conv.convert(verify_encoding(step.cond_expr));
+
+  // now do assertions and assumptions
+  for(auto &step : equation.SSA_steps)
+  {
+    if(step.is_assume())
+    {
+      exprt encoded=verify_encoding(step.cond_expr);
+      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
+      step.cond_literal=const_literal(true);
+    }
+    else if(step.is_assert())
+    {
+      exprt encoded=verify_encoding(step.cond_expr);
       debug() << "pr: " << from_expr(ns, "", encoded) << eom;
       prop_conv.set_to_true(encoded);
       step.cond_literal=const_literal(true);
