@@ -24,31 +24,6 @@ decision_proceduret::resultt cegist::operator()(
       debug() << e.first.get_identifier()
               << " -> " << from_expr(ns, "", e.second) << eom;
 
-    status() << "** Verification phase" << eom;
-
-    satcheckt verify_satcheck;
-    verify_satcheck.set_message_handler(get_message_handler());
-
-    verify_solvert verify_solver(ns, verify_satcheck);
-    verify_solver.set_message_handler(get_message_handler());
-    verify_solver.expressions=expressions;
-
-    equation.convert(verify_solver);
-
-    switch(verify_solver())
-    {
-    case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
-      counterexamples.push_back(verify_solver.get_counterexample());
-      break;
-
-    case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
-      result() << "VERIFICATION SUCCESSFUL" << eom;
-      return decision_proceduret::resultt::D_SATISFIABLE;
-
-    case decision_proceduret::resultt::D_ERROR:
-      return decision_proceduret::resultt::D_ERROR;
-    }
-    
     status() << "** Synthesis phase" << eom;
 
     satcheckt synth_satcheck;
@@ -81,6 +56,32 @@ decision_proceduret::resultt cegist::operator()(
     case decision_proceduret::resultt::D_ERROR:
       return decision_proceduret::resultt::D_ERROR;
     }
+
+    status() << "** Verification phase" << eom;
+
+    satcheckt verify_satcheck;
+    verify_satcheck.set_message_handler(get_message_handler());
+
+    verify_solvert verify_solver(ns, verify_satcheck);
+    verify_solver.set_message_handler(get_message_handler());
+    verify_solver.expressions=expressions;
+
+    equation.convert(verify_solver);
+
+    switch(verify_solver())
+    {
+    case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
+      counterexamples.push_back(verify_solver.get_counterexample());
+      break;
+
+    case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
+      result() << "VERIFICATION SUCCESSFUL" << eom;
+      return decision_proceduret::resultt::D_SATISFIABLE;
+
+    case decision_proceduret::resultt::D_ERROR:
+      return decision_proceduret::resultt::D_ERROR;
+    }
+
   }
 }
 
