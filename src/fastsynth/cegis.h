@@ -19,7 +19,7 @@ public:
 
 protected:
   const namespacet &ns;
-  
+
   // map function applications to values
   using counterexamplet=
     std::map<function_application_exprt, exprt::operandst>;
@@ -38,3 +38,7 @@ protected:
     prop_convt &);
 };
 
+void output_expressions(
+  const std::map<symbol_exprt, exprt> &,
+  const namespacet &,
+  std::ostream &);
