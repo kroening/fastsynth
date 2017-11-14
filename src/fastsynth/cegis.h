@@ -1,6 +1,7 @@
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
+class synth_encodingt;
 class symex_target_equationt;
 class prop_convt;
 
@@ -28,10 +29,12 @@ protected:
 
   void convert_negation(
     symex_target_equationt &,
+    synth_encodingt &,
     prop_convt &);
 
   void add_counterexample(
     const counterexamplet &,
+    synth_encodingt &,
     prop_convt &);
 };
 

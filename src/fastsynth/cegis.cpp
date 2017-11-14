@@ -1,6 +1,6 @@
 #include "cegis.h"
 #include "verify_solver.h"
-#include "synth_solver.h"
+#include "synth_encoding.h"
 
 #include <langapi/language_util.h>
 
@@ -25,21 +25,23 @@ decision_proceduret::resultt cegist::operator()(
     satcheckt synth_satcheck;
     synth_satcheck.set_message_handler(get_message_handler());
 
-    synth_solvert synth_solver(ns, synth_satcheck);
+    bv_pointerst synth_solver(ns, synth_satcheck);
     synth_solver.set_message_handler(get_message_handler());
+
+    synth_encodingt synth_encoding;
 
     if(counterexamples.empty())
     {
-      convert_negation(equation, synth_solver);
+      convert_negation(equation, synth_encoding, synth_solver);
     }
     else
     {
       std::size_t counter=0;
       for(const auto &c : counterexamples)
       {
-        synth_solver.suffix="$ce"+std::to_string(counter);
-        add_counterexample(c, synth_solver);
-        convert_negation(equation, synth_solver);
+        synth_encoding.suffix="$ce"+std::to_string(counter);
+        add_counterexample(c, synth_encoding, synth_solver);
+        convert_negation(equation, synth_encoding, synth_solver);
         counter++;
       }
     }
@@ -50,7 +52,8 @@ decision_proceduret::resultt cegist::operator()(
       {
         std::map<symbol_exprt, exprt> old_expressions;
         old_expressions.swap(expressions);
-        expressions=synth_solver.get_expressions();
+
+        expressions=synth_encoding.get_expressions(synth_solver);
         if(old_expressions==expressions)
         {
           error() << "NO PROGRESS MADE" << eom;
@@ -101,26 +104,27 @@ decision_proceduret::resultt cegist::operator()(
 
 void cegist::convert_negation(
   symex_target_equationt &equation,
+  synth_encodingt &synth_encoding,
   prop_convt &prop_conv)
 {
   // guards
   for(auto &step : equation.SSA_steps)
-    step.guard_literal=prop_conv.convert(step.guard);
+    step.guard_literal=prop_conv.convert(synth_encoding(step.guard));
 
   // assignments
   for(const auto &step : equation.SSA_steps)
     if(step.is_assignment())
-      prop_conv.set_to_true(step.cond_expr);
+      prop_conv.set_to_true(synth_encoding(step.cond_expr));
 
   // decls
   for(const auto &step : equation.SSA_steps)
     if(step.is_decl())
-      prop_conv.convert(step.cond_expr);
+      prop_conv.convert(synth_encoding(step.cond_expr));
 
   // gotos
   for(auto &step : equation.SSA_steps)
     if(step.is_goto())
-      step.cond_literal=prop_conv.convert(step.cond_expr);
+      step.cond_literal=prop_conv.convert(synth_encoding(step.cond_expr));
 
   // now do assertions and assumptions
   for(auto &step : equation.SSA_steps)
@@ -128,7 +132,7 @@ void cegist::convert_negation(
     if(step.is_assert() ||
        step.is_assume())
     {
-      prop_conv.set_to_true(step.cond_expr);
+      prop_conv.set_to_true(synth_encoding(step.cond_expr));
       step.cond_literal=const_literal(true);
     }
   }
@@ -136,6 +140,7 @@ void cegist::convert_negation(
 
 void cegist::add_counterexample(
   const counterexamplet &ce,
+  synth_encodingt &synth_encoding,
   prop_convt &dest)
 {
   for(const auto &it : ce)

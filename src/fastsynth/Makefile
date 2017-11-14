@@ -1,4 +1,4 @@
-SRC = fastsynth.cpp synth_solver.cpp verify_solver.cpp cegis.cpp \
+SRC = fastsynth.cpp verify_solver.cpp cegis.cpp \
       synth_encoding.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
