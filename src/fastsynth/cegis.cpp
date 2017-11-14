@@ -78,8 +78,16 @@ decision_proceduret::resultt cegist::operator()(
     status() << "** Verification phase" << eom;
 
     for(const auto &e : expressions)
+    {
       debug() << e.first.get_identifier()
-              << " -> " << from_expr(ns, "", e.second) << eom;
+              << " -> ";
+      if(e.second.id()==ID_parameter)
+        debug() << "p" << e.second.get(ID_identifier);
+      else
+        debug() << from_expr(ns, "", e.second);
+
+      debug() << eom;
+    }
 
     satcheckt verify_satcheck;
     verify_satcheck.set_message_handler(get_message_handler());
