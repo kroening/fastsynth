@@ -28,7 +28,21 @@ decision_proceduret::resultt cegist::operator()(
     synth_solvert synth_solver(ns, synth_satcheck);
     synth_solver.set_message_handler(get_message_handler());
 
-    convert_negation(equation, synth_solver);
+    if(counterexamples.empty())
+    {
+      convert_negation(equation, synth_solver);
+    }
+    else
+    {
+      std::size_t counter=0;
+      for(const auto &c : counterexamples)
+      {
+        synth_solver.suffix="$ce"+std::to_string(counter);
+        add_counterexample(c, synth_solver);
+        convert_negation(equation, synth_solver);
+        counter++;
+      }
+    }
 
     switch(synth_solver())
     {
@@ -89,14 +103,25 @@ void cegist::convert_negation(
   symex_target_equationt &equation,
   prop_convt &prop_conv)
 {
-  // all but assertions and assumptions
-  equation.convert_guards(prop_conv);
-  equation.convert_assignments(prop_conv);
-  equation.convert_decls(prop_conv);
-  equation.convert_goto_instructions(prop_conv);
-  equation.convert_io(prop_conv);
-  equation.convert_constraints(prop_conv);  
-  
+  // guards
+  for(auto &step : equation.SSA_steps)
+    step.guard_literal=prop_conv.convert(step.guard);
+
+  // assignments
+  for(const auto &step : equation.SSA_steps)
+    if(step.is_assignment())
+      prop_conv.set_to_true(step.cond_expr);
+
+  // decls
+  for(const auto &step : equation.SSA_steps)
+    if(step.is_decl())
+      prop_conv.convert(step.cond_expr);
+
+  // gotos
+  for(auto &step : equation.SSA_steps)
+    if(step.is_goto())
+      step.cond_literal=prop_conv.convert(step.cond_expr);
+
   // now do assertions and assumptions
   for(auto &step : equation.SSA_steps)
   {
@@ -109,3 +134,21 @@ void cegist::convert_negation(
   }
 }
 
+void cegist::add_counterexample(
+  const counterexamplet &ce,
+  prop_convt &dest)
+{
+  for(const auto &it : ce)
+  {
+    const function_application_exprt &app=it.first;
+    const exprt::operandst &values=it.second;
+    const auto &arguments=app.arguments();
+
+    assert(arguments.size()==values.size());
+
+    for(std::size_t i=0; i<arguments.size(); i++)
+    {
+      dest.set_to_true(equal_exprt(arguments[i], values[i]));
+    }
+  }
+}

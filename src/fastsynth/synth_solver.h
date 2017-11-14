@@ -21,6 +21,8 @@ public:
 
   std::map<symbol_exprt, exprt> get_expressions() const;
 
+  std::string suffix;
+
 protected:
   struct e_datat
   {

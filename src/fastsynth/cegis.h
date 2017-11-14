@@ -29,5 +29,9 @@ protected:
   void convert_negation(
     symex_target_equationt &,
     prop_convt &);
+
+  void add_counterexample(
+    const counterexamplet &,
+    prop_convt &);
 };
 
