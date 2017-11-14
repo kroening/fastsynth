@@ -114,7 +114,11 @@ void cegist::convert_negation(
   // assignments
   for(const auto &step : equation.SSA_steps)
     if(step.is_assignment())
-      prop_conv.set_to_true(synth_encoding(step.cond_expr));
+    {
+      exprt encoded=synth_encoding(step.cond_expr);
+      debug() << "pa: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
+    }
 
   // decls
   for(const auto &step : equation.SSA_steps)
@@ -132,7 +136,9 @@ void cegist::convert_negation(
     if(step.is_assert() ||
        step.is_assume())
     {
-      prop_conv.set_to_true(synth_encoding(step.cond_expr));
+      exprt encoded=synth_encoding(step.cond_expr);
+      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
       step.cond_literal=const_literal(true);
     }
   }
@@ -141,7 +147,7 @@ void cegist::convert_negation(
 void cegist::add_counterexample(
   const counterexamplet &ce,
   synth_encodingt &synth_encoding,
-  prop_convt &dest)
+  prop_convt &prop_conv)
 {
   for(const auto &it : ce)
   {
@@ -153,7 +159,10 @@ void cegist::add_counterexample(
 
     for(std::size_t i=0; i<arguments.size(); i++)
     {
-      dest.set_to_true(equal_exprt(arguments[i], values[i]));
+      exprt encoded=synth_encoding(
+        equal_exprt(arguments[i], values[i]));
+      debug() << "ce: " << from_expr(ns, "", encoded) << eom;
+      prop_conv.set_to_true(encoded);
     }
   }
 }
