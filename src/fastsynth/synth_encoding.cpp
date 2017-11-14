@@ -3,18 +3,14 @@
 exprt e_datat::instructiont::result(
   const std::vector<exprt> &arguments)
 {
-  if(parameter_sel.empty())
-    return constant_val;
-
-  exprt result_expr=constant_val;
-  exprt selector=constant_sel;
+  exprt result_expr=constant_val; // last resort
 
   assert(arguments.size()==parameter_sel.size());
 
   for(std::size_t i=0; i<parameter_sel.size(); i++)
   {
-    result_expr=if_exprt(selector, result_expr, arguments[i]);
-    selector=parameter_sel[i];
+    exprt selector=parameter_sel[i];
+    result_expr=if_exprt(selector, arguments[i], result_expr);
   }
 
   return result_expr;
@@ -29,6 +25,11 @@ void e_datat::setup(
   function_symbol=e.function();
   const irep_idt &identifier=function_symbol.get_identifier();
 
+  const auto &arguments=e.arguments();
+  parameter_types.resize(arguments.size());
+  for(std::size_t i=0; i<parameter_types.size(); i++)
+    parameter_types[i]=arguments[i].type();
+
   instructions.reserve(1);
 
   for(std::size_t pc=0; pc<1; pc++)
@@ -37,13 +38,10 @@ void e_datat::setup(
     auto &instruction=instructions[pc];
 
     // constant
-    irep_idt const_sel_id=id2string(identifier)+"_"+std::to_string(pc)+"_csel";
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_sel=symbol_exprt(const_sel_id, bool_typet());
     instruction.constant_val=symbol_exprt(const_val_id, e.type());
 
     // one of the arguments
-    const auto &arguments=e.arguments();
     instruction.parameter_sel.resize(arguments.size());
 
     for(std::size_t i=0; i<arguments.size(); i++)
@@ -82,28 +80,23 @@ exprt e_datat::get_expression(
     const auto &instruction=instructions[pc];
     exprt &result=results[pc];
 
-    // constant?
+    // a parameter?
 
-    if(parameter_types.empty() ||
-       solver.get(instruction.constant_sel).is_true())
+    result=nil_exprt();
+
+    for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
+      if(solver.get(instruction.parameter_sel[i]).is_true())
+      {
+        result=exprt(ID_parameter, parameter_types[i]);
+        result.set(ID_identifier, i);
+        break;
+      }
+
+    if(result.is_nil())
     {
+      // constant, this is the last resort
       result=solver.get(instruction.constant_val);
     }
-    else
-    {
-      // a parameter?
-
-      result=nil_exprt();
-
-      for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
-        if(solver.get(instruction.parameter_sel[i]).is_true())
-        {
-          result=exprt(ID_parameter, parameter_types[i]);
-          result.set(ID_identifier, i);
-          break;
-        }
-    }
-
   }
 
   return results.back();

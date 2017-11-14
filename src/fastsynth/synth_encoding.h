@@ -20,8 +20,7 @@ public:
 
     std::size_t pc;
 
-    // constant
-    symbol_exprt constant_sel;
+    // constant, always the last resort
     symbol_exprt constant_val;
 
     // parameter
