@@ -2,6 +2,8 @@
 
 #include <util/arith_tools.h>
 
+#include <langapi/language_util.h>
+
 bvt verify_solvert::convert_bitvector(const exprt &expr)
 {
   if(expr.id()==ID_function_application)
@@ -35,8 +37,33 @@ decision_proceduret::resultt verify_solvert::dec_solve()
   return BASEt::dec_solve();
 }
 
-std::map<function_application_exprt, exprt> verify_solvert::get_counterexample()
+std::map<function_application_exprt, exprt::operandst>
+  verify_solvert::get_counterexample()
 {
-  return {};
+  std::map<function_application_exprt, exprt::operandst> result;
+
+  // iterate over arguments, and get their value
+  for(const auto &app : applications)
+  {
+    const auto &arguments=app.arguments();
+    exprt::operandst values;
+    values.reserve(arguments.size());
+
+    for(const auto &argument : arguments)
+    {
+      exprt value=get(argument);
+      values.push_back(value);
+    }
+
+    result[app]=values;
+
+    status() << "CE:";
+    for(const auto &v : values)
+      status() << ' ' << from_expr(ns, "", v);
+
+    status() << eom;
+  }
+
+  return result;
 }
 

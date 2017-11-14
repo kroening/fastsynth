@@ -20,7 +20,8 @@ protected:
   const namespacet &ns;
   
   // map function applications to values
-  using counterexamplet=std::map<function_application_exprt, exprt>;
+  using counterexamplet=
+    std::map<function_application_exprt, exprt::operandst>;
 
   using counterexamplest=std::vector<counterexamplet>;
   counterexamplest counterexamples;

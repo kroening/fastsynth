@@ -21,7 +21,8 @@ public:
 
   std::map<symbol_exprt, exprt> expressions;
 
-  std::map<function_application_exprt, exprt> get_counterexample();
+  std::map<function_application_exprt, exprt::operandst>
+    get_counterexample();
 
 protected:
   static exprt instantiate(
