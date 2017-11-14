@@ -57,7 +57,7 @@ std::map<function_application_exprt, exprt::operandst>
 
     result[app]=values;
 
-    status() << "CE:";
+    status() << "CE for " << from_expr(ns, "", app) << ':';
     for(const auto &v : values)
       status() << ' ' << from_expr(ns, "", v);
 
