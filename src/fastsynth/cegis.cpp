@@ -1,6 +1,7 @@
 #include "cegis.h"
 #include "verify_solver.h"
 #include "synth_encoding.h"
+#include "verify_encoding.h"
 
 #include <langapi/language_util.h>
 
@@ -86,6 +87,8 @@ decision_proceduret::resultt cegist::operator()(
     verify_solvert verify_solver(ns, verify_satcheck);
     verify_solver.set_message_handler(get_message_handler());
     verify_solver.expressions=expressions;
+
+    //verify_encodingt verify_encoding;
 
     equation.convert(verify_solver);
 
