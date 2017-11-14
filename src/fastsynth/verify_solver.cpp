@@ -29,7 +29,21 @@ exprt verify_solvert::instantiate(
   const exprt &expr,
   const function_application_exprt &e)
 {
-  return expr;
+  if(expr.id()==ID_parameter)
+  {
+    std::size_t count=std::stoul(expr.get_string(ID_identifier));
+    assert(count<e.arguments().size());
+    return e.arguments()[count];
+  }
+  else
+  {
+    exprt tmp=expr;
+
+    for(auto &op : tmp.operands())
+      op=instantiate(op, e);
+
+    return tmp;
+  }
 }
 
 decision_proceduret::resultt verify_solvert::dec_solve()
