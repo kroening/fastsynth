@@ -4,7 +4,7 @@ main.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^EXPRESSIONa -> 1$
-^EXPRESSIONb -> 1$
+^Result: EXPRESSIONa -> 1$
+^Result: EXPRESSIONb -> 1$
 --
 ^warning: ignoring
