@@ -25,10 +25,29 @@ public:
 
     // parameter
     std::vector<symbol_exprt> parameter_sel;
+
+    // binary operation
+    struct binary_opt
+    {
+      symbol_exprt sel;
+      irep_idt operation;
+      std::size_t operand0, operand1;
+    };
+
+    std::vector<binary_opt> binary_ops;
+
+    binary_opt &add_binary_op()
+    {
+      binary_ops.push_back(binary_opt());
+      return binary_ops.back();
+    }
     
     // result of the instruction
-    // for a set of arguments
-    exprt result(const std::vector<exprt> &arguments);
+    // - for a set of arguments
+    // - for a given vector of previous results
+    exprt result(
+      const std::vector<exprt> &arguments,
+      const std::vector<exprt> &results);
   };
 
   std::vector<instructiont> instructions;

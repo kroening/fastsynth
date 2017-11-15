@@ -1,21 +1,5 @@
 #include "synth_encoding.h"
 
-exprt e_datat::instructiont::result(
-  const std::vector<exprt> &arguments)
-{
-  exprt result_expr=constant_val; // last resort
-
-  assert(arguments.size()==parameter_sel.size());
-
-  for(std::size_t i=0; i<parameter_sel.size(); i++)
-  {
-    exprt selector=parameter_sel[i];
-    result_expr=if_exprt(selector, arguments[i], result_expr);
-  }
-
-  return result_expr;
-}
-
 void e_datat::setup(
   const function_application_exprt &e)
 {
@@ -30,9 +14,10 @@ void e_datat::setup(
   for(std::size_t i=0; i<parameter_types.size(); i++)
     parameter_types[i]=arguments[i].type();
 
-  instructions.reserve(1);
+  std::size_t program_size=2;
+  instructions.reserve(program_size);
 
-  for(std::size_t pc=0; pc<1; pc++)
+  for(std::size_t pc=0; pc<program_size; pc++)
   {
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
@@ -50,17 +35,71 @@ void e_datat::setup(
                std::to_string(pc)+"_p"+std::to_string(i)+"sel";
       instruction.parameter_sel[i]=symbol_exprt(param_sel_id, bool_typet());
     }
+
+    // a binary operation
+
+    for(std::size_t operand0=0; operand0<pc; operand0++)
+      for(std::size_t operand1=0; operand1<pc; operand1++)
+      {
+        std::size_t index=instruction.binary_ops.size();
+        auto &binary_op=instruction.add_binary_op();
+
+        irep_idt sel_id=id2string(identifier)+"_"+
+                 std::to_string(pc)+"_b"+std::to_string(index)+"sel";
+        binary_op.sel=symbol_exprt(sel_id, bool_typet());
+
+        binary_op.operand0=operand0;
+        binary_op.operand1=operand1;
+        binary_op.operation=ID_plus;
+      }
   }
+}
+
+exprt e_datat::instructiont::result(
+  const std::vector<exprt> &arguments,
+  const std::vector<exprt> &results)
+{
+  // constant, which is last resort
+  exprt result_expr=constant_val;
+
+  // a parameter
+  assert(arguments.size()==parameter_sel.size());
+
+  for(std::size_t i=0; i<parameter_sel.size(); i++)
+  {
+    exprt selector=parameter_sel[i];
+    result_expr=if_exprt(selector, arguments[i], result_expr);
+  }
+
+  // a binary operation
+  for(const auto &binary_op : binary_ops)
+  {
+    exprt selector=binary_op.sel;
+
+    assert(binary_op.operand0<results.size());
+    assert(binary_op.operand1<results.size());
+
+    binary_exprt binary_expr(binary_op.operation);
+    binary_expr.op0()=results[binary_op.operand0];
+    binary_expr.op1()=results[binary_op.operand1];
+
+    // need to do some kind of promotion
+    binary_expr.type()=binary_expr.op0().type();
+
+    result_expr=if_exprt(selector, binary_expr, result_expr);
+  }
+
+  return result_expr;
 }
 
 exprt e_datat::result(
   const std::vector<exprt> &arguments)
 {
   std::vector<exprt> results;
-  results.resize(instructions.size());
+  results.resize(instructions.size(), nil_exprt());
 
   for(std::size_t pc=0; pc<instructions.size(); pc++)
-    results[pc]=instructions[pc].result(arguments);
+    results[pc]=instructions[pc].result(arguments, results);
 
   assert(!results.empty());
 
@@ -79,18 +118,38 @@ exprt e_datat::get_expression(
   {
     const auto &instruction=instructions[pc];
     exprt &result=results[pc];
+    result=nil_exprt();
+
+    // a binary operation?
+    for(const auto &binary_op : instruction.binary_ops)
+    {
+      if(solver.get(binary_op.sel).is_true())
+      {
+        assert(binary_op.operand0<results.size());
+        assert(binary_op.operand1<results.size());
+
+        result=binary_exprt(
+          results[binary_op.operand0],
+          binary_op.operation,
+          results[binary_op.operand1],
+          results[binary_op.operand0].type());
+
+        break;
+      }
+    }
 
     // a parameter?
 
-    result=nil_exprt();
-
-    for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
-      if(solver.get(instruction.parameter_sel[i]).is_true())
-      {
-        result=exprt(ID_parameter, parameter_types[i]);
-        result.set(ID_identifier, i);
-        break;
-      }
+    if(result.is_nil())
+    {
+      for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
+        if(solver.get(instruction.parameter_sel[i]).is_true())
+        {
+          result=exprt(ID_parameter, parameter_types[i]);
+          result.set(ID_identifier, i);
+          break;
+        }
+    }
 
     if(result.is_nil())
     {
