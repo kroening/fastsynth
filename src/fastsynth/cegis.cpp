@@ -244,12 +244,8 @@ void output_expressions(
   for(const auto &e : expressions)
   {
     out << e.first.get_identifier()
-        << " -> ";
-    if(e.second.id()==ID_parameter)
-      out << "p" << e.second.get(ID_identifier);
-    else
-      out << from_expr(ns, "", e.second);
-
-    out << '\n';
+        << " -> "
+        << from_expr(ns, "", e.second)
+        << '\n';
   }
 }

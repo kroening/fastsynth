@@ -36,11 +36,20 @@ exprt verify_encodingt::instantiate(
   const exprt &expr,
   const function_application_exprt &e)
 {
-  if(expr.id()==ID_parameter)
+  if(expr.id()==ID_symbol)
   {
-    std::size_t count=std::stoul(expr.get_string(ID_identifier));
-    assert(count<e.arguments().size());
-    return e.arguments()[count];
+    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    static const std::string parameter_prefix="synth::parameter";
+
+    if(std::string(id2string(identifier), 0, parameter_prefix.size())==parameter_prefix)
+    {
+      std::string suffix(id2string(identifier), parameter_prefix.size(), std::string::npos);
+      std::size_t count=std::stoul(suffix);
+      assert(count<e.arguments().size());
+      return e.arguments()[count];
+    }
+    else
+      return expr;
   }
   else
   {

@@ -145,8 +145,8 @@ exprt e_datat::get_expression(
       for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
         if(solver.get(instruction.parameter_sel[i]).is_true())
         {
-          result=exprt(ID_parameter, parameter_types[i]);
-          result.set(ID_identifier, i);
+          irep_idt p_identifier="synth::parameter"+std::to_string(i);
+          result=symbol_exprt(p_identifier, parameter_types[i]);
           break;
         }
     }
