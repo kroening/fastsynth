@@ -6,9 +6,11 @@ struct e_datat
 public:
   e_datat():setup_done(false) { }
 
-  exprt operator()(const function_application_exprt &expr)
+  exprt operator()(
+    const function_application_exprt &expr,
+    const std::size_t program_size)
   {
-    setup(expr);
+    setup(expr, program_size);
     return result(expr.arguments());
   }
 
@@ -63,12 +65,19 @@ protected:
   bool setup_done;
 
   exprt result(const std::vector<exprt> &arguments);
-  void setup(const function_application_exprt &);
+
+  void setup(
+    const function_application_exprt &,
+    const std::size_t program_size);
 };
 
 class synth_encodingt
 {
 public:
+  synth_encodingt():program_size(1)
+  {
+  }
+
   exprt operator()(const exprt &);
 
   exprt get_expression(
@@ -79,6 +88,8 @@ public:
     const decision_proceduret &solver) const;
 
   std::string suffix;
+
+  std::size_t program_size;
 
 protected:
   std::map<symbol_exprt, e_datat> e_data_map;

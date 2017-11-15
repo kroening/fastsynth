@@ -15,6 +15,8 @@ decision_proceduret::resultt cegist::operator()(
 {
   unsigned iteration=0;
   
+  std::size_t program_size=1;
+
   // now enter the CEGIS loop
   while(true)
   {
@@ -30,6 +32,7 @@ decision_proceduret::resultt cegist::operator()(
     synth_solver.set_message_handler(get_message_handler());
 
     synth_encodingt synth_encoding;
+    synth_encoding.program_size=program_size;
 
     if(counterexamples.empty())
     {
@@ -69,6 +72,14 @@ decision_proceduret::resultt cegist::operator()(
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // no candidate
+      if(program_size<5)
+      {
+        program_size+=1;
+        status() << "Failed to get candidate; "
+                    "increasing program size to " << program_size << eom;
+        continue; // do another attempt to synthesize
+      }
+
       error() << "FAILED TO GET CANDIDATE" << eom;
       return decision_proceduret::resultt::D_UNSATISFIABLE;
 

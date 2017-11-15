@@ -1,7 +1,8 @@
 #include "synth_encoding.h"
 
 void e_datat::setup(
-  const function_application_exprt &e)
+  const function_application_exprt &e,
+  const std::size_t program_size)
 {
   if(setup_done) return;
   setup_done=true;
@@ -14,7 +15,6 @@ void e_datat::setup(
   for(std::size_t i=0; i<parameter_types.size(); i++)
     parameter_types[i]=arguments[i].type();
 
-  std::size_t program_size=2;
   instructions.reserve(program_size);
 
   for(std::size_t pc=0; pc<program_size; pc++)
@@ -172,7 +172,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
       op=(*this)(op);
 
     e_datat &e_data=e_data_map[tmp.function()];
-    exprt final_result=e_data(tmp);
+    exprt final_result=e_data(tmp, program_size);
 
     return final_result;
   }
