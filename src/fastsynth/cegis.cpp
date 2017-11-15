@@ -10,6 +10,8 @@
 #include <goto-symex/goto_symex.h>
 #include <goto-symex/symex_target_equation.h>
 
+#include <util/simplify_expr.h>
+
 decision_proceduret::resultt cegist::operator()(
   symex_target_equationt &equation)
 {
@@ -63,6 +65,10 @@ decision_proceduret::resultt cegist::operator()(
         #endif
 
         expressions=synth_encoding.get_expressions(synth_solver);
+
+        for(auto &e : expressions)
+          e.second=simplify_expr(e.second, ns);
+
         if(old_expressions==expressions)
         {
           error() << "NO PROGRESS MADE" << eom;
@@ -113,6 +119,7 @@ decision_proceduret::resultt cegist::operator()(
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
+      status() << "Result obtained with " << iteration << " iteration(s)" << eom;
       result() << "VERIFICATION SUCCESSFUL" << eom;
       return decision_proceduret::resultt::D_SATISFIABLE;
 
