@@ -142,7 +142,16 @@ int main(int argc, const char *argv[])
   switch(cegis(equation))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
-    output_expressions(cegis.expressions, ns, message.result());
+
+    for(const auto &e : cegis.expressions)
+    {
+      message.result() << "Result: "
+                       << e.first.get_identifier()
+                       << " -> "
+                       << from_expr(ns, "", e.second)
+                       << '\n';
+    }
+
     message.result() << messaget::eom;
     break;
     
