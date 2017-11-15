@@ -7,6 +7,7 @@
 #include <util/config.h>
 #include <util/arith_tools.h>
 #include <util/std_types.h>
+#include <util/time_stopping.h>
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
@@ -139,6 +140,8 @@ int main(int argc, const char *argv[])
   cegist cegis(ns);
   cegis.set_message_handler(mh);
   
+  auto start_time=current_time();
+
   switch(cegis(equation))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
@@ -153,8 +156,13 @@ int main(int argc, const char *argv[])
     }
 
     message.result() << messaget::eom;
-    break;
     
+    message.statistics() << "Synthesis time: "
+                         << current_time()-start_time
+                         << 's'
+                         << messaget::eom;
+    break;
+
   default:
     return 1;
   }
