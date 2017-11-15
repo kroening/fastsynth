@@ -38,20 +38,24 @@ void e_datat::setup(
 
     // a binary operation
 
-    for(std::size_t operand0=0; operand0<pc; operand0++)
-      for(std::size_t operand1=0; operand1<pc; operand1++)
-      {
-        std::size_t index=instruction.binary_ops.size();
-        auto &binary_op=instruction.add_binary_op();
+    static const irep_idt ops[]=
+      { ID_plus, ID_minus, ID_shl };
 
-        irep_idt sel_id=id2string(identifier)+"_"+
-                 std::to_string(pc)+"_b"+std::to_string(index)+"sel";
-        binary_op.sel=symbol_exprt(sel_id, bool_typet());
+    for(const auto &operation : ops)
+      for(std::size_t operand0=0; operand0<pc; operand0++)
+        for(std::size_t operand1=0; operand1<pc; operand1++)
+        {
+          std::size_t index=instruction.binary_ops.size();
+          auto &binary_op=instruction.add_binary_op();
 
-        binary_op.operand0=operand0;
-        binary_op.operand1=operand1;
-        binary_op.operation=ID_plus;
-      }
+          irep_idt sel_id=id2string(identifier)+"_"+
+                   std::to_string(pc)+"_b"+std::to_string(index)+"sel";
+          binary_op.sel=symbol_exprt(sel_id, bool_typet());
+
+          binary_op.operand0=operand0;
+          binary_op.operand1=operand1;
+          binary_op.operation=operation;
+        }
   }
 }
 
