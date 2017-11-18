@@ -7,6 +7,7 @@
 #include <util/config.h>
 #include <util/arith_tools.h>
 #include <util/std_types.h>
+#include <util/time_stopping.h>
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
@@ -66,6 +67,24 @@ void instrument_expressions(
     }
 }
 
+void show_formula(
+  const symex_target_equationt &src,
+  const namespacet &ns)
+{
+  for(const auto &step : src.SSA_steps)
+  {
+    if(step.is_assignment() ||
+       step.is_assume())
+    {
+      std::cout << "P: " << from_expr(ns, "", step.cond_expr) << '\n';
+    }
+    else if(step.is_assert())
+    {
+      std::cout << "A: " << from_expr(ns, "", step.cond_expr) << '\n';
+    }
+  }
+}
+
 int main(int argc, const char *argv[])
 {
   console_message_handlert mh;
@@ -115,21 +134,35 @@ int main(int argc, const char *argv[])
   goto_symex(goto_model.goto_functions);
 
   #if 0
-  equation.output(std::cout);
-  return 0;
+  show_formula(equation, ns);
   #endif
   
   cegist cegis(ns);
   cegis.set_message_handler(mh);
   
+  auto start_time=current_time();
+
   switch(cegis(equation))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
+
     for(const auto &e : cegis.expressions)
-      message.result() << e.first.get_identifier() << " -> "
-                       << from_expr(ns, "", e.second) << messaget::eom;
-    break;
+    {
+      message.result() << "Result: "
+                       << e.first.get_identifier()
+                       << " -> "
+                       << from_expr(ns, "", e.second)
+                       << '\n';
+    }
+
+    message.result() << messaget::eom;
     
+    message.statistics() << "Synthesis time: "
+                         << current_time()-start_time
+                         << 's'
+                         << messaget::eom;
+    break;
+
   default:
     return 1;
   }

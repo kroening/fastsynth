@@ -1,10 +1,10 @@
-#include "verify_solver.h"
+#include "verify_encoding.h"
 
 #include <util/arith_tools.h>
 
-#include <langapi/language_util.h>
+//#include <langapi/language_util.h>
 
-bvt verify_solvert::convert_bitvector(const exprt &expr)
+exprt verify_encodingt::operator()(const exprt &expr)
 {
   if(expr.id()==ID_function_application)
   {
@@ -19,13 +19,20 @@ bvt verify_solvert::convert_bitvector(const exprt &expr)
     // need to instantiate parameters with arguments
     exprt instance=instantiate(result, e);
 
-    return BASEt::convert_bitvector(instance);
+    return instance;
   }
   else
-    return BASEt::convert_bitvector(expr);
+  {
+    exprt tmp=expr;
+
+    for(auto &op : tmp.operands())
+      op=(*this)(op);
+
+    return tmp;
+  }
 }
 
-exprt verify_solvert::instantiate(
+exprt verify_encodingt::instantiate(
   const exprt &expr,
   const function_application_exprt &e)
 {
@@ -55,13 +62,9 @@ exprt verify_solvert::instantiate(
   }
 }
 
-decision_proceduret::resultt verify_solvert::dec_solve()
-{
-  return BASEt::dec_solve();
-}
-
 std::map<function_application_exprt, exprt::operandst>
-  verify_solvert::get_counterexample()
+  verify_encodingt::get_counterexample(
+    const decision_proceduret &solver)
 {
   std::map<function_application_exprt, exprt::operandst> result;
 
@@ -74,17 +77,11 @@ std::map<function_application_exprt, exprt::operandst>
 
     for(const auto &argument : arguments)
     {
-      exprt value=get(argument);
+      exprt value=solver.get(argument);
       values.push_back(value);
     }
 
     result[app]=values;
-
-    status() << "CE for " << from_expr(ns, "", app) << ':';
-    for(const auto &v : values)
-      status() << ' ' << from_expr(ns, "", v);
-
-    status() << eom;
   }
 
   return result;
