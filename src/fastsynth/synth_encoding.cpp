@@ -113,6 +113,9 @@ exprt e_datat::result(
 exprt e_datat::get_expression(
   const decision_proceduret &solver) const
 {
+  // this goes backwards,
+  // i.e., outside-in from the synthesis case split
+
   assert(!instructions.empty());
 
   std::vector<exprt> results;
@@ -125,8 +128,14 @@ exprt e_datat::get_expression(
     result=nil_exprt();
 
     // a binary operation?
-    for(const auto &binary_op : instruction.binary_ops)
+    // Need to go backwards
+
+    for(auto b_op_it=instruction.binary_ops.rbegin();
+        b_op_it!=instruction.binary_ops.rend();
+        b_op_it++)
     {
+      const auto &binary_op=*b_op_it;
+
       if(solver.get(binary_op.sel).is_true())
       {
         assert(binary_op.operand0<results.size());
@@ -147,12 +156,16 @@ exprt e_datat::get_expression(
     if(result.is_nil())
     {
       for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
-        if(solver.get(instruction.parameter_sel[i]).is_true())
+      {
+        std::size_t index=instruction.parameter_sel.size()-i-1;
+
+        if(solver.get(instruction.parameter_sel[index]).is_true())
         {
-          irep_idt p_identifier="synth::parameter"+std::to_string(i);
-          result=symbol_exprt(p_identifier, parameter_types[i]);
+          irep_idt p_identifier="synth::parameter"+std::to_string(index);
+          result=symbol_exprt(p_identifier, parameter_types[index]);
           break;
         }
+      }
     }
 
     if(result.is_nil())
