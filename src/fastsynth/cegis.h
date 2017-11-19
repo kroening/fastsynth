@@ -21,11 +21,18 @@ public:
 protected:
   const namespacet &ns;
 
+  decision_proceduret::resultt incremental_loop(
+    symex_target_equationt &);
+
+  decision_proceduret::resultt non_incremental_loop(
+    symex_target_equationt &);
+
   // map function applications to values
   using counterexamplet=
     std::map<function_application_exprt, exprt::operandst>;
 
   using counterexamplest=std::vector<counterexamplet>;
+
   counterexamplest counterexamples;
 
   void convert(

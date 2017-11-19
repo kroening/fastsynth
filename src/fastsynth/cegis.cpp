@@ -15,8 +15,16 @@
 decision_proceduret::resultt cegist::operator()(
   symex_target_equationt &equation)
 {
+  return incremental_loop(equation);
+}
+
+decision_proceduret::resultt cegist::non_incremental_loop(
+  symex_target_equationt &equation)
+{
+  status() << "** non-incremental CEGIS" << eom;
+
   unsigned iteration=0;
-  
+
   std::size_t program_size=1;
 
   // now enter the CEGIS loop
@@ -127,6 +135,132 @@ decision_proceduret::resultt cegist::operator()(
       return decision_proceduret::resultt::D_ERROR;
     }
 
+  }
+}
+
+decision_proceduret::resultt cegist::incremental_loop(
+  symex_target_equationt &equation)
+{
+  status() << "** incremental CEGIS" << eom;
+
+  unsigned iteration=0;
+
+  std::size_t program_size=1;
+  std::size_t counterexample_counter=0;
+
+  // now enter the CEGIS loop
+  while(true)
+  {
+    satcheck_no_simplifiert synth_satcheck;
+    synth_satcheck.set_message_handler(get_message_handler());
+
+    bv_pointerst synth_solver(ns, synth_satcheck);
+    synth_solver.set_message_handler(get_message_handler());
+
+    synth_encodingt synth_encoding;
+    synth_encoding.program_size=program_size;
+
+    convert_negation(equation, synth_encoding, synth_solver);
+
+    bool verify=false;
+
+    do
+    {
+      iteration++;
+      status() << "** CEGIS iteration " << iteration << eom;
+
+      status() << "** Synthesis phase" << eom;
+
+      switch(synth_solver())
+      {
+      case decision_proceduret::resultt::D_SATISFIABLE: // got candidate
+        {
+          std::map<symbol_exprt, exprt> old_expressions;
+          old_expressions.swap(expressions);
+
+          #if 0
+          synth_solver.print_assignment(debug());
+          debug() << eom;
+          #endif
+
+          expressions=synth_encoding.get_expressions(synth_solver);
+
+          for(auto &e : expressions)
+            e.second=simplify_expr(e.second, ns);
+
+          if(old_expressions==expressions)
+          {
+            error() << "NO PROGRESS MADE" << eom;
+            return decision_proceduret::resultt::D_ERROR;
+          }
+        }
+
+        verify=true;
+        break;
+
+      case decision_proceduret::resultt::D_UNSATISFIABLE: // no candidate
+        if(program_size<5)
+        {
+          program_size+=1;
+          status() << "Failed to get candidate; "
+                      "increasing program size to " << program_size << eom;
+          verify=false; // do another attempt to synthesize
+          break;
+        }
+
+        error() << "FAILED TO GET CANDIDATE" << eom;
+        return decision_proceduret::resultt::D_UNSATISFIABLE;
+
+      case decision_proceduret::resultt::D_ERROR:
+        return decision_proceduret::resultt::D_ERROR;
+      }
+
+      if(verify)
+      {
+        status() << "** Verification phase" << eom;
+
+        output_expressions(expressions, ns, debug());
+        debug() << eom;
+
+        satcheckt verify_satcheck;
+        verify_satcheck.set_message_handler(get_message_handler());
+
+        verify_solvert verify_solver(ns, verify_satcheck);
+        verify_solver.set_message_handler(get_message_handler());
+        verify_solver.expressions=expressions;
+
+        //verify_encodingt verify_encoding;
+
+        equation.convert(verify_solver);
+
+        // convert(equation, verify_encoding, verify_solver);
+
+        switch(verify_solver())
+        {
+        case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
+          {
+            auto c=verify_solver.get_counterexample();
+            // auto c=verify_encoding.get_counterexample(verify_solver);
+
+            synth_encoding.suffix=
+              "$ce"+std::to_string(counterexample_counter);
+            add_counterexample(c, synth_encoding, synth_solver);
+            convert_negation(equation, synth_encoding, synth_solver);
+            counterexample_counter++;
+          }
+          break;
+
+        case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
+          status() << "Result obtained with " << iteration << " iteration(s)" << eom;
+          result() << "VERIFICATION SUCCESSFUL" << eom;
+          return decision_proceduret::resultt::D_SATISFIABLE;
+
+        case decision_proceduret::resultt::D_ERROR:
+          return decision_proceduret::resultt::D_ERROR;
+        }
+      }
+    }
+    while(verify);
   }
 }
 
