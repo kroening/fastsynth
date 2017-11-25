@@ -1,4 +1,37 @@
+#include <util/c_types.h>
+#include <util/std_types.h>
+#include <util/config.h>
+
 #include "synth_encoding.h"
+
+#include <algorithm>
+
+typet promotion(const typet &t0, const typet &t1)
+{
+  // same encoding but different width
+  if(t0.id()==ID_signedbv && t1.id()==ID_signedbv)
+  {
+    auto t0_width=to_signedbv_type(t0).get_width();
+    auto t1_width=to_signedbv_type(t1).get_width();
+    return t0_width>=t1_width?t0:t1;
+  }
+  else if(t0.id()==ID_unsignedbv && t1.id()==ID_unsignedbv)
+  {
+    auto t0_width=to_unsignedbv_type(t0).get_width();
+    auto t1_width=to_unsignedbv_type(t1).get_width();
+    return t0_width>=t1_width?t0:t1;
+  }
+  else
+    return t0;
+}
+
+exprt promotion(const exprt &expr, const typet &t)
+{
+  if(expr.type()==t)
+    return expr;
+
+  return typecast_exprt(expr, t);
+}
 
 void e_datat::setup(
   const function_application_exprt &e,
@@ -9,6 +42,8 @@ void e_datat::setup(
 
   function_symbol=e.function();
   const irep_idt &identifier=function_symbol.get_identifier();
+
+  return_type=e.type();
 
   const auto &arguments=e.arguments();
   parameter_types.resize(arguments.size());
@@ -22,9 +57,9 @@ void e_datat::setup(
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
 
-    // constant
+    // integer constant
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_val=symbol_exprt(const_val_id, e.type());
+    instruction.constant_val=symbol_exprt(const_val_id, signed_int_type());
 
     // one of the arguments
     instruction.parameter_sel.resize(arguments.size());
@@ -59,6 +94,19 @@ void e_datat::setup(
   }
 }
 
+if_exprt e_datat::instructiont::chain(
+  const symbol_exprt &selector,
+  const exprt &expr_true,
+  const exprt &expr_false)
+{
+  typet t=promotion(expr_true.type(), expr_false.type());
+
+  return if_exprt(
+    selector,
+    promotion(expr_true, t),
+    promotion(expr_false, t));
+}
+
 exprt e_datat::instructiont::result(
   const std::vector<exprt> &arguments,
   const std::vector<exprt> &results)
@@ -71,26 +119,28 @@ exprt e_datat::instructiont::result(
 
   for(std::size_t i=0; i<parameter_sel.size(); i++)
   {
-    exprt selector=parameter_sel[i];
-    result_expr=if_exprt(selector, arguments[i], result_expr);
+    auto selector=parameter_sel[i];
+    result_expr=chain(selector, arguments[i], result_expr);
   }
 
   // a binary operation
   for(const auto &binary_op : binary_ops)
   {
-    exprt selector=binary_op.sel;
+    auto selector=binary_op.sel;
 
     assert(binary_op.operand0<results.size());
     assert(binary_op.operand1<results.size());
 
-    binary_exprt binary_expr(binary_op.operation);
-    binary_expr.op0()=results[binary_op.operand0];
-    binary_expr.op1()=results[binary_op.operand1];
+    const auto &op0=results[binary_op.operand0];
+    const auto &op1=results[binary_op.operand1];
 
-    // need to do some kind of promotion
-    binary_expr.type()=binary_expr.op0().type();
+    typet t=promotion(op0.type(), op1.type());
 
-    result_expr=if_exprt(selector, binary_expr, result_expr);
+    binary_exprt binary_expr(binary_op.operation, t);
+    binary_expr.op0()=promotion(op0, t);
+    binary_expr.op1()=promotion(op1, t);
+
+    result_expr=chain(selector, binary_expr, result_expr);
   }
 
   return result_expr;
@@ -107,7 +157,7 @@ exprt e_datat::result(
 
   assert(!results.empty());
 
-  return results.back();
+  return promotion(results.back(), return_type);
 }
 
 exprt e_datat::get_expression(
@@ -157,6 +207,7 @@ exprt e_datat::get_expression(
     {
       for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
       {
+        // need to go backwards
         std::size_t index=instruction.parameter_sel.size()-i-1;
 
         if(solver.get(instruction.parameter_sel[index]).is_true())
@@ -175,7 +226,7 @@ exprt e_datat::get_expression(
     }
   }
 
-  return results.back();
+  return promotion(results.back(), return_type);
 }
 
 exprt synth_encodingt::operator()(const exprt &expr)

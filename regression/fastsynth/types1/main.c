@@ -1,10 +1,11 @@
-int EXPRESSION(short);
+unsigned short EXPRESSION(unsigned char);
 
 int main()
 {
-  short in;
-  int out;
+  unsigned char in;
+  unsigned short out;
   out=EXPRESSION(in);
-  // the below needs promotion
-  __CPROVER_assert(out==in+in, "");
+  // the below needs conversion
+  __CPROVER_assert(out==in, "");
+  return 0;
 }

@@ -50,6 +50,12 @@ public:
     exprt result(
       const std::vector<exprt> &arguments,
       const std::vector<exprt> &results);
+
+  protected:
+    if_exprt chain(
+      const symbol_exprt &selector,
+      const exprt &,
+      const exprt &);
   };
 
   std::vector<instructiont> instructions;
@@ -57,6 +63,7 @@ public:
   // result of the function application
   // for a set of arguments
   std::vector<typet> parameter_types;
+  typet return_type;
   symbol_exprt function_symbol;
 
   exprt get_expression(const decision_proceduret &) const;
@@ -88,7 +95,6 @@ public:
     const decision_proceduret &solver) const;
 
   std::string suffix;
-
   std::size_t program_size;
 
 protected:
