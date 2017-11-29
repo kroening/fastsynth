@@ -175,6 +175,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_string_literal()
   }
 
   // Hmpf. Eof before end of string literal. This is an error.
+  ok=false;
   error("EOF within string literal");
   return ERROR;
 }
@@ -232,12 +233,14 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
           return token=get_hex_numeral();
         else
         {
-          error("unexpected numeral token");
+          ok=false;
+          error("unknown numeral token");
           return token=ERROR;
         }
       }
       else
       {
+        ok=false;
         error("unexpected EOF in numeral token");
         return token=ERROR;
       }
@@ -257,6 +260,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
       else
       {
         // illegal character, error
+        ok=false;
         error("unexpected character");
         return token=ERROR;
       }
@@ -272,6 +276,7 @@ void new_smt2_parsert::command_sequence()
   {
     if(next_token()!=SYMBOL)
     {
+      ok=false;
       error("expected symbol as command");
       return;
     }
@@ -281,6 +286,7 @@ void new_smt2_parsert::command_sequence()
     switch(next_token())
     {
     case END_OF_FILE:
+      ok=false;
       error("expected closing parenthesis at end of command, but got EOF");
       return;
 
@@ -289,13 +295,17 @@ void new_smt2_parsert::command_sequence()
       break;
 
     default:
+      ok=false;
       error("expected end of command");
       return;
     }
   }
 
   if(token!=END_OF_FILE)
+  {
+    ok=false;
     error("unexpected token: "+buffer);
+  }
 }
 
 #include <iostream>
@@ -322,6 +332,7 @@ void new_smt2_parsert::command()
       break;
 
     case END_OF_FILE:
+      ok=false;
       error("unexpected EOF in command");
       return;
 
