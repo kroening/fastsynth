@@ -57,18 +57,18 @@ void e_datat::setup(
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
 
-    // integer constant
+    // constant -- hardwired default, not an option
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
     instruction.constant_val=symbol_exprt(const_val_id, signed_int_type());
 
     // one of the arguments
-    instruction.parameter_sel.resize(arguments.size());
-
     for(std::size_t i=0; i<arguments.size(); i++)
     {
       irep_idt param_sel_id=id2string(identifier)+"_"+
                std::to_string(pc)+"_p"+std::to_string(i)+"sel";
-      instruction.parameter_sel[i]=symbol_exprt(param_sel_id, bool_typet());
+      auto &option=instruction.add_option(param_sel_id);
+      option.kind=instructiont::optiont::PARAMETER;
+      option.parameter_number=i;
     }
 
     // a binary operation
@@ -76,20 +76,23 @@ void e_datat::setup(
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl };
 
+    std::size_t binary_op_index=0;
+
     for(const auto &operation : ops)
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
-          std::size_t index=instruction.binary_ops.size();
-          auto &binary_op=instruction.add_binary_op();
-
           irep_idt sel_id=id2string(identifier)+"_"+
-                   std::to_string(pc)+"_b"+std::to_string(index)+"sel";
-          binary_op.sel=symbol_exprt(sel_id, bool_typet());
+                   std::to_string(pc)+"_b"+
+                   std::to_string(binary_op_index)+"sel";
 
-          binary_op.operand0=operand0;
-          binary_op.operand1=operand1;
-          binary_op.operation=operation;
+          auto &option=instruction.add_option(sel_id);
+          option.kind=instructiont::optiont::BINARY;
+          option.operand0=operand0;
+          option.operand1=operand1;
+          option.operation=operation;
+
+          binary_op_index++;
         }
   }
 }
@@ -114,33 +117,40 @@ exprt e_datat::instructiont::result(
   // constant, which is last resort
   exprt result_expr=constant_val;
 
-  // a parameter
-  assert(arguments.size()==parameter_sel.size());
-
-  for(std::size_t i=0; i<parameter_sel.size(); i++)
+  for(const auto &option : options)
   {
-    auto selector=parameter_sel[i];
-    result_expr=chain(selector, arguments[i], result_expr);
-  }
+    switch(option.kind)
+    {
+    case optiont::PARAMETER:
+      result_expr=chain(
+        option.sel, arguments[option.parameter_number], result_expr);
+      break;
 
-  // a binary operation
-  for(const auto &binary_op : binary_ops)
-  {
-    auto selector=binary_op.sel;
+    case optiont::UNARY:
+      // TBD
+      break;
 
-    assert(binary_op.operand0<results.size());
-    assert(binary_op.operand1<results.size());
+    case optiont::BINARY: // a binary operation
+      {
+        assert(option.operand0<results.size());
+        assert(option.operand1<results.size());
 
-    const auto &op0=results[binary_op.operand0];
-    const auto &op1=results[binary_op.operand1];
+        const auto &op0=results[option.operand0];
+        const auto &op1=results[option.operand1];
 
-    typet t=promotion(op0.type(), op1.type());
+        typet t=promotion(op0.type(), op1.type());
 
-    binary_exprt binary_expr(binary_op.operation, t);
-    binary_expr.op0()=promotion(op0, t);
-    binary_expr.op1()=promotion(op1, t);
+        binary_exprt binary_expr(option.operation, t);
+        binary_expr.op0()=promotion(op0, t);
+        binary_expr.op1()=promotion(op1, t);
 
-    result_expr=chain(selector, binary_expr, result_expr);
+        result_expr=chain(option.sel, binary_expr, result_expr);
+      }
+      break;
+
+    default:
+      UNREACHABLE;
+    }
   }
 
   return result_expr;
@@ -163,9 +173,6 @@ exprt e_datat::result(
 exprt e_datat::get_expression(
   const decision_proceduret &solver) const
 {
-  // this goes backwards,
-  // i.e., outside-in from the synthesis case split
-
   assert(!instructions.empty());
 
   std::vector<exprt> results;
@@ -177,53 +184,55 @@ exprt e_datat::get_expression(
     exprt &result=results[pc];
     result=nil_exprt();
 
-    // a binary operation?
-    // Need to go backwards
+    // we now go _backwards_ through the options, as we've
+    // built the ite inside-out
 
-    for(auto b_op_it=instruction.binary_ops.rbegin();
-        b_op_it!=instruction.binary_ops.rend();
-        b_op_it++)
+    for(instructiont::optionst::const_reverse_iterator
+        o_it=instruction.options.rbegin();
+        result.is_nil() && o_it!=instruction.options.rend();
+        o_it++)
     {
-      const auto &binary_op=*b_op_it;
-
-      if(solver.get(binary_op.sel).is_true())
+      if(solver.get(o_it->sel).is_true())
       {
-        assert(binary_op.operand0<results.size());
-        assert(binary_op.operand1<results.size());
-
-        result=binary_exprt(
-          results[binary_op.operand0],
-          binary_op.operation,
-          results[binary_op.operand1],
-          results[binary_op.operand0].type());
-
-        break;
-      }
-    }
-
-    // a parameter?
-
-    if(result.is_nil())
-    {
-      for(std::size_t i=0; i<instruction.parameter_sel.size(); i++)
-      {
-        // need to go backwards
-        std::size_t index=instruction.parameter_sel.size()-i-1;
-
-        if(solver.get(instruction.parameter_sel[index]).is_true())
+        switch(o_it->kind)
         {
-          irep_idt p_identifier="synth::parameter"+std::to_string(index);
-          result=symbol_exprt(p_identifier, parameter_types[index]);
+        case instructiont::optiont::PARAMETER: // a parameter
+          {
+            irep_idt p_identifier="synth::parameter"+
+                     std::to_string(o_it->parameter_number);
+            result=symbol_exprt(p_identifier, parameter_types[o_it->parameter_number]);
+          }
           break;
+
+        case instructiont::optiont::UNARY:
+          // TBD
+          break;
+
+        case instructiont::optiont::BINARY:
+          {
+            const auto &binary_op=*o_it;
+
+            assert(binary_op.operand0<results.size());
+            assert(binary_op.operand1<results.size());
+
+            result=binary_exprt(
+              results[binary_op.operand0],
+              binary_op.operation,
+              results[binary_op.operand1],
+              results[binary_op.operand0].type());
+          }
+          break;
+
+        default:
+          UNREACHABLE;
         }
       }
     }
 
+    // constant, this is the last resort when none of the
+    // selectors is true
     if(result.is_nil())
-    {
-      // constant, this is the last resort
       result=solver.get(instruction.constant_val);
-    }
   }
 
   return promotion(results.back(), return_type);

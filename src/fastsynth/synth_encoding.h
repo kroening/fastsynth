@@ -25,23 +25,28 @@ public:
     // constant, always the last resort
     symbol_exprt constant_val;
 
-    // parameter
-    std::vector<symbol_exprt> parameter_sel;
-
-    // binary operation
-    struct binary_opt
+    struct optiont
     {
+      optiont():parameter_number(0), kind(NONE),
+        operand0(0), operand1(0)
+      {
+      }
+
       symbol_exprt sel;
       irep_idt operation;
+      std::size_t parameter_number;
+      enum { NONE, PARAMETER, UNARY, BINARY } kind;
       std::size_t operand0, operand1;
     };
 
-    std::vector<binary_opt> binary_ops;
+    using optionst=std::vector<optiont>;
+    optionst options;
 
-    binary_opt &add_binary_op()
+    optiont &add_option(const irep_idt &sel_identifier)
     {
-      binary_ops.push_back(binary_opt());
-      return binary_ops.back();
+      options.push_back(optiont());
+      options.back().sel=symbol_exprt(sel_identifier, bool_typet());
+      return options.back();
     }
     
     // result of the instruction
