@@ -118,7 +118,7 @@ int c_frontend(const cmdlinet &cmdline)
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
   symex_target_equationt equation(ns);
-  goto_symext goto_symex(ns, new_symbol_table, equation);
+  goto_symext goto_symex(mh, ns, new_symbol_table, equation);
   
   goto_symex(goto_model.goto_functions);
 
