@@ -74,7 +74,7 @@ void e_datat::setup(
     // a binary operation
 
     static const irep_idt ops[]=
-      { ID_plus, ID_minus, ID_shl };
+      { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor };
 
     std::size_t binary_op_index=0;
 
@@ -172,7 +172,7 @@ exprt e_datat::result(
     exprt c=instructions[pc].constraint(arguments, results);
 
     irep_idt result_identifier=
-      id2string(identifier)+"_"+std::to_string(pc)+"_result"+suffix;
+      id2string(identifier)+"_result_"+std::to_string(pc)+suffix;
 
     results[pc]=symbol_exprt(result_identifier, c.type());
 

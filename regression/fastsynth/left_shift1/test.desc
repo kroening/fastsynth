@@ -4,6 +4,6 @@ main.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSION -> parameter0 << 2$
+^Result: EXPRESSION -> parameter0 << 3$
 --
 ^warning: ignoring
