@@ -57,6 +57,8 @@ public:
       const std::vector<exprt> &arguments,
       const std::vector<exprt> &results);
 
+    typet type;
+
   protected:
     if_exprt chain(
       const symbol_exprt &selector,

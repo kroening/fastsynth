@@ -1,4 +1,3 @@
-#include <util/c_types.h>
 #include <util/std_types.h>
 #include <util/config.h>
 
@@ -51,17 +50,17 @@ void e_datat::setup(
     parameter_types[i]=arguments[i].type();
 
   instructions.reserve(program_size);
-
   for(std::size_t pc=0; pc<program_size; pc++)
   {
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
+    instruction.type=return_type;
 
     // constant -- hardwired default, not an option
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_val=symbol_exprt(const_val_id, signed_int_type());
+    instruction.constant_val=symbol_exprt(const_val_id, instruction.type);
 
-    // one of the arguments
+    // one of the arguments, if type matches
     for(std::size_t i=0; i<arguments.size(); i++)
     {
       irep_idt param_sel_id=id2string(identifier)+"_"+
@@ -74,7 +73,8 @@ void e_datat::setup(
     // a binary operation
 
     static const irep_idt ops[]=
-      { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor };
+      { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
+        ID_and, ID_or, ID_xor };
 
     std::size_t binary_op_index=0;
 
@@ -82,6 +82,10 @@ void e_datat::setup(
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
+          if((operation==ID_and || operation==ID_or || operation==ID_xor)!=
+             (instruction.type.id()==ID_bool))
+            continue;
+
           irep_idt sel_id=id2string(identifier)+"_"+
                    std::to_string(pc)+"_b"+
                    std::to_string(binary_op_index)+"sel";
@@ -102,12 +106,10 @@ if_exprt e_datat::instructiont::chain(
   const exprt &expr_true,
   const exprt &expr_false)
 {
-  typet t=promotion(expr_true.type(), expr_false.type());
-
   return if_exprt(
     selector,
-    promotion(expr_true, t),
-    promotion(expr_false, t));
+    expr_true,
+    expr_false);
 }
 
 exprt e_datat::instructiont::constraint(
@@ -138,11 +140,9 @@ exprt e_datat::instructiont::constraint(
         const auto &op0=results[option.operand0];
         const auto &op1=results[option.operand1];
 
-        typet t=promotion(op0.type(), op1.type());
-
-        binary_exprt binary_expr(option.operation, t);
-        binary_expr.op0()=promotion(op0, t);
-        binary_expr.op1()=promotion(op1, t);
+        binary_exprt binary_expr(option.operation, type);
+        binary_expr.op0()=op0;
+        binary_expr.op1()=op1;
 
         result_expr=chain(option.sel, binary_expr, result_expr);
       }
@@ -181,7 +181,7 @@ exprt e_datat::result(
 
   assert(!results.empty());
 
-  return promotion(results.back(), return_type);
+  return results.back();
 }
 
 exprt e_datat::get_expression(
@@ -249,7 +249,7 @@ exprt e_datat::get_expression(
       result=solver.get(instruction.constant_val);
   }
 
-  return promotion(results.back(), return_type);
+  return results.back();
 }
 
 exprt synth_encodingt::operator()(const exprt &expr)
