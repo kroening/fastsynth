@@ -1,5 +1,4 @@
 #include "cegis.h"
-#include "verify_solver.h"
 #include "synth_encoding.h"
 #include "verify_encoding.h"
 
@@ -125,21 +124,18 @@ decision_proceduret::resultt cegist::non_incremental_loop(
     satcheckt verify_satcheck;
     verify_satcheck.set_message_handler(get_message_handler());
 
-    verify_solvert verify_solver(ns, verify_satcheck);
+    bv_pointerst verify_solver(ns, verify_satcheck);
     verify_solver.set_message_handler(get_message_handler());
-    verify_solver.expressions=expressions;
 
-    //verify_encodingt verify_encoding;
+    verify_encodingt verify_encoding;
+    verify_encoding.expressions=expressions;
 
-    equation.convert(verify_solver);
-
-    // convert(equation, verify_encoding, verify_solver);
+    convert(equation, verify_encoding, verify_solver);
 
     switch(verify_solver())
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
-      counterexamples.push_back(verify_solver.get_counterexample());
-      // counterexamples.push_back(verify_encoding.get_counterexample(verify_solver));
+      counterexamples.push_back(verify_encoding.get_counterexample(verify_solver));
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
@@ -241,22 +237,19 @@ decision_proceduret::resultt cegist::incremental_loop(
         satcheckt verify_satcheck;
         verify_satcheck.set_message_handler(get_message_handler());
 
-        verify_solvert verify_solver(ns, verify_satcheck);
+        bv_pointerst verify_solver(ns, verify_satcheck);
         verify_solver.set_message_handler(get_message_handler());
-        verify_solver.expressions=expressions;
 
-        //verify_encodingt verify_encoding;
+        verify_encodingt verify_encoding;
+        verify_encoding.expressions=expressions;
 
-        equation.convert(verify_solver);
-
-        // convert(equation, verify_encoding, verify_solver);
+        convert(equation, verify_encoding, verify_solver);
 
         switch(verify_solver())
         {
         case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
           {
-            auto c=verify_solver.get_counterexample();
-            // auto c=verify_encoding.get_counterexample(verify_solver);
+            auto c=verify_encoding.get_counterexample(verify_solver);
 
             synth_encoding.suffix=
               "$ce"+std::to_string(counterexample_counter);
@@ -351,23 +344,29 @@ void cegist::convert(
       step.cond_literal=prop_conv.convert(verify_encoding(step.cond_expr));
 
   // now do assertions and assumptions
+  exprt::operandst assumptions, assertions;
+
   for(auto &step : equation.SSA_steps)
   {
     if(step.is_assume())
     {
       exprt encoded=verify_encoding(step.cond_expr);
-      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-      step.cond_literal=const_literal(true);
+      debug() << "pA: " << from_expr(ns, "", encoded) << eom;
+      literalt l=prop_conv.convert(encoded);
+      step.cond_literal=l;
+      assumptions.push_back(literal_exprt(l));
     }
     else if(step.is_assert())
     {
       exprt encoded=verify_encoding(step.cond_expr);
       debug() << "pr: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-      step.cond_literal=const_literal(true);
+      assertions.push_back(
+        implies_exprt(conjunction(assumptions), encoded));
     }
   }
+
+  // one assertion must be false
+  prop_conv.set_to_false(conjunction(assertions));
 }
 
 void cegist::add_counterexample(
