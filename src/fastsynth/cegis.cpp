@@ -15,7 +15,7 @@
 decision_proceduret::resultt cegist::operator()(
   symex_target_equationt &equation)
 {
-  return incremental_loop(equation);
+  return non_incremental_loop(equation);
 }
 
 decision_proceduret::resultt cegist::non_incremental_loop(
@@ -46,7 +46,15 @@ decision_proceduret::resultt cegist::non_incremental_loop(
 
     if(counterexamples.empty())
     {
+      synth_encoding.suffix="$ce";
+      synth_encoding.constraints.clear();
       convert_negation(equation, synth_encoding, synth_solver);
+
+      for(const auto &c : synth_encoding.constraints)
+      {
+        synth_solver.set_to_true(c);
+        debug() << "ec: " << from_expr(ns, "", c) << eom;
+      }
     }
     else
     {
@@ -54,8 +62,16 @@ decision_proceduret::resultt cegist::non_incremental_loop(
       for(const auto &c : counterexamples)
       {
         synth_encoding.suffix="$ce"+std::to_string(counter);
+        synth_encoding.constraints.clear();
         add_counterexample(c, synth_encoding, synth_solver);
         convert_negation(equation, synth_encoding, synth_solver);
+
+        for(const auto &c : synth_encoding.constraints)
+        {
+          synth_solver.set_to_true(c);
+          debug() << "ec: " << from_expr(ns, "", c) << eom;
+        }
+
         counter++;
       }
     }

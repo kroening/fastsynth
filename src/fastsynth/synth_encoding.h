@@ -8,10 +8,11 @@ public:
 
   exprt operator()(
     const function_application_exprt &expr,
+    const std::string &suffix,
     const std::size_t program_size)
   {
     setup(expr, program_size);
-    return result(expr.arguments());
+    return result(suffix, expr.arguments());
   }
 
   struct instructiont
@@ -49,10 +50,10 @@ public:
       return options.back();
     }
     
-    // result of the instruction
+    // generate a constraint for the instruction
     // - for a set of arguments
     // - for a given vector of previous results
-    exprt result(
+    exprt constraint(
       const std::vector<exprt> &arguments,
       const std::vector<exprt> &results);
 
@@ -73,10 +74,15 @@ public:
 
   exprt get_expression(const decision_proceduret &) const;
 
+  using constraintst=std::list<exprt>;
+  constraintst constraints;
+
 protected:
   bool setup_done;
 
-  exprt result(const std::vector<exprt> &arguments);
+  exprt result(
+    const std::string &suffix,
+    const std::vector<exprt> &arguments);
 
   void setup(
     const function_application_exprt &,
@@ -101,6 +107,9 @@ public:
 
   std::string suffix;
   std::size_t program_size;
+
+  using constraintst=std::list<exprt>;
+  constraintst constraints;
 
 protected:
   std::map<symbol_exprt, e_datat> e_data_map;

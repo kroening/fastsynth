@@ -110,7 +110,7 @@ if_exprt e_datat::instructiont::chain(
     promotion(expr_false, t));
 }
 
-exprt e_datat::instructiont::result(
+exprt e_datat::instructiont::constraint(
   const std::vector<exprt> &arguments,
   const std::vector<exprt> &results)
 {
@@ -157,13 +157,27 @@ exprt e_datat::instructiont::result(
 }
 
 exprt e_datat::result(
+  const std::string &suffix,
   const std::vector<exprt> &arguments)
 {
   std::vector<exprt> results;
   results.resize(instructions.size(), nil_exprt());
 
+  constraints.clear();
+
+  const irep_idt &identifier=function_symbol.get_identifier();
+
   for(std::size_t pc=0; pc<instructions.size(); pc++)
-    results[pc]=instructions[pc].result(arguments, results);
+  {
+    exprt c=instructions[pc].constraint(arguments, results);
+
+    irep_idt result_identifier=
+      id2string(identifier)+"_"+std::to_string(pc)+"_result"+suffix;
+
+    results[pc]=symbol_exprt(result_identifier, c.type());
+
+    constraints.push_back(equal_exprt(results[pc], c));
+  }
 
   assert(!results.empty());
 
@@ -249,7 +263,10 @@ exprt synth_encodingt::operator()(const exprt &expr)
       op=(*this)(op);
 
     e_datat &e_data=e_data_map[tmp.function()];
-    exprt final_result=e_data(tmp, program_size);
+    exprt final_result=e_data(tmp, suffix, program_size);
+
+    for(const auto &c : e_data.constraints)
+      constraints.push_back(c);
 
     return final_result;
   }
