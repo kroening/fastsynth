@@ -63,11 +63,14 @@ void e_datat::setup(
     // one of the arguments, if type matches
     for(std::size_t i=0; i<arguments.size(); i++)
     {
-      irep_idt param_sel_id=id2string(identifier)+"_"+
-               std::to_string(pc)+"_p"+std::to_string(i)+"sel";
-      auto &option=instruction.add_option(param_sel_id);
-      option.kind=instructiont::optiont::PARAMETER;
-      option.parameter_number=i;
+      if(parameter_types[i]==instruction.type)
+      {
+        irep_idt param_sel_id=id2string(identifier)+"_"+
+                 std::to_string(pc)+"_p"+std::to_string(i)+"sel";
+        auto &option=instruction.add_option(param_sel_id);
+        option.kind=instructiont::optiont::PARAMETER;
+        option.parameter_number=i;
+      }
     }
 
     // a binary operation
