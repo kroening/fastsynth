@@ -21,8 +21,19 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  if(has_suffix(cmdline.args.back(), ".sl"))
-    return sygus_frontend(cmdline);
-  else
-    return c_frontend(cmdline);
+  try
+  {
+    if(has_suffix(cmdline.args.back(), ".sl"))
+      return sygus_frontend(cmdline);
+    else
+      return c_frontend(cmdline);
+  }
+  catch(const char *s)
+  {
+    std::cerr << "Error: " << s << '\n';
+  }
+  catch(const std::string &s)
+  {
+    std::cerr << "Error: " << s << '\n';
+  }
 }
