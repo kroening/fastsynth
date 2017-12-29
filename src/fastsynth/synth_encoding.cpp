@@ -100,15 +100,26 @@ void e_datat::setup(
 
     std::size_t binary_op_index=0;
 
-    for(const auto &operation : ops)
+    for(auto operation : ops)
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
-          if(word_type.id()==ID_bool &&
-             (operation==ID_plus ||
-              operation==ID_minus ||
-              operation==ID_shl))
-            continue;
+          if(word_type.id()==ID_bool)
+          {
+            if(operation==ID_plus ||
+               operation==ID_minus ||
+               operation==ID_shl ||
+               operation==ID_lt ||
+               operation==ID_le)
+             continue;
+
+            if(operation==ID_bitand)
+              operation=ID_and;
+            else if(operation==ID_bitor)
+              operation=ID_or;
+            else if(operation==ID_bitxor)
+              continue; // we got ID_notequal
+          }
 
           irep_idt sel_id=id2string(identifier)+"_"+
                    std::to_string(pc)+"_b"+
