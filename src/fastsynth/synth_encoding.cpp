@@ -7,6 +7,17 @@
 
 typet promotion(const typet &t0, const typet &t1)
 {
+  // same?
+  if(t0==t1)
+    return t0;
+
+  // one is boolean?
+  if(t0.id()==ID_bool)
+    return t1;
+
+  if(t1.id()==ID_bool)
+    return t0;
+
   // same encoding but different width
   if(t0.id()==ID_signedbv && t1.id()==ID_signedbv)
   {
@@ -32,6 +43,16 @@ exprt promotion(const exprt &expr, const typet &t)
   return typecast_exprt(expr, t);
 }
 
+typet e_datat::compute_word_type()
+{
+  typet result=return_type;
+
+  for(const auto & t : parameter_types)
+    result=promotion(result, t);
+
+  return result;
+}
+
 void e_datat::setup(
   const function_application_exprt &e,
   const std::size_t program_size)
@@ -49,35 +70,33 @@ void e_datat::setup(
   for(std::size_t i=0; i<parameter_types.size(); i++)
     parameter_types[i]=arguments[i].type();
 
+  word_type=compute_word_type();
+
   instructions.reserve(program_size);
   for(std::size_t pc=0; pc<program_size; pc++)
   {
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
-    instruction.type=return_type;
 
     // constant -- hardwired default, not an option
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_val=symbol_exprt(const_val_id, instruction.type);
+    instruction.constant_val=symbol_exprt(const_val_id, word_type);
 
-    // one of the arguments, if type matches
+    // one of the arguments
     for(std::size_t i=0; i<arguments.size(); i++)
     {
-      if(parameter_types[i]==instruction.type)
-      {
-        irep_idt param_sel_id=id2string(identifier)+"_"+
-                 std::to_string(pc)+"_p"+std::to_string(i)+"sel";
-        auto &option=instruction.add_option(param_sel_id);
-        option.kind=instructiont::optiont::PARAMETER;
-        option.parameter_number=i;
-      }
+      irep_idt param_sel_id=id2string(identifier)+"_"+
+               std::to_string(pc)+"_p"+std::to_string(i)+"sel";
+      auto &option=instruction.add_option(param_sel_id);
+      option.kind=instructiont::optiont::PARAMETER;
+      option.parameter_number=i;
     }
 
     // a binary operation
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_and, ID_or, ID_xor };
+        ID_le, ID_lt, ID_equal, ID_notequal };
 
     std::size_t binary_op_index=0;
 
@@ -85,8 +104,10 @@ void e_datat::setup(
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
-          if((operation==ID_and || operation==ID_or || operation==ID_xor)!=
-             (instruction.type.id()==ID_bool))
+          if(word_type.id()==ID_bool &&
+             (operation==ID_plus ||
+              operation==ID_minus ||
+              operation==ID_shl))
             continue;
 
           irep_idt sel_id=id2string(identifier)+"_"+
@@ -94,10 +115,17 @@ void e_datat::setup(
                    std::to_string(binary_op_index)+"sel";
 
           auto &option=instruction.add_option(sel_id);
-          option.kind=instructiont::optiont::BINARY;
           option.operand0=operand0;
           option.operand1=operand1;
           option.operation=operation;
+
+          if(operation==ID_le ||
+             operation==ID_lt ||
+             operation==ID_equal ||
+             operation==ID_notequal)
+            option.kind=instructiont::optiont::BINARY_PREDICATE;
+          else
+            option.kind=instructiont::optiont::BINARY;
 
           binary_op_index++;
         }
@@ -116,6 +144,7 @@ if_exprt e_datat::instructiont::chain(
 }
 
 exprt e_datat::instructiont::constraint(
+  const typet &word_type,
   const std::vector<exprt> &arguments,
   const std::vector<exprt> &results)
 {
@@ -127,8 +156,11 @@ exprt e_datat::instructiont::constraint(
     switch(option.kind)
     {
     case optiont::PARAMETER:
-      result_expr=chain(
-        option.sel, arguments[option.parameter_number], result_expr);
+      {
+        exprt promoted_arg=
+          promotion(arguments[option.parameter_number], word_type);
+        result_expr=chain(option.sel, promoted_arg, result_expr);
+      }
       break;
 
     case optiont::UNARY:
@@ -143,11 +175,29 @@ exprt e_datat::instructiont::constraint(
         const auto &op0=results[option.operand0];
         const auto &op1=results[option.operand1];
 
-        binary_exprt binary_expr(option.operation, type);
+        binary_exprt binary_expr(option.operation, word_type);
         binary_expr.op0()=op0;
         binary_expr.op1()=op1;
 
         result_expr=chain(option.sel, binary_expr, result_expr);
+      }
+      break;
+
+    case optiont::BINARY_PREDICATE: // a predicate
+      {
+        assert(option.operand0<results.size());
+        assert(option.operand1<results.size());
+
+        const auto &op0=results[option.operand0];
+        const auto &op1=results[option.operand1];
+
+        binary_exprt binary_expr(option.operation, bool_typet());
+        binary_expr.op0()=op0;
+        binary_expr.op1()=op1;
+
+        exprt promoted=promotion(binary_expr, word_type);
+
+        result_expr=chain(option.sel, promoted, result_expr);
       }
       break;
 
@@ -172,7 +222,7 @@ exprt e_datat::result(
 
   for(std::size_t pc=0; pc<instructions.size(); pc++)
   {
-    exprt c=instructions[pc].constraint(arguments, results);
+    exprt c=instructions[pc].constraint(word_type, arguments, results);
 
     irep_idt result_identifier=
       id2string(identifier)+"_result_"+std::to_string(pc)+suffix;
@@ -184,7 +234,7 @@ exprt e_datat::result(
 
   assert(!results.empty());
 
-  return results.back();
+  return promotion(results.back(), return_type);
 }
 
 exprt e_datat::get_expression(
@@ -217,7 +267,9 @@ exprt e_datat::get_expression(
           {
             irep_idt p_identifier="synth::parameter"+
                      std::to_string(o_it->parameter_number);
-            result=symbol_exprt(p_identifier, parameter_types[o_it->parameter_number]);
+            result=promotion(
+              symbol_exprt(p_identifier, parameter_types[o_it->parameter_number]),
+              word_type);
           }
           break;
 
@@ -236,7 +288,24 @@ exprt e_datat::get_expression(
               results[binary_op.operand0],
               binary_op.operation,
               results[binary_op.operand1],
-              results[binary_op.operand0].type());
+              word_type);
+          }
+          break;
+
+        case instructiont::optiont::BINARY_PREDICATE:
+          {
+            const auto &binary_op=*o_it;
+
+            assert(binary_op.operand0<results.size());
+            assert(binary_op.operand1<results.size());
+
+            result=binary_exprt(
+              results[binary_op.operand0],
+              binary_op.operation,
+              results[binary_op.operand1],
+              bool_typet());
+
+            result=promotion(result, word_type);
           }
           break;
 
@@ -252,7 +321,7 @@ exprt e_datat::get_expression(
       result=solver.get(instruction.constant_val);
   }
 
-  return results.back();
+  return promotion(results.back(), return_type);
 }
 
 exprt synth_encodingt::operator()(const exprt &expr)

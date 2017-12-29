@@ -36,8 +36,9 @@ public:
       symbol_exprt sel;
       irep_idt operation;
       std::size_t parameter_number;
-      enum { NONE, PARAMETER, UNARY, BINARY } kind;
+      enum { NONE, PARAMETER, UNARY, BINARY, BINARY_PREDICATE } kind;
       std::size_t operand0, operand1;
+      exprt type;
     };
 
     using optionst=std::vector<optiont>;
@@ -51,13 +52,13 @@ public:
     }
     
     // generate a constraint for the instruction
+    // - for a given word type
     // - for a set of arguments
     // - for a given vector of previous results
     exprt constraint(
+      const typet &word_type,
       const std::vector<exprt> &arguments,
       const std::vector<exprt> &results);
-
-    typet type;
 
   protected:
     if_exprt chain(
@@ -70,14 +71,18 @@ public:
 
   // result of the function application
   // for a set of arguments
+
+  symbol_exprt function_symbol;
   std::vector<typet> parameter_types;
   typet return_type;
-  symbol_exprt function_symbol;
+  typet word_type;
 
   exprt get_expression(const decision_proceduret &) const;
 
   using constraintst=std::list<exprt>;
   constraintst constraints;
+
+  typet compute_word_type();
 
 protected:
   bool setup_done;
