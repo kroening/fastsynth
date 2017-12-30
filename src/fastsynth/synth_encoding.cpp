@@ -104,6 +104,12 @@ void e_datat::setup(
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
+          // there is usually no point applying an operation to two
+          // identical operands, with the exception of ID_plus, which
+          // produces 2*x
+          if(operand0==operand1 && operation!=ID_plus)
+            continue;
+
           if(word_type.id()==ID_bool)
           {
             if(operation==ID_plus ||
