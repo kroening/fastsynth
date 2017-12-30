@@ -228,9 +228,7 @@ std::size_t e_datat::instance_number(const argumentst &arguments)
   return res.first->second;
 }
 
-exprt e_datat::result(
-  const std::string &suffix,
-  const argumentst &arguments)
+exprt e_datat::result(const argumentst &arguments)
 {
   // find out which instance this is
   std::size_t instance_number=this->instance_number(arguments);
@@ -249,7 +247,7 @@ exprt e_datat::result(
     // results vary by instance
     irep_idt result_identifier=
       id2string(identifier)+"_inst"+std::to_string(instance_number)+
-      "_result_"+std::to_string(pc)+suffix;
+      "_result_"+std::to_string(pc);
 
     results[pc]=symbol_exprt(result_identifier, c.type());
 
@@ -359,7 +357,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
       op=(*this)(op);
 
     e_datat &e_data=e_data_map[tmp.function()];
-    exprt final_result=e_data(tmp, suffix, program_size);
+    exprt final_result=e_data(tmp, program_size);
 
     for(const auto &c : e_data.constraints)
       constraints.push_back(c);

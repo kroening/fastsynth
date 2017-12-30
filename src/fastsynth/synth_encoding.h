@@ -8,11 +8,10 @@ public:
 
   exprt operator()(
     const function_application_exprt &expr,
-    const std::string &suffix,
     const std::size_t program_size)
   {
     setup(expr, program_size);
-    return result(suffix, expr.arguments());
+    return result(expr.arguments());
   }
 
   struct instructiont
@@ -96,9 +95,7 @@ public:
 protected:
   bool setup_done;
 
-  exprt result(
-    const std::string &suffix,
-    const argumentst &arguments);
+  exprt result(const argumentst &);
 
   void setup(
     const function_application_exprt &,
