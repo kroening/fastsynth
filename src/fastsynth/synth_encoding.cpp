@@ -220,10 +220,21 @@ exprt e_datat::instructiont::constraint(
   return result_expr;
 }
 
+std::size_t e_datat::instance_number(const argumentst &arguments)
+{
+  const auto res=instances.insert(
+    std::pair<argumentst, std::size_t>(arguments, instances.size()));
+
+  return res.first->second;
+}
+
 exprt e_datat::result(
   const std::string &suffix,
-  const std::vector<exprt> &arguments)
+  const argumentst &arguments)
 {
+  // find out which instance this is
+  std::size_t instance_number=this->instance_number(arguments);
+
   std::vector<exprt> results;
   results.resize(instructions.size(), nil_exprt());
 
@@ -235,8 +246,10 @@ exprt e_datat::result(
   {
     exprt c=instructions[pc].constraint(word_type, arguments, results);
 
+    // results vary by instance
     irep_idt result_identifier=
-      id2string(identifier)+"_result_"+std::to_string(pc)+suffix;
+      id2string(identifier)+"_inst"+std::to_string(instance_number)+
+      "_result_"+std::to_string(pc)+suffix;
 
     results[pc]=symbol_exprt(result_identifier, c.type());
 

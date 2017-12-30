@@ -84,12 +84,21 @@ public:
 
   typet compute_word_type();
 
+  using instancest=
+    std::map<function_application_exprt::argumentst, std::size_t>;
+  instancest instances;
+
+  using argumentst=
+    function_application_exprt::argumentst;
+
+  std::size_t instance_number(const argumentst &);
+
 protected:
   bool setup_done;
 
   exprt result(
     const std::string &suffix,
-    const std::vector<exprt> &arguments);
+    const argumentst &arguments);
 
   void setup(
     const function_application_exprt &,
