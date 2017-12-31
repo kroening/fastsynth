@@ -5,6 +5,7 @@
 #include <langapi/language_util.h>
 
 #include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
 
 #include <goto-symex/goto_symex.h>
 #include <goto-symex/symex_target_equation.h>
