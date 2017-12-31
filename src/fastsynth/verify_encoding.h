@@ -1,4 +1,7 @@
-#include <solvers/flattening/bv_pointers.h>
+#include <set>
+
+#include <util/std_expr.h>
+#include <util/decision_procedure.h>
 
 class verify_encodingt
 {

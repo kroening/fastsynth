@@ -1,6 +1,6 @@
-#include "verify_encoding.h"
-
 #include <util/arith_tools.h>
+
+#include "verify_encoding.h"
 
 //#include <langapi/language_util.h>
 
