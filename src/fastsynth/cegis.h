@@ -27,9 +27,8 @@ protected:
   decision_proceduret::resultt non_incremental_loop(
     symex_target_equationt &);
 
-  // map function applications to values
-  using counterexamplet=
-    std::map<function_application_exprt, exprt::operandst>;
+  // map symbols to values
+  using counterexamplet=std::map<exprt, exprt>;
 
   using counterexamplest=std::vector<counterexamplet>;
 

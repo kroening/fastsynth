@@ -9,7 +9,6 @@ exprt verify_encodingt::operator()(const exprt &expr)
   if(expr.id()==ID_function_application)
   {
     const auto &e=to_function_application_expr(expr);
-    applications.insert(e);
 
     auto e_it=expressions.find(e.function());
     
@@ -20,6 +19,12 @@ exprt verify_encodingt::operator()(const exprt &expr)
     exprt instance=instantiate(result, e);
 
     return instance;
+  }
+  else if(expr.id()==ID_nondet_symbol)
+  {
+    // record
+    free_variables.insert(expr);
+    return expr;
   }
   else
   {
@@ -62,26 +67,16 @@ exprt verify_encodingt::instantiate(
   }
 }
 
-std::map<function_application_exprt, exprt::operandst>
-  verify_encodingt::get_counterexample(
-    const decision_proceduret &solver)
+std::map<exprt, exprt> verify_encodingt::get_counterexample(
+  const decision_proceduret &solver)
 {
-  std::map<function_application_exprt, exprt::operandst> result;
+  std::map<exprt, exprt> result;
 
-  // iterate over arguments, and get their value
-  for(const auto &app : applications)
+  // iterate over nondeterministic symbols, and get their value
+  for(const auto &var : free_variables)
   {
-    const auto &arguments=app.arguments();
-    exprt::operandst values;
-    values.reserve(arguments.size());
-
-    for(const auto &argument : arguments)
-    {
-      exprt value=solver.get(argument);
-      values.push_back(value);
-    }
-
-    result[app]=values;
+    exprt value=solver.get(var);
+    result[var]=value;
   }
 
   return result;

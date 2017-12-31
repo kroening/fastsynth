@@ -10,11 +10,12 @@ public:
 
   std::map<symbol_exprt, exprt> expressions;
 
-  std::map<function_application_exprt, exprt::operandst>
-    get_counterexample(const decision_proceduret &);
+  using counterexamplet=std::map<exprt, exprt>;
+
+  counterexamplet get_counterexample(const decision_proceduret &);
 
 protected:
-  std::set<function_application_exprt> applications;
+  std::set<exprt> free_variables;
 
   exprt instantiate(
     const exprt &expr,
