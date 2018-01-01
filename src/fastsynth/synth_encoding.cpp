@@ -377,6 +377,14 @@ exprt synth_encodingt::operator()(const exprt &expr)
     tmp.set_identifier(id2string(tmp.get_identifier())+suffix);
     return tmp;
   }
+  else if(expr.id()==ID_nondet_symbol)
+  {
+    // add the suffix
+    irep_idt identifier=expr.get(ID_identifier);
+    exprt tmp=expr;
+    tmp.set(ID_identifier, id2string(identifier)+suffix);
+    return tmp;
+  }
   else
   {
     exprt tmp=expr;
