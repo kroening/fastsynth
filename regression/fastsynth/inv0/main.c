@@ -20,7 +20,7 @@ int main()
     // do the transition
     x++;
 
-    if(x!=10)
+    if(x!=10) // loop guard
     {
       // check the property
       __CPROVER_assert(x!=200, "property");
