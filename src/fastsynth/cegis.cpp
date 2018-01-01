@@ -377,19 +377,12 @@ void cegist::add_counterexample(
 {
   for(const auto &it : ce)
   {
-    const function_application_exprt &app=it.first;
-    const exprt::operandst &values=it.second;
-    const auto &arguments=app.arguments();
+    const exprt &symbol=it.first;
+    const exprt &value=it.second;
 
-    assert(arguments.size()==values.size());
-
-    for(std::size_t i=0; i<arguments.size(); i++)
-    {
-      exprt encoded=synth_encoding(
-        equal_exprt(arguments[i], values[i]));
-      debug() << "ce: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-    }
+    exprt encoded=synth_encoding(equal_exprt(symbol, value));
+    debug() << "ce: " << from_expr(ns, "", encoded) << eom;
+    prop_conv.set_to_true(encoded);
   }
 }
 
