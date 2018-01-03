@@ -13,4 +13,6 @@ int main()
   result = EXPRESSION_parity(a, b, c, d);
 
   __CPROVER_assert(result == (a^b^c^d), "parity");
+
+  return 0;
 }
