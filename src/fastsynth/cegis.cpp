@@ -15,7 +15,7 @@
 decision_proceduret::resultt cegist::operator()(
   symex_target_equationt &equation)
 {
-  return non_incremental_loop(equation);
+  return incremental_loop(equation);
 }
 
 decision_proceduret::resultt cegist::non_incremental_loop(
@@ -136,6 +136,7 @@ decision_proceduret::resultt cegist::non_incremental_loop(
     switch(verify_solver())
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
+      status() << "** Verification failed" << eom;
       counterexamples.push_back(verify_encoding.get_counterexample(verify_solver));
       break;
 
@@ -175,6 +176,12 @@ decision_proceduret::resultt cegist::incremental_loop(
 
     convert_negation(equation, synth_encoding, synth_solver);
 
+    for(const auto &c : synth_encoding.constraints)
+    {
+      synth_solver.set_to_true(c);
+      debug() << "ec: " << from_expr(ns, "", c) << eom;
+    }
+
     bool verify=false;
 
     do
@@ -212,7 +219,7 @@ decision_proceduret::resultt cegist::incremental_loop(
         break;
 
       case decision_proceduret::resultt::D_UNSATISFIABLE: // no candidate
-        if(program_size<5)
+        if(program_size<max_program_size)
         {
           program_size+=1;
           status() << "Failed to get candidate; "
@@ -250,12 +257,24 @@ decision_proceduret::resultt cegist::incremental_loop(
         {
         case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
           {
+            status() << "** Verification failed" << eom;
+
             auto c=verify_encoding.get_counterexample(verify_solver);
+
+            synth_encoding.constraints.clear();
 
             synth_encoding.suffix=
               "$ce"+std::to_string(counterexample_counter);
+
             add_counterexample(c, synth_encoding, synth_solver);
             convert_negation(equation, synth_encoding, synth_solver);
+
+            for(const auto &c : synth_encoding.constraints)
+            {
+              synth_solver.set_to_true(c);
+              debug() << "ec: " << from_expr(ns, "", c) << eom;
+            }
+
             counterexample_counter++;
           }
           break;
