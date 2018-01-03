@@ -129,6 +129,12 @@ int c_frontend(const cmdlinet &cmdline)
   cegist cegis(ns);
   cegis.set_message_handler(mh);
   
+  if(cmdline.isset("max-program-size"))
+    cegis.max_program_size=std::stol(
+      cmdline.get_value("max-program-size"));
+  else
+    cegis.max_program_size=5; // default
+
   auto start_time=current_time();
 
   switch(cegis(equation))

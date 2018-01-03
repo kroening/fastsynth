@@ -9,7 +9,7 @@
 int main(int argc, const char *argv[])
 {
   cmdlinet cmdline;
-  if(cmdline.parse(argc, argv, ""))
+  if(cmdline.parse(argc, argv, "(max-program-size):"))
   {
     std::cerr << "Usage error\n";
     return 1;

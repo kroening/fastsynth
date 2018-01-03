@@ -102,7 +102,7 @@ decision_proceduret::resultt cegist::non_incremental_loop(
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // no candidate
-      if(program_size<5)
+      if(program_size<max_program_size)
       {
         program_size+=1;
         status() << "Failed to get candidate; "

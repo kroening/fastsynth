@@ -9,7 +9,8 @@ class prop_convt;
 class cegist:public messaget
 {
 public:
-  explicit cegist(const namespacet &_ns):ns(_ns)
+  explicit cegist(const namespacet &_ns):
+    max_program_size(0), ns(_ns)
   {
   }
 
@@ -17,6 +18,8 @@ public:
     symex_target_equationt &);
   
   std::map<symbol_exprt, exprt> expressions;
+
+  std::size_t max_program_size;
 
 protected:
   const namespacet &ns;
