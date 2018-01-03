@@ -4,6 +4,6 @@ main.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSION_parity -> parameter. == \(parameter. == parameter. \^ parameter.\)$
+^Result: EXPRESSION_parity -> parameter[0123] == \(parameter[0123] == \(parameter[0123] \^ parameter[0123]\)\)$
 --
 ^warning: ignoring
