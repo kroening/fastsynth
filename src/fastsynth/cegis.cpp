@@ -15,7 +15,7 @@
 decision_proceduret::resultt cegist::operator()(
   symex_target_equationt &equation)
 {
-  return incremental_loop(equation);
+  return non_incremental_loop(equation);
 }
 
 decision_proceduret::resultt cegist::non_incremental_loop(
