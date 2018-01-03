@@ -100,7 +100,7 @@ void e_datat::setup(
 
     std::size_t binary_op_index=0;
 
-    for(auto operation : ops)
+    for(const auto operation : ops)
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
@@ -110,21 +110,37 @@ void e_datat::setup(
           if(operand0==operand1 && operation!=ID_plus)
             continue;
 
+          // many operators are commutative, no need
+          // to have both orderings
+          if(operation==ID_plus ||
+             operation==ID_bitand ||
+             operation==ID_bitor ||
+             operation==ID_bitxor ||
+             operation==ID_equal ||
+             operation==ID_notequal)
+          {
+            if(operand0>operand1)
+              continue;
+          }
+
+          irep_idt final_operation=operation;
+
           if(word_type.id()==ID_bool)
           {
             if(operation==ID_plus ||
                operation==ID_minus ||
                operation==ID_shl ||
                operation==ID_lt ||
-               operation==ID_le)
+               operation==ID_le ||
+               operation==ID_notequal) // we got bitxor
              continue;
 
             if(operation==ID_bitand)
-              operation=ID_and;
+              final_operation=ID_and;
             else if(operation==ID_bitor)
-              operation=ID_or;
+              final_operation=ID_or;
             else if(operation==ID_bitxor)
-              continue; // we got ID_notequal
+              final_operation=ID_xor;
           }
 
           irep_idt sel_id=id2string(identifier)+"_"+
@@ -134,12 +150,12 @@ void e_datat::setup(
           auto &option=instruction.add_option(sel_id);
           option.operand0=operand0;
           option.operand1=operand1;
-          option.operation=operation;
+          option.operation=final_operation;
 
-          if(operation==ID_le ||
-             operation==ID_lt ||
-             operation==ID_equal ||
-             operation==ID_notequal)
+          if(final_operation==ID_le ||
+             final_operation==ID_lt ||
+             final_operation==ID_equal ||
+             final_operation==ID_notequal)
             option.kind=instructiont::optiont::BINARY_PREDICATE;
           else
             option.kind=instructiont::optiont::BINARY;
