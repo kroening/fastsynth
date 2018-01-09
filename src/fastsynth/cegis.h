@@ -9,7 +9,9 @@ class cegist:public messaget
 {
 public:
   explicit cegist(const namespacet &_ns):
-    max_program_size(0), ns(_ns)
+    max_program_size(0),
+    incremental_solving(false),
+    ns(_ns)
   {
   }
 
@@ -19,12 +21,12 @@ public:
     exprt::operandst side_conditions, constraints;
   };
 
-  decision_proceduret::resultt operator()(
-    const problemt &);
+  decision_proceduret::resultt operator()(const problemt &);
   
   std::map<symbol_exprt, exprt> expressions;
 
   std::size_t max_program_size;
+  bool incremental_solving;
 
 protected:
   const namespacet &ns;

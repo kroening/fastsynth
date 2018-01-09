@@ -9,9 +9,13 @@
 
 #include <util/simplify_expr.h>
 
-decision_proceduret::resultt cegist::operator()(const problemt &problem)
+decision_proceduret::resultt cegist::operator()(
+    const problemt &problem)
 {
-  return non_incremental_loop(problem);
+  if(incremental_solving)
+    return incremental_loop(problem);
+  else
+    return non_incremental_loop(problem);
 }
 
 decision_proceduret::resultt cegist::non_incremental_loop(
