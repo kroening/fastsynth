@@ -18,6 +18,9 @@ public:
   using variable_mapt=std::map<irep_idt, typet>;
   variable_mapt variable_map;
 
+  using function_mapt=std::map<irep_idt, exprt>;
+  function_mapt def_fun_map, synth_fun_map;
+
   virtual void error(const std::string &s) override;
 
   exprt expression();
