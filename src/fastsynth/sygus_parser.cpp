@@ -43,11 +43,25 @@ exprt sygus_parsert::expression()
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
+      bv_typet type;
+      std::size_t width = 4*buffer.size() - 2;
+      assert(width!=0 && width%4==0);
+      type.set_width(width);
+      constant_exprt expr(type);
+      expr.set_value(integer2binary(value,width));
+      return expr;
     }
     else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
+      bv_typet type;
+      std::size_t width = buffer.size() - 2;
+      assert(width!=0 && width%2==0);
+      type.set_width(width);
+      constant_exprt expr(type);
+      expr.set_value(integer2binary(value,width));
+      return expr;
     }
     else
     {
