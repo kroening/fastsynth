@@ -116,11 +116,47 @@ typet sygus_parsert::sort()
   case SYMBOL:
     if(buffer=="Bool")
       return bool_typet();
+    else if(buffer=="Int")
+      return integer_typet();
+    else if(buffer=="Real")
+      return real_typet();
     else
     {
       error("unexpected sort");
       return nil_typet();
     }
+
+  case OPEN:
+    if(next_token()!=SYMBOL)
+    {
+      error("expected symbol after '(' in a sort");
+      return nil_typet();
+    }
+
+    if(buffer=="BitVec")
+    {
+      if(next_token()!=NUMERAL)
+      {
+        error("expected number after BitVec");
+        return nil_typet();
+      }
+
+      auto width=std::stoll(buffer);
+
+      if(next_token()!=CLOSE)
+      {
+        error("expected ')' after BitVec width");
+        return nil_typet();
+      }
+
+      return bv_typet(width);
+    }
+    else
+    {
+      error("unexpected sort");
+      return nil_typet();
+    }
+
 
   default:
     error("unexpected token in a sort");
