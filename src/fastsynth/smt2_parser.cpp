@@ -281,7 +281,7 @@ void new_smt2_parsert::command_sequence()
       return;
     }
 
-    command();
+    command(buffer);
 
     switch(next_token())
     {
@@ -308,9 +308,8 @@ void new_smt2_parsert::command_sequence()
   }
 }
 
-void new_smt2_parsert::command()
+void new_smt2_parsert::ignore_command()
 {
-  // we'll just ignore it
   std::size_t parentheses=0;
   while(true)
   {

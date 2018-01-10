@@ -74,7 +74,13 @@ public:
 
 protected:
   void command_sequence();
-  virtual void command();
+
+  virtual void command(const std::string &)
+  {
+    ignore_command();
+  }
+
+  void ignore_command();
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
