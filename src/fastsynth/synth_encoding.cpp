@@ -396,9 +396,9 @@ exprt synth_encodingt::operator()(const exprt &expr)
   else if(expr.id()==ID_nondet_symbol)
   {
     // add the suffix
-    irep_idt identifier=expr.get(ID_identifier);
-    exprt tmp=expr;
-    tmp.set(ID_identifier, id2string(identifier)+suffix);
+    nondet_symbol_exprt tmp=to_nondet_symbol_expr(expr);
+    irep_idt identifier=tmp.get_identifier();
+    tmp.set_identifier(id2string(identifier)+suffix);
     return tmp;
   }
   else
