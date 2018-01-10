@@ -25,6 +25,7 @@ exprt::operandst sygus_parsert::operands()
   return result;
 }
 
+
 exprt sygus_parsert::expression()
 {
   switch(next_token())
@@ -188,7 +189,12 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         return result;
       }
-
+      else if(buffer=="=>" || buffer=="implies")
+      {
+        implies_exprt result;
+        result.operands()=op;
+        return result;
+      }
       else
       {
         // a defined function?
