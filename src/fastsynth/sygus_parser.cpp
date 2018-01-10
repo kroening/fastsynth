@@ -13,6 +13,7 @@ void sygus_parsert::error(const std::string &s)
   ok=false;
 }
 
+
 void sygus_parsert::command(const std::string &c)
 {
   if(c=="set-logic")
