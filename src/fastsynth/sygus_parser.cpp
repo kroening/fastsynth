@@ -209,6 +209,12 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         return result;
       }
+      else if(buffer=="let")
+      {
+        let_exprt result;
+        result.operands()=op;
+        return result;
+      }
       else
       {
         // a defined function?
