@@ -165,6 +165,8 @@ decision_proceduret::resultt cegist::incremental_loop(
   // now enter the CEGIS loop
   while(true)
   {
+    // we get here whenever we increase the size of the program
+
     satcheck_no_simplifiert synth_satcheck;
     synth_satcheck.set_message_handler(get_message_handler());
 
