@@ -30,7 +30,28 @@ exprt sygus_parsert::expression()
   switch(next_token())
   {
   case SYMBOL:
-    return symbol_exprt(buffer, bool_typet());
+    if(buffer=="true")
+      return true_exprt();
+    else if(buffer=="false")
+      return false_exprt();
+    else
+      return symbol_exprt(buffer, bool_typet());
+
+  case NUMERAL:
+    if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='x')
+    {
+      mp_integer value=
+        string2integer(std::string(buffer, 2, std::string::npos), 16);
+    }
+    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
+    {
+      mp_integer value=
+        string2integer(std::string(buffer, 2, std::string::npos), 2);
+    }
+    else
+    {
+      return constant_exprt();
+    }
 
   case OPEN:
     if(next_token()==SYMBOL)
