@@ -60,6 +60,30 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         return result;
       }
+      else if(buffer=="<=")
+      {
+        predicate_exprt result(ID_le);
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer==">=")
+      {
+        predicate_exprt result(ID_ge);
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer=="<")
+      {
+        predicate_exprt result(ID_lt);
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer==">")
+      {
+        predicate_exprt result(ID_gt);
+        result.operands()=op;
+        return result;
+      }
       else
       {
         // a defined function?
