@@ -308,8 +308,6 @@ void new_smt2_parsert::command_sequence()
   }
 }
 
-#include <iostream>
-
 void new_smt2_parsert::command()
 {
   // we'll just ignore it
