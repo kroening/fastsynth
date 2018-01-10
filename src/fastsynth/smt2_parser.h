@@ -57,7 +57,7 @@ private:
   tokent get_simple_symbol();
   tokent get_quoted_symbol();
   tokent get_string_literal();
-  bool is_simple_symbol_character(char ch);
+  static bool is_simple_symbol_character(char);
 };
 
 class new_smt2_parsert:public smt2_tokenizert
