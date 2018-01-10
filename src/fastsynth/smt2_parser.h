@@ -30,7 +30,7 @@ protected:
   std::string buffer;
   bool ok, peeked;
   using tokent=enum { NONE, END_OF_FILE, ERROR, STRING_LITERAL,
-                      NUMERAL, SYMBOL, KEYWORD, OPEN, CLOSE };
+                      NUMERAL, SYMBOL, OPEN, CLOSE };
   tokent token;
 
   // parse errors
