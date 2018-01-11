@@ -8,7 +8,10 @@
 #include <util/time_stopping.h>
 #include <util/config.h>
 
+#include <ansi-c/ansi_c_language.h>
+
 #include <langapi/language_util.h>
+#include <langapi/mode.h>
 
 #include <fstream>
 #include <iostream>
@@ -17,6 +20,7 @@ int sygus_frontend(const cmdlinet &cmdline)
 {
   assert(cmdline.args.size()==1);
 
+  register_language(new_ansi_c_language);
   config.ansi_c.set_32();
 
   console_message_handlert message_handler;
