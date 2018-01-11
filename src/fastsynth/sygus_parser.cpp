@@ -56,50 +56,52 @@ exprt sygus_parsert::expression()
   case OPEN:
     if(next_token()==SYMBOL)
     {
+      std::string id=buffer;
       const auto op=operands();
-      if(buffer=="and")
+
+      if(id=="and")
       {
         and_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(buffer=="or")
+      else if(id=="or")
       {
         or_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(buffer=="not")
+      else if(id=="not")
       {
         not_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(buffer=="=")
+      else if(id=="=")
       {
         equal_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(buffer=="<=")
+      else if(id=="<=")
       {
         predicate_exprt result(ID_le);
         result.operands()=op;
         return result;
       }
-      else if(buffer==">=")
+      else if(id==">=")
       {
         predicate_exprt result(ID_ge);
         result.operands()=op;
         return result;
       }
-      else if(buffer=="<")
+      else if(id=="<")
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
         return result;
       }
-      else if(buffer==">")
+      else if(id==">")
       {
         predicate_exprt result(ID_gt);
         result.operands()=op;
@@ -109,7 +111,7 @@ exprt sygus_parsert::expression()
       {
         // a defined function?
         function_application_exprt result;
-        result.function()=symbol_exprt(buffer);
+        result.function()=symbol_exprt(id);
         result.arguments()=op;
         return result;
       }
@@ -177,7 +179,6 @@ typet sygus_parsert::sort()
       error("unexpected sort");
       return nil_typet();
     }
-
 
   default:
     error("unexpected token in a sort");
