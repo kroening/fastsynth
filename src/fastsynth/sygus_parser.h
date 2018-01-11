@@ -12,7 +12,7 @@ public:
 
   virtual void command(const std::string &) override;
 
-  std::list<exprt> constraints;
+  exprt::operandst constraints;
   std::string logic, action;
 
   using variable_mapt=std::map<irep_idt, typet>;
