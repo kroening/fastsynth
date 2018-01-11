@@ -47,7 +47,10 @@ smt2_tokenizert::tokent smt2_tokenizert::get_simple_symbol()
   }
 
   // eof -- this is ok here
-  return END_OF_FILE;
+  if(buffer.empty())
+    return END_OF_FILE;
+  else
+    return SYMBOL;
 }
 
 smt2_tokenizert::tokent smt2_tokenizert::get_decimal_numeral()
@@ -71,7 +74,10 @@ smt2_tokenizert::tokent smt2_tokenizert::get_decimal_numeral()
   }
 
   // eof -- this is ok here
-  return END_OF_FILE;
+  if(buffer.empty())
+    return END_OF_FILE;
+  else
+    return NUMERAL;
 }
 
 smt2_tokenizert::tokent smt2_tokenizert::get_bin_numeral()
@@ -97,7 +103,10 @@ smt2_tokenizert::tokent smt2_tokenizert::get_bin_numeral()
   }
 
   // eof -- this is ok here
-  return END_OF_FILE;
+  if(buffer.empty())
+    return END_OF_FILE;
+  else
+    return NUMERAL;
 }
 
 smt2_tokenizert::tokent smt2_tokenizert::get_hex_numeral()
@@ -123,7 +132,10 @@ smt2_tokenizert::tokent smt2_tokenizert::get_hex_numeral()
   }
 
   // eof -- this is ok here
-  return END_OF_FILE;
+  if(buffer.empty())
+    return END_OF_FILE;
+  else
+    return NUMERAL;
 }
 
 smt2_tokenizert::tokent smt2_tokenizert::get_quoted_symbol()
@@ -143,7 +155,8 @@ smt2_tokenizert::tokent smt2_tokenizert::get_quoted_symbol()
     buffer+=ch;
   }
 
-  // Hmpf. Eof before end of quoted string. This is an error.
+  // Hmpf. Eof before end of quoted symbol. This is an error.
+  error("EOF within quoted symbol");
   return ERROR;
 }
 
