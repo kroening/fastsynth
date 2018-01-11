@@ -9,6 +9,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 #define CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 
+#include <util/expr.h>
+
 #include <iosfwd>
 #include <string>
 
@@ -77,10 +79,15 @@ protected:
 
   virtual void command(const std::string &)
   {
+    // by default, we ignore
     ignore_command();
   }
 
   void ignore_command();
+
+  exprt expression();
+  typet sort();
+  exprt::operandst operands();
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H

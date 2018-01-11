@@ -8,8 +8,9 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "smt2_parser.h"
 
+#include <util/std_expr.h>
+
 #include <istream>
-#include <ostream>
 
 bool smt2_tokenizert::is_simple_symbol_character(char ch)
 {
@@ -349,5 +350,178 @@ void new_smt2_parsert::ignore_command()
     default:
       next_token();
     }
+  }
+}
+
+exprt::operandst new_smt2_parsert::operands()
+{
+  exprt::operandst result;
+
+  while(peek()!=CLOSE)
+    result.push_back(expression());
+
+  next_token(); // eat the ')'
+
+  return result;
+}
+
+exprt new_smt2_parsert::expression()
+{
+  switch(next_token())
+  {
+  case SYMBOL:
+    if(buffer=="true")
+      return true_exprt();
+    else if(buffer=="false")
+      return false_exprt();
+    else
+      return symbol_exprt(buffer, bool_typet());
+
+  case NUMERAL:
+    if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='x')
+    {
+      mp_integer value=
+        string2integer(std::string(buffer, 2, std::string::npos), 16);
+    }
+    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
+    {
+      mp_integer value=
+        string2integer(std::string(buffer, 2, std::string::npos), 2);
+    }
+    else
+    {
+      return constant_exprt();
+    }
+
+  case OPEN:
+    if(next_token()==SYMBOL)
+    {
+      std::string id=buffer;
+      const auto op=operands();
+
+      if(id=="and")
+      {
+        and_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="or")
+      {
+        or_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="not")
+      {
+        not_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="=")
+      {
+        equal_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="<=")
+      {
+        predicate_exprt result(ID_le);
+        result.operands()=op;
+        return result;
+      }
+      else if(id==">=")
+      {
+        predicate_exprt result(ID_ge);
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="<")
+      {
+        predicate_exprt result(ID_lt);
+        result.operands()=op;
+        return result;
+      }
+      else if(id==">")
+      {
+        predicate_exprt result(ID_gt);
+        result.operands()=op;
+        return result;
+      }
+      else
+      {
+        // a defined function?
+        function_application_exprt result;
+        result.function()=symbol_exprt(id);
+        result.arguments()=op;
+        return result;
+      }
+    }
+    else
+    {
+      error("expected symbol after '(' in an expression");
+      return nil_exprt();
+    }
+
+  case END_OF_FILE:
+    error("EOF in an expression");
+    return nil_exprt();
+
+  default:
+    error("unexpected token in an expression");
+    return nil_exprt();
+  }
+}
+
+typet new_smt2_parsert::sort()
+{
+  switch(next_token())
+  {
+  case SYMBOL:
+    if(buffer=="Bool")
+      return bool_typet();
+    else if(buffer=="Int")
+      return integer_typet();
+    else if(buffer=="Real")
+      return real_typet();
+    else
+    {
+      error("unexpected sort");
+      return nil_typet();
+    }
+
+  case OPEN:
+    if(next_token()!=SYMBOL)
+    {
+      error("expected symbol after '(' in a sort");
+      return nil_typet();
+    }
+
+    if(buffer=="BitVec")
+    {
+      if(next_token()!=NUMERAL)
+      {
+        error("expected number after BitVec");
+        return nil_typet();
+      }
+
+      auto width=std::stoll(buffer);
+
+      if(next_token()!=CLOSE)
+      {
+        error("expected ')' after BitVec width");
+        return nil_typet();
+      }
+
+      return bv_typet(width);
+    }
+    else
+    {
+      error("unexpected sort");
+      return nil_typet();
+    }
+
+  default:
+    error("unexpected token in a sort");
+    return nil_typet();
   }
 }

@@ -22,9 +22,5 @@ public:
   function_mapt def_fun_map, synth_fun_map;
 
   virtual void error(const std::string &s) override;
-
-  exprt expression();
-  typet sort();
-  exprt::operandst operands();
 };
 
