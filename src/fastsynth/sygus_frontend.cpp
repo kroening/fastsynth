@@ -6,6 +6,7 @@
 #include <util/namespace.h>
 #include <util/symbol_table.h>
 #include <util/time_stopping.h>
+#include <util/config.h>
 
 #include <langapi/language_util.h>
 
@@ -15,6 +16,8 @@
 int sygus_frontend(const cmdlinet &cmdline)
 {
   assert(cmdline.args.size()==1);
+
+  config.ansi_c.set_32();
 
   console_message_handlert message_handler;
   messaget message(message_handler);
