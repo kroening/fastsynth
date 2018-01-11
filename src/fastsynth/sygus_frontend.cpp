@@ -76,6 +76,4 @@ int sygus_frontend(const cmdlinet &cmdline)
   }
 
   return 0;
-
-  return 0;
 }
