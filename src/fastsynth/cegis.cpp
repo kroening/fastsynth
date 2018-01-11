@@ -7,19 +7,15 @@
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 
-#include <goto-symex/goto_symex.h>
-#include <goto-symex/symex_target_equation.h>
-
 #include <util/simplify_expr.h>
 
-decision_proceduret::resultt cegist::operator()(
-  symex_target_equationt &equation)
+decision_proceduret::resultt cegist::operator()(const problemt &problem)
 {
-  return non_incremental_loop(equation);
+  return non_incremental_loop(problem);
 }
 
 decision_proceduret::resultt cegist::non_incremental_loop(
-  symex_target_equationt &equation)
+  const problemt &problem)
 {
   status() << "** non-incremental CEGIS" << eom;
 
@@ -48,13 +44,8 @@ decision_proceduret::resultt cegist::non_incremental_loop(
     {
       synth_encoding.suffix="$ce";
       synth_encoding.constraints.clear();
-      convert_negation(equation, synth_encoding, synth_solver);
 
-      for(const auto &c : synth_encoding.constraints)
-      {
-        synth_solver.set_to_true(c);
-        debug() << "ec: " << from_expr(ns, "", c) << eom;
-      }
+      add_problem(problem, synth_encoding, synth_solver);
     }
     else
     {
@@ -64,13 +55,8 @@ decision_proceduret::resultt cegist::non_incremental_loop(
         synth_encoding.suffix="$ce"+std::to_string(counter);
         synth_encoding.constraints.clear();
         add_counterexample(c, synth_encoding, synth_solver);
-        convert_negation(equation, synth_encoding, synth_solver);
 
-        for(const auto &c : synth_encoding.constraints)
-        {
-          synth_solver.set_to_true(c);
-          debug() << "ec: " << from_expr(ns, "", c) << eom;
-        }
+        add_problem(problem, synth_encoding, synth_solver);
 
         counter++;
       }
@@ -131,7 +117,7 @@ decision_proceduret::resultt cegist::non_incremental_loop(
     verify_encodingt verify_encoding;
     verify_encoding.expressions=expressions;
 
-    convert(equation, verify_encoding, verify_solver);
+    add_problem(problem, verify_encoding, verify_solver);
 
     switch(verify_solver())
     {
@@ -153,7 +139,7 @@ decision_proceduret::resultt cegist::non_incremental_loop(
 }
 
 decision_proceduret::resultt cegist::incremental_loop(
-  symex_target_equationt &equation)
+  const problemt &problem)
 {
   status() << "** incremental CEGIS" << eom;
 
@@ -176,13 +162,7 @@ decision_proceduret::resultt cegist::incremental_loop(
     synth_encodingt synth_encoding;
     synth_encoding.program_size=program_size;
 
-    convert_negation(equation, synth_encoding, synth_solver);
-
-    for(const auto &c : synth_encoding.constraints)
-    {
-      synth_solver.set_to_true(c);
-      debug() << "ec: " << from_expr(ns, "", c) << eom;
-    }
+    add_problem(problem, synth_encoding, synth_solver);
 
     bool verify=false;
 
@@ -253,7 +233,7 @@ decision_proceduret::resultt cegist::incremental_loop(
         verify_encodingt verify_encoding;
         verify_encoding.expressions=expressions;
 
-        convert(equation, verify_encoding, verify_solver);
+        add_problem(problem, verify_encoding, verify_solver);
 
         switch(verify_solver())
         {
@@ -269,13 +249,7 @@ decision_proceduret::resultt cegist::incremental_loop(
               "$ce"+std::to_string(counterexample_counter);
 
             add_counterexample(c, synth_encoding, synth_solver);
-            convert_negation(equation, synth_encoding, synth_solver);
-
-            for(const auto &c : synth_encoding.constraints)
-            {
-              synth_solver.set_to_true(c);
-              debug() << "ec: " << from_expr(ns, "", c) << eom;
-            }
+            add_problem(problem, synth_encoding, synth_solver);
 
             counterexample_counter++;
           }
@@ -295,100 +269,47 @@ decision_proceduret::resultt cegist::incremental_loop(
   }
 }
 
-void cegist::convert_negation(
-  symex_target_equationt &equation,
-  synth_encodingt &synth_encoding,
+void cegist::add_problem(
+  const problemt &problem,
+  synth_encodingt &encoding,
   prop_convt &prop_conv)
 {
-  // guards
-  for(auto &step : equation.SSA_steps)
-    step.guard_literal=prop_conv.convert(synth_encoding(step.guard));
-
-  // assignments
-  for(const auto &step : equation.SSA_steps)
-    if(step.is_assignment())
-    {
-      exprt encoded=synth_encoding(step.cond_expr);
-      debug() << "pa: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-    }
-
-  // decls
-  for(const auto &step : equation.SSA_steps)
-    if(step.is_decl())
-      prop_conv.convert(synth_encoding(step.cond_expr));
-
-  // gotos
-  for(auto &step : equation.SSA_steps)
-    if(step.is_goto())
-      step.cond_literal=prop_conv.convert(synth_encoding(step.cond_expr));
-
-  // now do assertions and assumptions
-  for(auto &step : equation.SSA_steps)
+  for(const auto &e : problem.side_conditions)
   {
-    if(step.is_assert() ||
-       step.is_assume())
-    {
-      exprt encoded=synth_encoding(step.cond_expr);
-      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-      step.cond_literal=const_literal(true);
-    }
+    const exprt encoded=encoding(e);
+    debug() << "sc: " << from_expr(ns, "", encoded) << eom;
+    prop_conv.set_to_true(encoded);
+  }
+
+  for(const auto &e : problem.constraints)
+  {
+    const exprt encoded=encoding(e);
+    debug() << "co: " << from_expr(ns, "", encoded) << eom;
+    prop_conv.set_to_true(encoded);
+  }
+
+  for(const auto &c : encoding.constraints)
+  {
+    prop_conv.set_to_true(c);
+    debug() << "ec: " << from_expr(ns, "", c) << eom;
   }
 }
 
-void cegist::convert(
-  symex_target_equationt &equation,
-  verify_encodingt &verify_encoding,
+void cegist::add_problem(
+  const problemt &problem,
+  verify_encodingt &encoding,
   prop_convt &prop_conv)
 {
-  // guards
-  for(auto &step : equation.SSA_steps)
-    step.guard_literal=prop_conv.convert(verify_encoding(step.guard));
-
-  // assignments
-  for(const auto &step : equation.SSA_steps)
-    if(step.is_assignment())
-    {
-      exprt encoded=verify_encoding(step.cond_expr);
-      debug() << "pa: " << from_expr(ns, "", encoded) << eom;
-      prop_conv.set_to_true(encoded);
-    }
-
-  // decls
-  for(const auto &step : equation.SSA_steps)
-    if(step.is_decl())
-      prop_conv.convert(verify_encoding(step.cond_expr));
-
-  // gotos
-  for(auto &step : equation.SSA_steps)
-    if(step.is_goto())
-      step.cond_literal=prop_conv.convert(verify_encoding(step.cond_expr));
-
-  // now do assertions and assumptions
-  exprt::operandst assumptions, assertions;
-
-  for(auto &step : equation.SSA_steps)
+  for(const auto &e : problem.side_conditions)
   {
-    if(step.is_assume())
-    {
-      exprt encoded=verify_encoding(step.cond_expr);
-      debug() << "pA: " << from_expr(ns, "", encoded) << eom;
-      literalt l=prop_conv.convert(encoded);
-      step.cond_literal=l;
-      assumptions.push_back(literal_exprt(l));
-    }
-    else if(step.is_assert())
-    {
-      exprt encoded=verify_encoding(step.cond_expr);
-      debug() << "pr: " << from_expr(ns, "", encoded) << eom;
-      assertions.push_back(
-        implies_exprt(conjunction(assumptions), encoded));
-    }
+    const exprt encoded=encoding(e);
+    debug() << "sc: " << from_expr(ns, "", encoded) << eom;
+    prop_conv.set_to_true(encoded);
   }
 
-  // one assertion must be false
-  prop_conv.set_to_false(conjunction(assertions));
+  const exprt encoded=encoding(conjunction(problem.constraints));
+  debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
+  prop_conv.set_to_false(encoded);
 }
 
 void cegist::add_counterexample(

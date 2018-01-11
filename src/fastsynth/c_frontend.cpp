@@ -85,6 +85,35 @@ void show_formula(
   }
 }
 
+cegist::problemt generate_cegis_problem(
+  const symex_target_equationt &src)
+{
+  cegist::problemt result;
+
+  exprt::operandst assertions;
+
+  for(const auto &step : src.SSA_steps)
+  {
+    if(step.is_assignment())
+      result.side_conditions.push_back(step.cond_expr);
+    else if(step.is_assume())
+    {
+      if(assertions.empty())
+        result.side_conditions.push_back(step.cond_expr);
+      else
+        result.side_conditions.push_back(
+          implies_exprt(conjunction(assertions), step.cond_expr));
+    }
+    else if(step.is_assert())
+    {
+      assertions.push_back(step.cond_expr);
+      result.constraints.push_back(step.cond_expr);
+    }
+  }
+
+  return result;
+}
+
 int c_frontend(const cmdlinet &cmdline)
 {
   console_message_handlert mh;
@@ -126,6 +155,8 @@ int c_frontend(const cmdlinet &cmdline)
   show_formula(equation, ns);
   #endif
   
+  const auto problem=generate_cegis_problem(equation);
+
   cegist cegis(ns);
   cegis.set_message_handler(mh);
   
@@ -137,7 +168,7 @@ int c_frontend(const cmdlinet &cmdline)
 
   auto start_time=current_time();
 
-  switch(cegis(equation))
+  switch(cegis(problem))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
 

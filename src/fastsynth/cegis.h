@@ -3,7 +3,6 @@
 
 class synth_encodingt;
 class verify_encodingt;
-class symex_target_equationt;
 class prop_convt;
 
 class cegist:public messaget
@@ -14,8 +13,14 @@ public:
   {
   }
 
+  class problemt
+  {
+  public:
+    exprt::operandst side_conditions, constraints;
+  };
+
   decision_proceduret::resultt operator()(
-    symex_target_equationt &);
+    const problemt &);
   
   std::map<symbol_exprt, exprt> expressions;
 
@@ -25,10 +30,10 @@ protected:
   const namespacet &ns;
 
   decision_proceduret::resultt incremental_loop(
-    symex_target_equationt &);
+    const problemt &);
 
   decision_proceduret::resultt non_incremental_loop(
-    symex_target_equationt &);
+    const problemt &);
 
   // map symbols to values
   using counterexamplet=std::map<exprt, exprt>;
@@ -37,13 +42,13 @@ protected:
 
   counterexamplest counterexamples;
 
-  void convert(
-    symex_target_equationt &,
+  void add_problem(
+    const problemt &,
     verify_encodingt &,
     prop_convt &);
 
-  void convert_negation(
-    symex_target_equationt &,
+  void add_problem(
+    const problemt &,
     synth_encodingt &,
     prop_convt &);
 
