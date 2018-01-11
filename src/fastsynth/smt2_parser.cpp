@@ -384,11 +384,25 @@ exprt new_smt2_parsert::expression()
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
+      bv_typet type;
+      std::size_t width = 4*buffer.size() - 2;
+      assert(width!=0 && width%4==0);
+      type.set_width(width);
+      constant_exprt expr(type);
+      expr.set_value(integer2binary(value,width));
+      return expr;
     }
     else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
+      bv_typet type;
+      std::size_t width = buffer.size() - 2;
+      assert(width!=0 && width%2==0);
+      type.set_width(width);
+      constant_exprt expr(type);
+      expr.set_value(integer2binary(value,width));
+      return expr;
     }
     else
     {
@@ -425,27 +439,120 @@ exprt new_smt2_parsert::expression()
         result.operands()=op;
         return result;
       }
-      else if(id=="<=")
+      else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
         predicate_exprt result(ID_le);
         result.operands()=op;
         return result;
       }
-      else if(id==">=")
+      else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
         predicate_exprt result(ID_ge);
         result.operands()=op;
         return result;
       }
-      else if(id=="<")
+      else if(id=="<" || id=="bvult" || id=="bvslt")
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
         return result;
       }
-      else if(id==">")
+      else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
         predicate_exprt result(ID_gt);
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvashr")
+      {
+        ashr_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvlshr" || id=="bvshr")
+      {
+        lshr_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
+      {
+        shl_exprt result;
+        result.operands()=op;
+        return result;
+      }
+
+      else if(id=="bvand")
+      {
+        bitand_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvor")
+      {
+        bitor_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvxor")
+      {
+        bitxor_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvnot" || id=="bvneg")
+      {
+        bitnot_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvadd" || id=="+")
+      {
+        plus_exprt result;
+        result.operands()=op;
+        return result;
+
+      }
+      else if(id=="bvsub" || id=="-")
+      {
+        minus_exprt result;
+        result.operands()=op;
+        return result;
+
+      }
+      else if(id=="bvmul" || id=="*")
+      {
+        mult_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvsdiv" || id=="bvudiv" || id=="/")
+      {
+        div_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvsrem" || id=="bvurem" || id=="%")
+      {
+        mod_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="ite")
+      {
+        if_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer=="=>" || buffer=="implies")
+      {
+        implies_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer=="let")
+      {
+        let_exprt result;
         result.operands()=op;
         return result;
       }
