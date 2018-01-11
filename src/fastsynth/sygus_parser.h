@@ -2,6 +2,8 @@
 
 #include <util/expr.h>
 
+#include "function.h"
+
 class sygus_parsert:public new_smt2_parsert
 {
 public:
@@ -18,9 +20,20 @@ public:
   using variable_mapt=std::map<irep_idt, typet>;
   variable_mapt variable_map;
 
-  using function_mapt=std::map<irep_idt, exprt>;
-  function_mapt def_fun_map, synth_fun_map;
+  struct functiont
+  {
+    function_typet type;
+    exprt body;
+  };
+
+  using function_mapt=std::map<irep_idt, functiont>;
+  function_mapt function_map;
 
   virtual void error(const std::string &s) override;
+
+  void NTDef_seq();
+  void GTerm_seq();
+  void NTDef();
+  void GTerm();
 };
 

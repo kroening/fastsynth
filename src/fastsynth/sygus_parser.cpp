@@ -29,7 +29,53 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="define-fun")
   {
-    ignore_command();
+    if(next_token()!=SYMBOL)
+    {
+      error("expected a symbol after define-fun");
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+
+    if(function_map.find(id)!=function_map.end())
+    {
+      error("function declared twice");
+      ignore_command();
+      return;
+    }
+
+    auto signature=function_signature();
+    exprt body=expression();
+
+    auto &f=function_map[id];
+    f.type=signature;
+    f.body=body;
+  }
+  else if(c=="synth-fun")
+  {
+    if(next_token()!=SYMBOL)
+    {
+      error("expected a symbol after synth-fun");
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+
+    if(function_map.find(id)!=function_map.end())
+    {
+      error("function declared twice");
+      ignore_command();
+      return;
+    }
+
+    auto signature=function_signature();
+    NTDef_seq();
+
+    auto &f=function_map[id];
+    f.type=signature;
+    f.body=nil_exprt();
   }
   else if(c=="declare-var")
   {
@@ -40,14 +86,16 @@ void sygus_parsert::command(const std::string &c)
       return;
     }
 
-    if(variable_map.find(buffer)!=variable_map.end())
+    irep_idt id=buffer;
+
+    if(variable_map.find(id)!=variable_map.end())
     {
       error("variable declared twice");
       ignore_command();
       return;
     }
 
-    variable_map[buffer]=sort();
+    variable_map[id]=sort();
   }
   else if(c=="synth-fun")
   {
@@ -68,5 +116,79 @@ void sygus_parsert::command(const std::string &c)
   }
   else
     ignore_command();
+}
+
+void sygus_parsert::NTDef_seq()
+{
+  if(next_token()!=OPEN)
+  {
+    error("NTDef-sequence must begin with '('");
+    return;
+  }
+
+  while(peek()!=CLOSE)
+  {
+    NTDef();
+  }
+
+  next_token(); // eat the ')'
+}
+
+void sygus_parsert::GTerm_seq()
+{
+  while(peek()!=CLOSE)
+  {
+    GTerm();
+  }
+}
+
+void sygus_parsert::NTDef()
+{
+  // (Symbol Sort GTerm+)
+  if(next_token()!=OPEN)
+  {
+    error("NTDef must begin with '('");
+    return;
+  }
+
+  if(next_token()!=SYMBOL)
+  {
+    error("NTDef must have a symbol");
+    return;
+  }
+
+  sort();
+
+  GTerm_seq();
+
+  if(next_token()!=CLOSE)
+  {
+    error("NTDef must end with ')'");
+    return;
+  }
+}
+
+void sygus_parsert::GTerm()
+{
+  // production rule
+
+  switch(next_token())
+  {
+  case SYMBOL:
+    break;
+
+  case OPEN:
+    while(peek()!=CLOSE)
+    {
+      GTerm();
+    }
+
+    next_token(); // eat ')'
+    break;
+
+  default:
+    error("Unexpected GTerm");
+    return;
+  }
 }
 

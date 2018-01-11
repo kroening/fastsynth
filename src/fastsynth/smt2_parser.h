@@ -14,6 +14,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <iosfwd>
 #include <string>
 
+class function_typet;
+
 class smt2_tokenizert
 {
 public:
@@ -88,6 +90,7 @@ protected:
   exprt expression();
   typet sort();
   exprt::operandst operands();
+  function_typet function_signature();
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H

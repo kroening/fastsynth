@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <istream>
 
+#include "function.h"
+
 bool smt2_tokenizert::is_simple_symbol_character(char ch)
 {
   // any non-empty sequence of letters, digits and the characters
@@ -524,4 +526,47 @@ typet new_smt2_parsert::sort()
     error("unexpected token in a sort");
     return nil_typet();
   }
+}
+
+function_typet new_smt2_parsert::function_signature()
+{
+  function_typet result;
+
+  if(next_token()!=OPEN)
+  {
+    error("expected '(' at beginning of signature");
+    return result;
+  }
+
+  while(peek()!=CLOSE)
+  {
+    if(next_token()!=OPEN)
+    {
+      error("expected '(' at beginning of parameter");
+      return result;
+    }
+
+    if(next_token()!=SYMBOL)
+    {
+      error("expected symbol in parameter");
+      return result;
+    }
+
+    auto &var=result.add_variable();
+
+    var.set_identifier(buffer);
+    var.type()=sort();
+
+    if(next_token()!=CLOSE)
+    {
+      error("expected ')' at end of parameter");
+      return result;
+    }
+  }
+
+  next_token(); // eat the ')'
+
+  result.range()=sort();
+
+  return result;
 }
