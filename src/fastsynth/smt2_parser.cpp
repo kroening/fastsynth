@@ -9,6 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "smt2_parser.h"
 
 #include <util/std_expr.h>
+#include <util/arith_tools.h>
 
 #include <istream>
 
@@ -388,9 +389,7 @@ exprt new_smt2_parsert::expression()
       std::size_t width = 4*buffer.size() - 2;
       assert(width!=0 && width%4==0);
       type.set_width(width);
-      constant_exprt expr(type);
-      expr.set_value(integer2binary(value,width));
-      return expr;
+      return from_integer(value,type);
     }
     else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
     {
@@ -400,9 +399,7 @@ exprt new_smt2_parsert::expression()
       std::size_t width = buffer.size() - 2;
       assert(width!=0 && width%2==0);
       type.set_width(width);
-      constant_exprt expr(type);
-      expr.set_value(integer2binary(value,width));
-      return expr;
+      return from_integer(value,type);
     }
     else
     {
@@ -465,20 +462,29 @@ exprt new_smt2_parsert::expression()
       }
       else if(id=="bvashr")
       {
-        ashr_exprt result;
-        result.operands()=op;
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        ashr_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
         return result;
       }
       else if(id=="bvlshr" || id=="bvshr")
       {
-        lshr_exprt result;
-        result.operands()=op;
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        lshr_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
         return result;
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
-        shl_exprt result;
-        result.operands()=op;
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        shl_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
         return result;
       }
 
@@ -486,6 +492,7 @@ exprt new_smt2_parsert::expression()
       {
         bitand_exprt result;
         result.operands()=op;
+        result.type()=bv_typet();
         return result;
       }
       else if(id=="bvor")
