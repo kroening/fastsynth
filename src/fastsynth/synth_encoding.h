@@ -28,15 +28,15 @@ public:
     struct optiont
     {
       optiont():parameter_number(0), kind(NONE),
-        operand0(0), operand1(0)
+        operand0(0), operand1(0), operand2(0)
       {
       }
 
       symbol_exprt sel;
       irep_idt operation;
       std::size_t parameter_number;
-      enum { NONE, PARAMETER, UNARY, BINARY, BINARY_PREDICATE } kind;
-      std::size_t operand0, operand1;
+      enum { NONE, PARAMETER, UNARY, BINARY, BINARY_PREDICATE, ITE } kind;
+      std::size_t operand0, operand1, operand2;
       exprt type;
     };
 

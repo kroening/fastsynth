@@ -4,6 +4,7 @@
 #include "synth_encoding.h"
 
 #include <algorithm>
+#include <iostream>
 
 typet promotion(const typet &t0, const typet &t1)
 {
@@ -162,6 +163,31 @@ void e_datat::setup(
 
           binary_op_index++;
         }
+
+    //trinary operator, if-then-else
+    for(std::size_t operand0=0; operand0<pc; operand0++)
+      for(std::size_t operand1=0; operand1<pc; operand1++)
+        for(std::size_t operand2=0; operand2<pc; operand2++)
+        {
+          // no point using if-then-else if operand 1 and operand 2
+          // are the same
+          if(operand1==operand2)
+            continue;
+
+          if(operand0==operand1 || operand0==operand2)
+            continue;
+
+          irep_idt sel_id = id2string(identifier)+'_'+
+              std::to_string(pc)+"_ite_sel";
+
+          auto &option=instruction.add_option(sel_id);
+          option.operand0=operand0;
+          option.operand1=operand1;
+          option.operand2=operand2;
+          option.operation=ID_if;
+          option.kind=instructiont::optiont::ITE;
+        }
+
   }
 }
 
@@ -233,8 +259,27 @@ exprt e_datat::instructiont::constraint(
         result_expr=chain(option.sel, promoted, result_expr);
       }
       break;
+    case optiont::ITE: // if-then-else
+    {
+      assert(option.operand0<results.size());
+      assert(option.operand1<results.size());
+      assert(option.operand2<results.size());
+
+      const auto &op0=results[option.operand0];
+      const auto &op1=results[option.operand1];
+      const auto &op2=results[option.operand2];
+
+      exprt op0_conv=
+          (word_type.id()==ID_bool)?op0:
+          typecast_exprt(op0, bool_typet());
+
+      if_exprt if_expr(op0_conv, op1, op2);
+      result_expr=chain(option.sel, if_expr, result_expr);
+    }
+    break;
 
     default:
+      std::cout<<"error: option kind: " << option.kind<<std::endl;
       UNREACHABLE;
     }
   }
@@ -352,7 +397,23 @@ exprt e_datat::get_expression(
             result=promotion(result, word_type);
           }
           break;
+        case instructiont::optiont::ITE:
+          {
+            const auto &ite_op = *o_it;
+            assert(ite_op.operand0 < results.size());
+            assert(ite_op.operand1 < results.size());
+            assert(ite_op.operand2 < results.size());
 
+            exprt op0 = results[ite_op.operand0];
+
+            exprt op0_conv =
+              word_type.id() == ID_bool?op0 :
+                  typecast_exprt(op0, bool_typet());
+
+            result = if_exprt(op0_conv, results[ite_op.operand1],
+              results[ite_op.operand2]);
+          }
+          break;
         default:
           UNREACHABLE;
         }
