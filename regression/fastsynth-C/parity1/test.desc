@@ -4,6 +4,6 @@ main.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSION_parity -> parameter0 \^ parameter1 \^ parameter2 \^ parameter3$
+^Result: EXPRESSION_parity -> (parameter0 \^ parameter1 \^ parameter2 \^ parameter3)|(\(\(parameter0 \^ parameter3\) == parameter1\) == parameter2)$
 --
 ^warning: ignoring
