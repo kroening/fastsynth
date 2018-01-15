@@ -1,3 +1,6 @@
+#ifndef CPROVER_FASTSYNTH_CEGIS_H_
+#define CPROVER_FASTSYNTH_CEGIS_H_
+
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
@@ -22,7 +25,7 @@ public:
   };
 
   decision_proceduret::resultt operator()(const problemt &);
-  
+
   std::map<symbol_exprt, exprt> expressions;
 
   std::size_t max_program_size;
@@ -31,32 +34,11 @@ public:
 protected:
   const namespacet &ns;
 
-  decision_proceduret::resultt incremental_loop(
-    const problemt &);
-
-  decision_proceduret::resultt non_incremental_loop(
-    const problemt &);
-
-  // map symbols to values
-  using counterexamplet=std::map<exprt, exprt>;
-
-  using counterexamplest=std::vector<counterexamplet>;
-
-  counterexamplest counterexamples;
+  decision_proceduret::resultt loop(const problemt &, class learnt &);
 
   void add_problem(
     const problemt &,
     verify_encodingt &,
-    prop_convt &);
-
-  void add_problem(
-    const problemt &,
-    synth_encodingt &,
-    prop_convt &);
-
-  void add_counterexample(
-    const counterexamplet &,
-    synth_encodingt &,
     prop_convt &);
 };
 
@@ -64,3 +46,5 @@ void output_expressions(
   const std::map<symbol_exprt, exprt> &,
   const namespacet &,
   std::ostream &);
+
+#endif /* CPROVER_FASTSYNTH_CEGIS_H_ */
