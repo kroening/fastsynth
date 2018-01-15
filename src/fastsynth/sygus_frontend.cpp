@@ -52,6 +52,8 @@ int sygus_frontend(const cmdlinet &cmdline)
   else
     cegis.max_program_size=5; // default
 
+  cegis.incremental_solving=cmdline.isset("incremental");
+
   cegist::problemt problem;
   problem.constraints=parser.constraints;
 

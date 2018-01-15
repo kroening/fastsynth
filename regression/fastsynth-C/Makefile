@@ -1,10 +1,10 @@
 default: tests.log
 
 test:
-	@../test.pl -c ../../../src/fastsynth/fastsynth
+	@../test.pl -c "../../../src/fastsynth/fastsynth --incremental"
 
 tests.log: ../test.pl
-	@../test.pl -c ../../../src/fastsynth/fastsynth
+	@../test.pl -c "../../../src/fastsynth/fastsynth --incremental"
 
 show:
 	@for dir in *; do \

@@ -6,15 +6,19 @@
 #include "c_frontend.h"
 #include "sygus_frontend.h"
 
+#define FASTSYNTH_OPTIONS \
+   "(max-program-size):" \
+   "(incremental)" \
+
 int main(int argc, const char *argv[])
 {
   cmdlinet cmdline;
-  if(cmdline.parse(argc, argv, "(max-program-size):"))
+  if(cmdline.parse(argc, argv, FASTSYNTH_OPTIONS))
   {
     std::cerr << "Usage error\n";
     return 1;
   }
-  
+
   if(cmdline.args.size()!=1)
   {
     std::cerr << "Usage error\n";
