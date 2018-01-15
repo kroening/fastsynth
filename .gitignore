@@ -1,7 +1,7 @@
 .cproject
 .project
 .settings
-fastsynth
+src/fastsynth/fastsynth
 *.d
 *.o
 *.exe
