@@ -1,7 +1,10 @@
 .cproject
 .project
 .settings
+.clang-format
 src/fastsynth/fastsynth
 *.d
 *.o
+*.out
+*.log
 *.exe
