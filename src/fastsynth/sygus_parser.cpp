@@ -120,11 +120,9 @@ void sygus_parsert::command(const std::string &c)
 
 void sygus_parsert::NTDef_seq()
 {
-  if(next_token()!=OPEN)
-  {
-    error("NTDef-sequence must begin with '('");
+  // it is not necessary to give a syntactic template
+  if(peek()!=OPEN)
     return;
-  }
 
   while(peek()!=CLOSE)
   {
@@ -151,6 +149,9 @@ void sygus_parsert::NTDef()
     return;
   }
 
+  if(peek()==OPEN)
+    next_token(); // symbol might be in another set of parenthesis
+
   if(next_token()!=SYMBOL)
   {
     error("NTDef must have a symbol");
@@ -175,6 +176,8 @@ void sygus_parsert::GTerm()
   switch(next_token())
   {
   case SYMBOL:
+  case NUMERAL:
+  case STRING_LITERAL:
     break;
 
   case OPEN:
