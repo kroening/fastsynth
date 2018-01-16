@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <iosfwd>
 #include <string>
+#include <util/std_expr.h>
 
 class function_typet;
 
@@ -88,6 +89,7 @@ protected:
   void ignore_command();
 
   exprt expression();
+  let_exprt let_expression(bool first_in_chain);
   typet sort();
   exprt::operandst operands();
   function_typet function_signature();

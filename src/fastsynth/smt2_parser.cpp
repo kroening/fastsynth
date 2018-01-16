@@ -8,7 +8,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "smt2_parser.h"
 
-#include <util/std_expr.h>
+#include <util/arith_tools.h>
 
 #include <istream>
 
@@ -354,7 +354,7 @@ void new_smt2_parsert::ignore_command()
     }
   }
 }
-
+#include <iostream>
 exprt::operandst new_smt2_parsert::operands()
 {
   exprt::operandst result;
@@ -364,6 +364,55 @@ exprt::operandst new_smt2_parsert::operands()
 
   next_token(); // eat the ')'
 
+  return result;
+}
+
+
+let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
+{
+  let_exprt result;
+
+  if(peek()!=OPEN && !first_in_chain)
+  {
+    // no need for chaining, single let exprt.
+    result.operands()=operands();
+    return result;
+  }
+  else
+  {
+    if(peek()==OPEN && first_in_chain)
+    {
+      next_token(); // eat the '('that starts the bindings list
+    }
+    next_token(); // eat the '(' that starts the next binding
+    // get op0
+    if(next_token() == SYMBOL)
+    {
+      symbol_exprt operand0(buffer, sort());
+      result.op0() = operand0;
+    }
+    else
+      error("expected symbol");
+
+    // get op1
+    result.op1() = expression();
+    next_token(); //eat the ')' that closes this binding
+
+    if(peek()!=CLOSE) //we are still in a chain of bindings
+    {
+      // get op2
+      result.op2() = let_expression(false);
+    }
+    else
+    {
+      // we are at the end of the chain
+      next_token(); // eat the ')' that closes the bindings list
+      if(peek()!= OPEN)
+        error("let expects where here");
+      result.op2() = expression();
+      next_token(); // eat the final ')' that closes the let exprt
+    }
+  }
   return result;
 }
 
@@ -384,11 +433,21 @@ exprt new_smt2_parsert::expression()
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
+      bv_typet type;
+      std::size_t width = 4*buffer.size() - 2;
+      assert(width!=0 && width%4==0);
+      type.set_width(width);
+      return from_integer(value,type);
     }
     else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
+      bv_typet type;
+      std::size_t width = buffer.size() - 2;
+      assert(width!=0 && width%2==0);
+      type.set_width(width);
+      return from_integer(value,type);
     }
     else
     {
@@ -399,6 +458,13 @@ exprt new_smt2_parsert::expression()
     if(next_token()==SYMBOL)
     {
       std::string id=buffer;
+
+      if(buffer=="let")
+      {
+        //bool indicates first in chain
+        return let_expression(true);
+      }
+
       const auto op=operands();
 
       if(id=="and")
@@ -425,27 +491,124 @@ exprt new_smt2_parsert::expression()
         result.operands()=op;
         return result;
       }
-      else if(id=="<=")
+      else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
         predicate_exprt result(ID_le);
         result.operands()=op;
         return result;
       }
-      else if(id==">=")
+      else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
         predicate_exprt result(ID_ge);
         result.operands()=op;
         return result;
       }
-      else if(id=="<")
+      else if(id=="<" || id=="bvult" || id=="bvslt")
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
         return result;
       }
-      else if(id==">")
+      else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
         predicate_exprt result(ID_gt);
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvashr")
+      {
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        ashr_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
+        return result;
+      }
+      else if(id=="bvlshr" || id=="bvshr")
+      {
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        lshr_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
+        return result;
+      }
+      else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
+      {
+        if(op.size()!=2)
+          error("bit shift must have 2 operands");
+
+        shl_exprt result(op[0], op[1]);
+        result.type()=bv_typet();
+        return result;
+      }
+
+      else if(id=="bvand")
+      {
+        bitand_exprt result;
+        result.operands()=op;
+        result.type()=bv_typet();
+        return result;
+      }
+      else if(id=="bvor")
+      {
+        bitor_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvxor")
+      {
+        bitxor_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvnot" || id=="bvneg")
+      {
+        bitnot_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvadd" || id=="+")
+      {
+        plus_exprt result;
+        result.operands()=op;
+        return result;
+
+      }
+      else if(id=="bvsub" || id=="-")
+      {
+        minus_exprt result;
+        result.operands()=op;
+        return result;
+
+      }
+      else if(id=="bvmul" || id=="*")
+      {
+        mult_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvsdiv" || id=="bvudiv" || id=="/")
+      {
+        div_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="bvsrem" || id=="bvurem" || id=="%")
+      {
+        mod_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="ite")
+      {
+        if_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(buffer=="=>" || buffer=="implies")
+      {
+        implies_exprt result;
         result.operands()=op;
         return result;
       }
