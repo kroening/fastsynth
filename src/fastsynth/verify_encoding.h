@@ -1,3 +1,6 @@
+#ifndef CPROVER_FASTSYNTH_VERIFY_ENCODING_H_
+#define CPROVER_FASTSYNTH_VERIFY_ENCODING_H_
+
 #include <set>
 
 #include <util/std_expr.h>
@@ -22,3 +25,4 @@ protected:
     const function_application_exprt &e);
 };
 
+#endif /* CPROVER_FASTSYNTH_VERIFY_ENCODING_H_ */

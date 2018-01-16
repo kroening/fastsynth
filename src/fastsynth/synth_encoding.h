@@ -1,3 +1,6 @@
+#ifndef CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
+#define CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
+
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
@@ -49,7 +52,7 @@ public:
       options.back().sel=symbol_exprt(sel_identifier, bool_typet());
       return options.back();
     }
-    
+
     // generate a constraint for the instruction
     // - for a given word type
     // - for a set of arguments
@@ -128,3 +131,4 @@ protected:
   std::map<symbol_exprt, e_datat> e_data_map;
 };
 
+#endif /* CPROVER_FASTSYNTH_SYNTH_ENCODING_H_ */
