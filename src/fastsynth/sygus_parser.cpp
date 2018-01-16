@@ -120,11 +120,9 @@ void sygus_parsert::command(const std::string &c)
 
 void sygus_parsert::NTDef_seq()
 {
-  if(next_token()!=OPEN)
-  {
-    error("NTDef-sequence must begin with '('");
+  // it is not necessary to give a syntactic template
+  if(peek()!=OPEN)
     return;
-  }
 
   while(peek()!=CLOSE)
   {
