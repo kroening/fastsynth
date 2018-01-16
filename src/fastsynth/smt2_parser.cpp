@@ -396,9 +396,9 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
 
     // get op1
     result.op1() = expression();
-    next_token(); //eat the ')' that closes this binding
+    next_token(); // eat the ')' that closes this binding
 
-    if(peek()!=CLOSE) //we are still in a chain of bindings
+    if(peek()!=CLOSE) // we are still in a chain of bindings
     {
       // get op2
       result.op2() = let_expression(false);
@@ -433,21 +433,19 @@ exprt new_smt2_parsert::expression()
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
-      bv_typet type;
-      std::size_t width = 4*buffer.size() - 2;
-      assert(width!=0 && width%4==0);
-      type.set_width(width);
-      return from_integer(value,type);
+      const std::size_t width = 4*buffer.size() - 2;
+      CHECK_RETURN(width!=0 && width%4==0);
+      bv_typet type(width);
+      return from_integer(value, type);
     }
     else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
-      bv_typet type;
-      std::size_t width = buffer.size() - 2;
-      assert(width!=0 && width%2==0);
-      type.set_width(width);
-      return from_integer(value,type);
+      const std::size_t width = buffer.size() - 2;
+      CHECK_RETURN(width!=0 && width%2==0);
+      bv_typet type(width);
+      return from_integer(value, type);
     }
     else
     {
@@ -461,7 +459,7 @@ exprt new_smt2_parsert::expression()
 
       if(buffer=="let")
       {
-        //bool indicates first in chain
+        // bool indicates first in chain
         return let_expression(true);
       }
 
@@ -521,7 +519,9 @@ exprt new_smt2_parsert::expression()
           error("bit shift must have 2 operands");
 
         ashr_exprt result(op[0], op[1]);
-        result.type()=bv_typet();
+        bv_typet type(0u);
+        type.remove(ID_width);
+        result.type()=type;
         return result;
       }
       else if(id=="bvlshr" || id=="bvshr")
@@ -530,7 +530,9 @@ exprt new_smt2_parsert::expression()
           error("bit shift must have 2 operands");
 
         lshr_exprt result(op[0], op[1]);
-        result.type()=bv_typet();
+        bv_typet type(0u);
+        type.remove(ID_width);
+        result.type()=type;
         return result;
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
@@ -539,7 +541,9 @@ exprt new_smt2_parsert::expression()
           error("bit shift must have 2 operands");
 
         shl_exprt result(op[0], op[1]);
-        result.type()=bv_typet();
+        bv_typet type(0u);
+        type.remove(ID_width);
+        result.type()=type;
         return result;
       }
 
@@ -547,7 +551,9 @@ exprt new_smt2_parsert::expression()
       {
         bitand_exprt result;
         result.operands()=op;
-        result.type()=bv_typet();
+        bv_typet type(0u);
+        type.remove(ID_width);
+        result.type()=type;
         return result;
       }
       else if(id=="bvor")
@@ -573,14 +579,12 @@ exprt new_smt2_parsert::expression()
         plus_exprt result;
         result.operands()=op;
         return result;
-
       }
       else if(id=="bvsub" || id=="-")
       {
         minus_exprt result;
         result.operands()=op;
         return result;
-
       }
       else if(id=="bvmul" || id=="*")
       {
