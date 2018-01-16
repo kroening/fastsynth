@@ -8,7 +8,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "smt2_parser.h"
 
-#include <util/std_expr.h>
 #include <util/arith_tools.h>
 
 #include <istream>
@@ -355,7 +354,7 @@ void new_smt2_parsert::ignore_command()
     }
   }
 }
-
+#include <iostream>
 exprt::operandst new_smt2_parsert::operands()
 {
   exprt::operandst result;
@@ -365,6 +364,55 @@ exprt::operandst new_smt2_parsert::operands()
 
   next_token(); // eat the ')'
 
+  return result;
+}
+
+
+let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
+{
+  let_exprt result;
+
+  if(peek()!=OPEN && !first_in_chain)
+  {
+    // no need for chaining, single let exprt.
+    result.operands()=operands();
+    return result;
+  }
+  else
+  {
+    if(peek()==OPEN && first_in_chain)
+    {
+      next_token(); // eat the '('that starts the bindings list
+    }
+    next_token(); // eat the '(' that starts the next binding
+    // get op0
+    if(next_token() == SYMBOL)
+    {
+      symbol_exprt operand0(buffer, sort());
+      result.op0() = operand0;
+    }
+    else
+      error("expected symbol");
+
+    // get op1
+    result.op1() = expression();
+    next_token(); //eat the ')' that closes this binding
+
+    if(peek()!=CLOSE) //we are still in a chain of bindings
+    {
+      // get op2
+      result.op2() = let_expression(false);
+    }
+    else
+    {
+      // we are at the end of the chain
+      next_token(); // eat the ')' that closes the bindings list
+      if(peek()!= OPEN)
+        error("let expects where here");
+      result.op2() = expression();
+      next_token(); // eat the final ')' that closes the let exprt
+    }
+  }
   return result;
 }
 
@@ -410,6 +458,13 @@ exprt new_smt2_parsert::expression()
     if(next_token()==SYMBOL)
     {
       std::string id=buffer;
+
+      if(buffer=="let")
+      {
+        //bool indicates first in chain
+        return let_expression(true);
+      }
+
       const auto op=operands();
 
       if(id=="and")
@@ -554,12 +609,6 @@ exprt new_smt2_parsert::expression()
       else if(buffer=="=>" || buffer=="implies")
       {
         implies_exprt result;
-        result.operands()=op;
-        return result;
-      }
-      else if(buffer=="let")
-      {
-        let_exprt result;
         result.operands()=op;
         return result;
       }
