@@ -9,6 +9,7 @@
 #define FASTSYNTH_OPTIONS \
    "(max-program-size):" \
    "(incremental)" \
+   "(simplifying-solver)" \
 
 int main(int argc, const char *argv[])
 {

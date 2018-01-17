@@ -17,7 +17,7 @@ decision_proceduret::resultt cegist::operator()(
   if(incremental_solving)
   {
     status() << "** incremental CEGIS" << eom;
-    incremental_prop_learnt learn(*this, ns, problem);
+    incremental_prop_learnt learn(*this, ns, problem, use_simp_solver);
     return loop(problem, learn);
   }
   else
