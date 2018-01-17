@@ -1,3 +1,6 @@
+#ifndef CPROVER_FUNCTION_H
+#define CPROVER_FUNCTION_H
+
 #include <util/type.h>
 
 class function_typet:public typet
@@ -61,3 +64,5 @@ public:
     return subtypes()[1];
   }
 };
+
+#endif

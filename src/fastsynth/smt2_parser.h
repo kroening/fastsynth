@@ -15,6 +15,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <string>
 #include <util/std_expr.h>
 
+#include "function.h"
+
 class function_typet;
 
 class smt2_tokenizert
@@ -93,6 +95,15 @@ protected:
   typet sort();
   exprt::operandst operands();
   function_typet function_signature();
+
+  struct functiont
+  {
+    function_typet type;
+    exprt body;
+  };
+
+  using function_mapt=std::map<irep_idt, functiont>;
+  function_mapt function_map;
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
