@@ -6,24 +6,33 @@
 incremental_prop_learnt::incremental_prop_learnt(
   messaget &msg,
   const namespacet &ns,
-  const cegist::problemt &problem)
+  const cegist::problemt &problem,
+  bool _use_simp_solver)
   : msg(msg),
     ns(ns),
     problem(problem),
     synth_satcheck(new satcheck_no_simplifiert()),
     synth_solver(new bv_pointerst(ns, *synth_satcheck)),
     program_size(1u),
-    counterexample_counter(0u)
+    counterexample_counter(0u),
+    use_simp_solver(_use_simp_solver)
 {
   init();
 }
 
 void incremental_prop_learnt::init()
 {
+  if(use_simp_solver)
+  {
+    synth_satcheck.reset(new satcheckt());
+    synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
+  }
+
   synth_encoding.program_size = program_size;
   synth_satcheck->set_message_handler(msg.get_message_handler());
   synth_solver->set_message_handler(msg.get_message_handler());
   add_problem(ns, msg, problem, synth_encoding, *synth_solver);
+  freeze_expression_symbols();
 }
 
 void incremental_prop_learnt::set_program_size(const size_t program_size)
@@ -51,6 +60,7 @@ void incremental_prop_learnt::set_program_size(const size_t program_size)
 
        counter++;
      }
+     freeze_expression_symbols();
   }
 }
 
@@ -76,6 +86,31 @@ void incremental_prop_learnt::add(
   add_counterexample(ns, msg, counterexample, synth_encoding, *synth_solver);
   add_problem(ns, msg, problem, synth_encoding, *synth_solver);
 
+  freeze_expression_symbols();
   counterexample_counter++;
+}
+
+
+void incremental_prop_learnt::freeze_expression_symbols()
+{
+  if(!use_simp_solver)
+    return;
+
+  for(const auto &s : synth_solver->get_symbols())
+  {
+    if(id2string(s.first).find("EXPRESSION") != std::string::npos)
+    {
+      synth_solver->set_frozen(s.second);
+    }
+  }
+
+  for(const auto &m : synth_solver->get_map().mapping)
+  {
+    if(id2string(m.first).find("EXPRESSION") != std::string::npos)
+    {
+      for(const auto &map_bit : m.second.literal_map)
+        synth_solver->set_frozen(map_bit.l);
+    }
+  }
 }
 

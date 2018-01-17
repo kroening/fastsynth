@@ -14,6 +14,7 @@ public:
   explicit cegist(const namespacet &_ns):
     max_program_size(0),
     incremental_solving(false),
+    use_simp_solver(false),
     ns(_ns)
   {
   }
@@ -30,6 +31,7 @@ public:
 
   std::size_t max_program_size;
   bool incremental_solving;
+  bool use_simp_solver;
 
 protected:
   const namespacet &ns;
