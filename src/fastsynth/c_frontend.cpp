@@ -167,6 +167,8 @@ int c_frontend(const cmdlinet &cmdline)
     cegis.max_program_size=5; // default
 
   cegis.incremental_solving=cmdline.isset("incremental");
+  cegis.incremental_solving=cmdline.isset("simplifying-solver");
+
 
   auto start_time=current_time();
 

@@ -23,7 +23,7 @@ class incremental_prop_learnt : public learnt
   const cegist::problemt &problem;
 
   /// Solver instance.
-  std::unique_ptr<satcheck_no_simplifiert> synth_satcheck;
+  std::unique_ptr<propt> synth_satcheck;
 
   /// Decision procedure for synthesis logic.
   std::unique_ptr<class bv_pointerst> synth_solver;
@@ -40,6 +40,9 @@ class incremental_prop_learnt : public learnt
   /// Counterexample set to synthesise against.
   std::vector<verify_encodingt::counterexamplet> counterexamples;
 
+  /// Boolean indicates whether to use simplifying solver
+  bool use_simp_solver;
+
   /// Initialises message handler and adds the base synthesis problem to the
   /// constraint.
   void init();
@@ -49,10 +52,12 @@ public:
   /// \param msg \see msg incremental_prop_learnt::msg
   /// \param ns \see ns incremental_prop_learnt::ns
   /// \param problem \see incremental_prop_learnt::problem
+  /// \param use_simp_solver indicates whether to use simplifying solver
   incremental_prop_learnt(
     messaget &msg,
     const namespacet &ns,
-    const cegist::problemt &problem);
+    const cegist::problemt &problem,
+    bool use_simp_solver);
 
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
@@ -65,6 +70,11 @@ public:
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
   void add(const verify_encodingt::counterexamplet &counterexample) override;
+
+  /// \brief freezes variables in the sat solver associated to the
+  /// expression to be synthesised. Needed when the incremental solver with
+  /// simplifier is used
+  void freeze_expression_symbols();
 };
 
 #endif /* CPROVER_FASTSYNTH_INCREMENTAL_PROP_LEARN_H_ */
