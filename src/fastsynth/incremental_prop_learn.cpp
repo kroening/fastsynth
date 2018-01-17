@@ -36,8 +36,22 @@ void incremental_prop_learnt::set_program_size(const size_t program_size)
   synth_satcheck.reset(new satcheck_minisat_no_simplifiert());
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
   synth_encoding = synth_encodingt();
-  counterexample_counter = 0u;
   init();
+  // re-add counterexamples
+  if(counterexample_counter!=0u)
+  {
+    std::size_t counter = 0;
+     for(const auto &c : counterexamples)
+     {
+       synth_encoding.suffix = "$ce" + std::to_string(counter);
+       synth_encoding.constraints.clear();
+       add_counterexample(ns, msg, c, synth_encoding, *synth_solver);
+
+       add_problem(ns, msg, problem, synth_encoding, *synth_solver);
+
+       counter++;
+     }
+  }
 }
 
 decision_proceduret::resultt incremental_prop_learnt::operator()()
@@ -53,6 +67,8 @@ std::map<symbol_exprt, exprt> incremental_prop_learnt::get_expressions() const
 void incremental_prop_learnt::add(
   const verify_encodingt::counterexamplet &counterexample)
 {
+  counterexamples.emplace_back(counterexample);
+
   synth_encoding.constraints.clear();
 
   synth_encoding.suffix = "$ce" + std::to_string(counterexample_counter);
@@ -62,3 +78,4 @@ void incremental_prop_learnt::add(
 
   counterexample_counter++;
 }
+
