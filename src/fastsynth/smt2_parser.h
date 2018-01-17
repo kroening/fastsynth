@@ -104,6 +104,9 @@ protected:
 
   using function_mapt=std::map<irep_idt, functiont>;
   function_mapt function_map;
+
+  using variable_mapt=std::map<irep_idt, typet>;
+  variable_mapt variable_map;
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H

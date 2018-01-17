@@ -15,9 +15,6 @@ public:
   exprt::operandst constraints;
   std::string logic, action;
 
-  using variable_mapt=std::map<irep_idt, typet>;
-  variable_mapt variable_map;
-
   virtual void error(const std::string &s) override;
 
   void NTDef_seq();
