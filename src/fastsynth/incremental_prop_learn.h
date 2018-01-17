@@ -37,6 +37,9 @@ class incremental_prop_learnt : public learnt
   /// Number of counterexamples inserted.
   size_t counterexample_counter;
 
+  /// Counterexample set to synthesise against.
+  std::vector<verify_encodingt::counterexamplet> counterexamples;
+
   /// Initialises message handler and adds the base synthesis problem to the
   /// constraint.
   void init();
