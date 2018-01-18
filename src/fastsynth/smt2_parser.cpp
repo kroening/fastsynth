@@ -418,6 +418,28 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
   return result;
 }
 
+void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
+{
+  if(expr.operands().size()!=3)
+    error("ite operation expects 3 operands");
+  if(expr.op1().type()!=expr.op2().type() &&
+      !(expr.op1().id()==ID_constant || expr.op2().id()==ID_constant))
+    error("mismatching types for ite operands");
+
+  if(expr.op0().id()!=ID_bool)
+  {
+    expr.op0().type()=bool_typet();
+  }
+
+  if(expr.op1().id()==ID_constant && expr.op2().id()!=ID_constant)
+    expr.op1().type()=expr.op2().type();
+
+  if(expr.op2().id()==ID_constant && expr.op1().id()!=ID_constant)
+    expr.op2().type()=expr.op1().type();
+
+  expr.type()=expr.op1().type();
+
+}
 exprt new_smt2_parsert::expression()
 {
   switch(next_token())
@@ -610,6 +632,7 @@ exprt new_smt2_parsert::expression()
       {
         if_exprt result;
         result.operands()=op;
+        fix_ite_operation_result_type(result);
         return result;
       }
       else if(buffer=="=>" || buffer=="implies")
