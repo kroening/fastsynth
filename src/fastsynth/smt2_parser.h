@@ -110,7 +110,6 @@ protected:
   void fix_binary_operation_result_type(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
 
-  typet default_type;
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
