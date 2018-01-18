@@ -26,6 +26,13 @@ void sygus_parsert::command(const std::string &c)
 
     logic=buffer;
     std::cout << "Logic: " << logic << '\n';
+    if(logic=="BitVec" || logic =="BV")
+      default_type=unsignedbv_typet(32);
+    else if(logic=="LIA" || logic=="SLIA")
+      default_type=integer_typet();
+    else
+      default_type=unsignedbv_typet(32);
+
   }
   else if(c=="define-fun")
   {
@@ -45,12 +52,15 @@ void sygus_parsert::command(const std::string &c)
       return;
     }
 
+    local_variable_map.clear();
+
     auto signature=function_signature();
     exprt body=expression();
 
     auto &f=function_map[id];
     f.type=signature;
     f.body=body;
+    local_variable_map.clear();
   }
   else if(c=="synth-fun")
   {
@@ -96,10 +106,6 @@ void sygus_parsert::command(const std::string &c)
     }
 
     variable_map[id]=sort();
-  }
-  else if(c=="synth-fun")
-  {
-    ignore_command();
   }
   else if(c=="constraint")
   {

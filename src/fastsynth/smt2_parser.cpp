@@ -402,6 +402,7 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
     {
       // get op2
       result.op2() = let_expression(false);
+      result.type() = result.op2().type();
     }
     else
     {
@@ -410,10 +411,86 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
       if(peek()!= OPEN)
         error("let expects where here");
       result.op2() = expression();
+      result.type()=result.op2().type();
       next_token(); // eat the final ')' that closes the let exprt
     }
   }
   return result;
+}
+
+
+exprt new_smt2_parsert::expand_function(irep_idt ID, exprt::operandst op)
+{
+  auto &f = function_map[ID];
+//  if(f.body==nil_typet())
+  {
+    function_application_exprt result;
+    result.function()=symbol_exprt(ID);
+    result.arguments()=op;
+    // check arguments
+    if(op.size()!=f.type.variables().size())
+    {
+      error("wrong number of arguments for function ");
+      return nil_exprt();
+    }
+
+    for(std::size_t i=0; i<op.size(); i++)
+    {
+      if(op[i].type()!=f.type.variables()[i].type())
+      {
+        std::cout <<ID.c_str();
+        error("wrong type for arguments for function ");
+        std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
+        std::cout<<" got: "<<op[i].type().id()<<std::endl;
+
+
+        return nil_exprt();
+      }
+    }
+    result.type()=f.type.range();
+    return result;
+  }
+}
+
+
+void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
+{
+  if(expr.operands().size()!=3)
+    error("ite operation expects 3 operands");
+  if(expr.op1().type()!=expr.op2().type() &&
+      !(expr.op1().id()==ID_constant || expr.op2().id()==ID_constant))
+    error("mismatching types for ite operands");
+
+  if(expr.op0().id()!=ID_bool)
+  {
+    expr.op0().type()=bool_typet();
+  }
+
+  if(expr.op1().id()==ID_constant && expr.op2().id()!=ID_constant)
+    expr.op1().type()=expr.op2().type();
+
+  if(expr.op2().id()==ID_constant && expr.op1().id()!=ID_constant)
+    expr.op2().type()=expr.op1().type();
+
+  expr.type()=expr.op1().type();
+
+}
+
+void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
+{
+  if(expr.operands().size()!=2)
+    error("binary operation expects 2 operands");
+  if(expr.op0().type()!=expr.op1().type() &&
+      !(expr.op0().id()==ID_constant || expr.op1().id()==ID_constant))
+    error("mismatching types for binary operand" + expr.id_string());
+
+  if(expr.op0().id()==ID_constant && expr.op1().id()!=ID_constant)
+    expr.op0().type()=expr.op1().type();
+
+  if(expr.op1().id()==ID_constant && expr.op0().id()!=ID_constant)
+    expr.op1().type()=expr.op0().type();
+
+  expr.type()=expr.op0().type();
 }
 
 exprt new_smt2_parsert::expression()
@@ -425,31 +502,41 @@ exprt new_smt2_parsert::expression()
       return true_exprt();
     else if(buffer=="false")
       return false_exprt();
+    else if(local_variable_map.find(buffer)!=local_variable_map.end())
+    {
+      // search local variable map first, we clear the local variable map
+      // as soon as we are done parsing the function body
+      return symbol_exprt(buffer, local_variable_map[buffer]);
+    }
+    else if(variable_map.find(buffer)!=variable_map.end())
+    {
+      return symbol_exprt(buffer, variable_map[buffer]);
+    }
     else
-      return symbol_exprt(buffer, bool_typet());
+      return symbol_exprt(buffer, default_type);
 
   case NUMERAL:
-    if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='x')
+    if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
-      const std::size_t width = 4*buffer.size() - 2;
+      const std::size_t width = 4*(buffer.length() - 2);
       CHECK_RETURN(width!=0 && width%4==0);
-      bv_typet type(width);
+      unsignedbv_typet type(width);
       return from_integer(value, type);
     }
-    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
+    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
       const std::size_t width = buffer.size() - 2;
       CHECK_RETURN(width!=0 && width%2==0);
-      bv_typet type(width);
+      unsignedbv_typet type(width);
       return from_integer(value, type);
     }
     else
     {
-      return constant_exprt();
+      return constant_exprt(buffer, integer_typet());
     }
 
   case OPEN:
@@ -474,6 +561,12 @@ exprt new_smt2_parsert::expression()
       else if(id=="or")
       {
         or_exprt result;
+        result.operands()=op;
+        return result;
+      }
+      else if(id=="xor")
+      {
+        notequal_exprt result;
         result.operands()=op;
         return result;
       }
@@ -505,6 +598,7 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
+        result.type()=bool_typet();
         return result;
       }
       else if(id==">" || id=="bvugt" || id=="bvsgt")
@@ -578,39 +672,45 @@ exprt new_smt2_parsert::expression()
       {
         plus_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsub" || id=="-")
       {
         minus_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvmul" || id=="*")
       {
         mult_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsdiv" || id=="bvudiv" || id=="/")
       {
         div_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
         mod_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="ite")
       {
         if_exprt result;
         result.operands()=op;
+        fix_ite_operation_result_type(result);
         return result;
       }
-      else if(buffer=="=>" || buffer=="implies")
+      else if(id=="=>" || id=="implies")
       {
         implies_exprt result;
         result.operands()=op;
@@ -618,11 +718,24 @@ exprt new_smt2_parsert::expression()
       }
       else
       {
-        // a defined function?
-        function_application_exprt result;
-        result.function()=symbol_exprt(id);
-        result.arguments()=op;
-        return result;
+        if(function_map.count(id)!=0)
+        {
+          return expand_function(id, op);
+        }
+        else if(local_variable_map.find(id)!=local_variable_map.end())
+        {
+          symbol_exprt result(id, local_variable_map[id]);
+          return result;
+        }
+        else if(variable_map.find(id)!=variable_map.end())
+        {
+          symbol_exprt result(id, variable_map[id]);
+          return result;
+        }
+        else
+        {
+          error("use of undeclared symbol or function" + id);
+        }
       }
     }
     else
@@ -654,7 +767,7 @@ typet new_smt2_parsert::sort()
       return real_typet();
     else
     {
-      error("unexpected sort");
+      error("unexpected sort: " + buffer);
       return nil_typet();
     }
 
@@ -681,11 +794,11 @@ typet new_smt2_parsert::sort()
         return nil_typet();
       }
 
-      return bv_typet(width);
+      return unsignedbv_typet(width);
     }
     else
     {
-      error("unexpected sort");
+      error("unexpected sort: " + buffer);
       return nil_typet();
     }
 
@@ -720,9 +833,10 @@ function_typet new_smt2_parsert::function_signature()
     }
 
     auto &var=result.add_variable();
-
-    var.set_identifier(buffer);
+    std::string id=buffer;
+    var.set_identifier(id);
     var.type()=sort();
+    local_variable_map[id]=var.type();
 
     if(next_token()!=CLOSE)
     {
