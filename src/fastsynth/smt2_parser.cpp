@@ -418,6 +418,41 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
   return result;
 }
 
+
+exprt new_smt2_parsert::expand_function(irep_idt ID, exprt::operandst op)
+{
+  auto &f = function_map[ID];
+//  if(f.body==nil_typet())
+  {
+    function_application_exprt result;
+    result.function()=symbol_exprt(ID);
+    result.arguments()=op;
+    // check arguments
+    if(op.size()!=f.type.variables().size())
+    {
+      error("wrong number of arguments for function ");
+      return nil_exprt();
+    }
+
+    for(std::size_t i=0; i<op.size(); i++)
+    {
+      if(op[i].type()!=f.type.variables()[i].type())
+      {
+        error("wrong type for arguments for function ");
+        std::cout <<ID.c_str();
+        std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
+        std::cout<<" got: "<<op[i].type().id()<<std::endl;
+
+
+        return nil_exprt();
+      }
+    }
+    result.type()=f.type.range();
+    return result;
+  }
+}
+
+
 void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
   if(expr.operands().size()!=3)
@@ -643,11 +678,19 @@ exprt new_smt2_parsert::expression()
       }
       else
       {
-        // a defined function?
-        function_application_exprt result;
-        result.function()=symbol_exprt(id);
-        result.arguments()=op;
-        return result;
+        if(function_map.count(id)!=0)
+        {
+          return expand_function(id, op);
+        }
+        else if(variable_map.find(id)!=variable_map.end())
+        {
+          symbol_exprt result(id, variable_map[id]);
+          return result;
+        }
+        else
+        {
+          error("use of undeclared symbol or function" + id);
+        }
       }
     }
     else
