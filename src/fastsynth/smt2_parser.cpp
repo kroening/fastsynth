@@ -480,6 +480,7 @@ void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 
 void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
 {
+  // TODO: deal with different widths of bitvector
   if(expr.operands().size()!=2)
     error("binary operation expects 2 operands");
   if(expr.op0().type()!=expr.op1().type())
@@ -508,6 +509,31 @@ void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
   expr.type()=expr.op0().type();
 }
 
+exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
+{
+  if(expr.type().id()==ID_signedbv) // no need to cast
+    return expr;
+  if(expr.type().id()!=ID_unsignedbv)
+    error("expected unsigned bitvector");
+ signedbv_typet signed_type(to_unsignedbv_type(expr.op1().type()).get_width());
+ typecast_exprt result(expr, signed_type);
+ result.op0()=expr;
+ result.type()=signed_type;
+ return result;
+}
+
+exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
+{
+  if(expr.type().id()==ID_unsignedbv) //no need to cast
+    return expr;
+  if(expr.type().id()!=ID_signedbv)
+    error("expected signed bitvector");
+ unsignedbv_typet unsigned_type(to_signedbv_type(expr.op1().type()).get_width());
+ typecast_exprt result(expr, unsigned_type);
+ result.op0()=expr;
+ result.type()=unsigned_type;
+ return result;
+}
 
 exprt new_smt2_parsert::expression()
 {
@@ -618,25 +644,46 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_le);
         result.operands()=op;
+
+        if(id=="bvsle")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+        }
         return result;
       }
       else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
         predicate_exprt result(ID_ge);
         result.operands()=op;
+        if(id=="bvsge")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+        }
+
         return result;
       }
       else if(id=="<" || id=="bvult" || id=="bvslt")
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
-        result.type()=bool_typet();
+        if(id=="bvslt")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+        }
         return result;
       }
       else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
         predicate_exprt result(ID_gt);
         result.operands()=op;
+        if(id=="bvsgt")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+        }
         return result;
       }
       else if(id=="bvashr")
@@ -720,7 +767,20 @@ exprt new_smt2_parsert::expression()
         fix_binary_operation_result_type(result);
         return result;
       }
-      else if(id=="bvsdiv" || id=="bvudiv" || id=="/")
+      else if(id=="bvsdiv" || id=="bvudiv")
+      {
+        div_exprt result;
+        result.operands()=op;
+        fix_binary_operation_result_type(result);
+        if(id=="bvsdiv")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+          return cast_bv_to_unsigned(result);
+        }
+        return result;
+      }
+      else if(id=="/" || id=="div")
       {
         div_exprt result;
         result.operands()=op;
@@ -732,6 +792,13 @@ exprt new_smt2_parsert::expression()
         mod_exprt result;
         result.operands()=op;
         fix_binary_operation_result_type(result);
+
+        if(id=="bvsrem")
+        {
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+          return cast_bv_to_unsigned(result);
+        }
         return result;
       }
       else if(id=="ite")
