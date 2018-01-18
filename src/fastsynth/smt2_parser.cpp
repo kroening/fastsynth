@@ -438,8 +438,8 @@ exprt new_smt2_parsert::expand_function(irep_idt ID, exprt::operandst op)
     {
       if(op[i].type()!=f.type.variables()[i].type())
       {
-        error("wrong type for arguments for function ");
         std::cout <<ID.c_str();
+        error("wrong type for arguments for function ");
         std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
         std::cout<<" got: "<<op[i].type().id()<<std::endl;
 
@@ -502,6 +502,12 @@ exprt new_smt2_parsert::expression()
       return true_exprt();
     else if(buffer=="false")
       return false_exprt();
+    else if(local_variable_map.find(buffer)!=local_variable_map.end())
+    {
+      // search local variable map first, we clear the local variable map
+      // as soon as we are done parsing the function body
+      return symbol_exprt(buffer, local_variable_map[buffer]);
+    }
     else if(variable_map.find(buffer)!=variable_map.end())
     {
       return symbol_exprt(buffer, variable_map[buffer]);
@@ -716,6 +722,11 @@ exprt new_smt2_parsert::expression()
         {
           return expand_function(id, op);
         }
+        else if(local_variable_map.find(id)!=local_variable_map.end())
+        {
+          symbol_exprt result(id, local_variable_map[id]);
+          return result;
+        }
         else if(variable_map.find(id)!=variable_map.end())
         {
           symbol_exprt result(id, variable_map[id]);
@@ -822,9 +833,10 @@ function_typet new_smt2_parsert::function_signature()
     }
 
     auto &var=result.add_variable();
-
-    var.set_identifier(buffer);
+    std::string id=buffer;
+    var.set_identifier(id);
     var.type()=sort();
+    local_variable_map[id]=var.type();
 
     if(next_token()!=CLOSE)
     {

@@ -45,12 +45,15 @@ void sygus_parsert::command(const std::string &c)
       return;
     }
 
+    local_variable_map.clear();
+
     auto signature=function_signature();
     exprt body=expression();
 
     auto &f=function_map[id];
     f.type=signature;
     f.body=body;
+    local_variable_map.clear();
   }
   else if(c=="synth-fun")
   {
