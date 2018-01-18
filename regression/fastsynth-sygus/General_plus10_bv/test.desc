@@ -1,0 +1,10 @@
+CORE
+General_plus10_bv.sl
+
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+^Result: fb -> .*$
+^Result: fc -> .*$
+--
+^warning: ignoring
