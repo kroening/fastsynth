@@ -750,7 +750,7 @@ typet new_smt2_parsert::sort()
       return real_typet();
     else
     {
-      error("unexpected sort");
+      error("unexpected sort: " + buffer);
       return nil_typet();
     }
 
@@ -781,7 +781,7 @@ typet new_smt2_parsert::sort()
     }
     else
     {
-      error("unexpected sort");
+      error("unexpected sort: " + buffer);
       return nil_typet();
     }
 
