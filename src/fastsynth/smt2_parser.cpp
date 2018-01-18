@@ -513,7 +513,7 @@ exprt new_smt2_parsert::expression()
       return symbol_exprt(buffer, variable_map[buffer]);
     }
     else
-      return symbol_exprt(buffer, bool_typet());
+      return symbol_exprt(buffer, default_type);
 
   case NUMERAL:
     if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')

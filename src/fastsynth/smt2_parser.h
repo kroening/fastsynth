@@ -111,6 +111,7 @@ protected:
   using variable_mapt=std::map<irep_idt, typet>;
   variable_mapt variable_map;
   variable_mapt local_variable_map;
+  typet default_type;
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
