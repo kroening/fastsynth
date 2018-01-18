@@ -14,7 +14,8 @@ public:
   /// Sets the maximum program size permitted.
   virtual void set_program_size(size_t program_size) = 0;
 
-  /// Finds a new candidate for the current counterexample set.
+  /// Finds a new candidate for the current counterexample set. This operation
+  /// needs to be implemented in a thread-safe manner.
   /// \return \see decision_proceduret::resultt
   virtual decision_proceduret::resultt operator()() = 0;
 
@@ -25,6 +26,9 @@ public:
   /// Adds an additional counterexample to the search constraint.
   /// \param counterexample New counterexample.
   virtual void add(const verify_encodingt::counterexamplet &counterexample) = 0;
+
+  /// Cancels a concurrent run of learnt::operator()().
+  virtual void cancel() = 0;
 };
 
 #endif /* CPROVER_FASTSYNTH_LEARN_H_ */

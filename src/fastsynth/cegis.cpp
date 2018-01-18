@@ -1,4 +1,5 @@
 #include "cegis.h"
+#include "composite_learn.h"
 #include "incremental_prop_learn.h"
 #include "prop_learn.h"
 #include "synth_encoding.h"
@@ -14,18 +15,24 @@
 decision_proceduret::resultt cegist::operator()(
     const problemt &problem)
 {
+  composite_learnt learn;
+
   if(incremental_solving)
   {
     status() << "** incremental CEGIS" << eom;
-    incremental_prop_learnt learn(*this, ns, problem, use_simp_solver);
-    return loop(problem, learn);
+    if(use_simp_solver)
+      learn.add<incremental_prop_learnt<satcheckt>>(*this, ns, problem);
+    else
+      learn.add<incremental_prop_learnt<satcheck_no_simplifiert>>(
+        *this, ns, problem);
   }
   else
   {
     status() << "** non-incremental CEGIS" << eom;
-    prop_learnt learn(*this, ns, problem);
-    return loop(problem, learn);
+    learn.add<prop_learnt>(*this, ns, problem);
   }
+
+  return loop(problem, learn);
 }
 
 decision_proceduret::resultt cegist::loop(
