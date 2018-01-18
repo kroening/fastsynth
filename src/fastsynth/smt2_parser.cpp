@@ -475,6 +475,24 @@ void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
   expr.type()=expr.op1().type();
 
 }
+
+void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
+{
+  if(expr.operands().size()!=2)
+    error("binary operation expects 2 operands");
+  if(expr.op0().type()!=expr.op1().type() &&
+      !(expr.op0().id()==ID_constant || expr.op1().id()==ID_constant))
+    error("mismatching types for binary operand" + expr.id_string());
+
+  if(expr.op0().id()==ID_constant && expr.op1().id()!=ID_constant)
+    expr.op0().type()=expr.op1().type();
+
+  if(expr.op1().id()==ID_constant && expr.op0().id()!=ID_constant)
+    expr.op1().type()=expr.op0().type();
+
+  expr.type()=expr.op0().type();
+}
+
 exprt new_smt2_parsert::expression()
 {
   switch(next_token())
@@ -564,6 +582,7 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
+        result.type()=bool_typet();
         return result;
       }
       else if(id==">" || id=="bvugt" || id=="bvsgt")
@@ -637,30 +656,35 @@ exprt new_smt2_parsert::expression()
       {
         plus_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsub" || id=="-")
       {
         minus_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvmul" || id=="*")
       {
         mult_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsdiv" || id=="bvudiv" || id=="/")
       {
         div_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
         mod_exprt result;
         result.operands()=op;
+        fix_binary_operation_result_type(result);
         return result;
       }
       else if(id=="ite")
