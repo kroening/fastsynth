@@ -354,7 +354,6 @@ void new_smt2_parsert::ignore_command()
     }
   }
 }
-#include <iostream>
 exprt::operandst new_smt2_parsert::operands()
 {
   exprt::operandst result;
@@ -418,38 +417,41 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
   return result;
 }
 
+#include <iostream>
 
-exprt new_smt2_parsert::expand_function(irep_idt ID, exprt::operandst op)
+exprt new_smt2_parsert::function_application(
+  const irep_idt &identifier,
+  const exprt::operandst &op)
 {
-  auto &f = function_map[ID];
-//  if(f.body==nil_typet())
+  const auto &f = function_map[identifier];
+
+  function_application_exprt result;
+
+  result.function()=symbol_exprt(identifier, f.type);
+  result.arguments()=op;
+
+  // check the arguments
+  if(op.size()!=f.type.variables().size())
   {
-    function_application_exprt result;
-    result.function()=symbol_exprt(ID);
-    result.arguments()=op;
-    // check arguments
-    if(op.size()!=f.type.variables().size())
+    error("wrong number of arguments for function");
+    return nil_exprt();
+  }
+
+  for(std::size_t i=0; i<op.size(); i++)
+  {
+    if(op[i].type()!=f.type.variables()[i].type())
     {
-      error("wrong number of arguments for function ");
+      std::cout << identifier;
+      error("wrong type for arguments for function ");
+      std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
+      std::cout<<" got: "<<op[i].type().id()<<std::endl;
+
       return nil_exprt();
     }
-
-    for(std::size_t i=0; i<op.size(); i++)
-    {
-      if(op[i].type()!=f.type.variables()[i].type())
-      {
-        std::cout <<ID.c_str();
-        error("wrong type for arguments for function ");
-        std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
-        std::cout<<" got: "<<op[i].type().id()<<std::endl;
-
-
-        return nil_exprt();
-      }
-    }
-    result.type()=f.type.range();
-    return result;
   }
+
+  result.type()=f.type.range();
+  return result;
 }
 
 
@@ -640,7 +642,6 @@ exprt new_smt2_parsert::expression()
         result.type()=type;
         return result;
       }
-
       else if(id=="bvand")
       {
         bitand_exprt result;
@@ -720,7 +721,8 @@ exprt new_smt2_parsert::expression()
       {
         if(function_map.count(id)!=0)
         {
-          return expand_function(id, op);
+          std::cout << "APPLICATION: " << id << "\n";
+          return function_application(id, op);
         }
         else if(local_variable_map.find(id)!=local_variable_map.end())
         {
