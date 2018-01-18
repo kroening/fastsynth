@@ -777,7 +777,7 @@ typet new_smt2_parsert::sort()
         return nil_typet();
       }
 
-      return bv_typet(width);
+      return unsignedbv_typet(width);
     }
     else
     {
