@@ -514,28 +514,36 @@ exprt new_smt2_parsert::expression()
   switch(next_token())
   {
   case SYMBOL:
-    if(buffer=="true")
-      return true_exprt();
-    else if(buffer=="false")
-      return false_exprt();
-    else if(local_variable_map.find(buffer)!=local_variable_map.end())
     {
-      // search local variable map first, we clear the local variable map
-      // as soon as we are done parsing the function body
-      return symbol_exprt(buffer, local_variable_map[buffer]);
-    }
-    else if(variable_map.find(buffer)!=variable_map.end())
-    {
-      return symbol_exprt(buffer, variable_map[buffer]);
-    }
-    else if(function_map.find(buffer)!=function_map.end())
-    {
-      return function_application(buffer, exprt::operandst());
-    }
-    else
-    {
-      error("unknown symbol " + buffer);
-      return symbol_exprt(buffer, bool_typet());
+      // hash it
+      const irep_idt identifier=buffer;
+
+      if(identifier==ID_true)
+        return true_exprt();
+      else if(identifier==ID_false)
+        return false_exprt();
+      else if(local_variable_map.find(identifier)!=
+              local_variable_map.end())
+      {
+        // search local variable map first, we clear the local variable map
+        // as soon as we are done parsing the function body
+        return symbol_exprt(identifier, local_variable_map[identifier]);
+      }
+      else if(variable_map.find(identifier)!=
+              variable_map.end())
+      {
+        return symbol_exprt(identifier, variable_map[identifier]);
+      }
+      else if(function_map.find(identifier)!=
+              function_map.end())
+      {
+        return function_application(identifier, exprt::operandst());
+      }
+      else
+      {
+        error("unknown symbol "+buffer);
+        return symbol_exprt(identifier, bool_typet());
+      }
     }
 
   case NUMERAL:
@@ -565,9 +573,10 @@ exprt new_smt2_parsert::expression()
   case OPEN:
     if(next_token()==SYMBOL)
     {
-      std::string id=buffer;
+      // hash it
+      const irep_idt id=buffer;
 
-      if(buffer=="let")
+      if(id==ID_let)
       {
         // bool indicates first in chain
         return let_expression(true);
@@ -575,25 +584,25 @@ exprt new_smt2_parsert::expression()
 
       const auto op=operands();
 
-      if(id=="and")
+      if(id==ID_and)
       {
         and_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(id=="or")
+      else if(id==ID_or)
       {
         or_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(id=="xor")
+      else if(id==ID_xor)
       {
         notequal_exprt result;
         result.operands()=op;
         return result;
       }
-      else if(id=="not")
+      else if(id==ID_not)
       {
         not_exprt result;
         result.operands()=op;
@@ -756,7 +765,7 @@ exprt new_smt2_parsert::expression()
         }
         else
         {
-          error("use of undeclared symbol or function" + id);
+          error("use of undeclared symbol or function"+id2string(id));
         }
       }
     }
@@ -789,7 +798,7 @@ typet new_smt2_parsert::sort()
       return real_typet();
     else
     {
-      error("unexpected sort: " + buffer);
+      error("unexpected sort: "+buffer);
       return nil_typet();
     }
 
@@ -905,7 +914,7 @@ void new_smt2_parsert::command(const std::string &c)
       return;
     }
 
-    irep_idt id=buffer;
+    const irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
     {
