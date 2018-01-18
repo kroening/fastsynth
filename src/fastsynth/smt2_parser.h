@@ -79,6 +79,19 @@ public:
     command_sequence();
   }
 
+  struct functiont
+  {
+    function_typet type;
+    exprt body;
+  };
+
+  using function_mapt=std::map<irep_idt, functiont>;
+  function_mapt function_map;
+
+  using variable_mapt=std::map<irep_idt, typet>;
+  variable_mapt variable_map;
+  variable_mapt local_variable_map;
+
 protected:
   void command_sequence();
 
@@ -97,18 +110,6 @@ protected:
   void fix_binary_operation_result_type(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
 
-  struct functiont
-  {
-    function_typet type;
-    exprt body;
-  };
-
-  using function_mapt=std::map<irep_idt, functiont>;
-  function_mapt function_map;
-
-  using variable_mapt=std::map<irep_idt, typet>;
-  variable_mapt variable_map;
-  variable_mapt local_variable_map;
   typet default_type;
 };
 
