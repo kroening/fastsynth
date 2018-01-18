@@ -1,3 +1,5 @@
+#include <fastsynth/c_frontend.h>
+
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -123,8 +125,8 @@ int c_frontend(const cmdlinet &cmdline)
 
   config.set(cmdline);
   config.ansi_c.set_arch_spec_i386();
-  
-  assert(cmdline.args.size()==1);
+
+  PRECONDITION(cmdline.args.size()==1);
 
   goto_modelt goto_model;
 
@@ -136,9 +138,9 @@ int c_frontend(const cmdlinet &cmdline)
   {
     return 1;
   }
-  
+
   auto expressions=find_expressions(goto_model);
-  
+
   for(const auto &i : expressions)
     message.status() << "EXPRESSION: " << i << messaget::eom;
 
@@ -148,18 +150,18 @@ int c_frontend(const cmdlinet &cmdline)
   namespacet ns(goto_model.symbol_table, new_symbol_table);
   symex_target_equationt equation(ns);
   goto_symext goto_symex(mh, ns, new_symbol_table, equation);
-  
+
   goto_symex(goto_model.goto_functions);
 
   #if 0
   show_formula(equation, ns);
   #endif
-  
+
   const auto problem=generate_cegis_problem(equation);
 
   cegist cegis(ns);
   cegis.set_message_handler(mh);
-  
+
   if(cmdline.isset("max-program-size"))
     cegis.max_program_size=std::stol(
       cmdline.get_value("max-program-size"));
@@ -167,7 +169,7 @@ int c_frontend(const cmdlinet &cmdline)
     cegis.max_program_size=5; // default
 
   cegis.incremental_solving=cmdline.isset("incremental");
-  cegis.incremental_solving=cmdline.isset("simplifying-solver");
+  cegis.use_simp_solver=cmdline.isset("simplifying-solver");
 
 
   auto start_time=current_time();
@@ -186,7 +188,7 @@ int c_frontend(const cmdlinet &cmdline)
     }
 
     message.result() << messaget::eom;
-    
+
     message.statistics() << "Synthesis time: "
                          << current_time()-start_time
                          << 's'
