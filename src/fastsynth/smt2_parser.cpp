@@ -721,7 +721,6 @@ exprt new_smt2_parsert::expression()
       {
         if(function_map.count(id)!=0)
         {
-          std::cout << "APPLICATION: " << id << "\n";
           return function_application(id, op);
         }
         else if(local_variable_map.find(id)!=local_variable_map.end())
