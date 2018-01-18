@@ -528,6 +528,10 @@ exprt new_smt2_parsert::expression()
     {
       return symbol_exprt(buffer, variable_map[buffer]);
     }
+    else if(function_map.find(buffer)!=function_map.end())
+    {
+      return function_application(buffer, exprt::operandst());
+    }
     else
     {
       error("unknown symbol " + buffer);
