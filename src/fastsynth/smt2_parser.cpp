@@ -502,6 +502,10 @@ exprt new_smt2_parsert::expression()
       return true_exprt();
     else if(buffer=="false")
       return false_exprt();
+    else if(variable_map.find(buffer)!=variable_map.end())
+    {
+      return symbol_exprt(buffer, variable_map[buffer]);
+    }
     else
       return symbol_exprt(buffer, bool_typet());
 
