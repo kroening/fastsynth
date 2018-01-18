@@ -558,6 +558,12 @@ exprt new_smt2_parsert::expression()
         result.operands()=op;
         return result;
       }
+      else if(id=="xor")
+      {
+        notequal_exprt result;
+        result.operands()=op;
+        return result;
+      }
       else if(id=="not")
       {
         not_exprt result;
