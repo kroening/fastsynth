@@ -13,7 +13,7 @@
 #include <util/simplify_expr.h>
 
 decision_proceduret::resultt cegist::operator()(
-    const problemt &problem)
+  const problemt &problem)
 {
   composite_learnt learn;
 
@@ -106,6 +106,7 @@ decision_proceduret::resultt cegist::loop(
 
     verify_encodingt verify_encoding;
     verify_encoding.expressions=expressions;
+    verify_encoding.free_variables=problem.free_variables;
 
     add_problem(problem, verify_encoding, verify_solver);
 
