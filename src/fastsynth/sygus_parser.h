@@ -21,6 +21,9 @@ public:
 
   virtual void error(const std::string &s) override;
 
+  void expand_function_applications(exprt &);
+
+protected:
   void NTDef_seq();
   void GTerm_seq();
   void NTDef();

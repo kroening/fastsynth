@@ -58,6 +58,9 @@ int sygus_frontend(const cmdlinet &cmdline)
   cegist::problemt problem;
   problem.constraints=parser.constraints;
 
+  for(auto &c : problem.constraints)
+    parser.expand_function_applications(c);
+
   auto start_time=current_time();
 
   switch(cegis(problem))

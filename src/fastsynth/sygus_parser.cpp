@@ -2,10 +2,13 @@
 
 #include <util/std_types.h>
 #include <util/std_expr.h>
+#include <util/replace_symbol.h>
 
 #include <cassert>
 #include <fstream>
 #include <iostream>
+
+#include "function.h"
 
 void sygus_parsert::error(const std::string &s)
 {
@@ -203,3 +206,44 @@ void sygus_parsert::GTerm()
   }
 }
 
+void sygus_parsert::expand_function_applications(exprt &expr)
+{
+  for(exprt &op : expr.operands())
+    expand_function_applications(op);
+
+  if(expr.id()==ID_function_application)
+  {
+    auto &app=to_function_application_expr(expr);
+
+    // look it up
+    irep_idt identifier=app.function().get_identifier();
+    auto f_it=function_map.find(identifier);
+
+    if(f_it!=function_map.end())
+    {
+      const auto &f=f_it->second;
+
+      if(synth_fun_set.find(identifier)!=synth_fun_set.end())
+        return; // do not expand
+
+      assert(f.type.variables().size()==
+             app.arguments().size());
+
+      replace_symbolt replace_symbol;
+
+      std::map<irep_idt, exprt> parameter_map;
+      for(std::size_t i=0; i<f.type.variables().size(); i++)
+      {
+        const irep_idt p_identifier=
+          f.type.variables()[i].get_identifier();
+
+        replace_symbol.insert(p_identifier, app.arguments()[i]);
+      }
+
+      exprt body=f.body;
+      replace_symbol(body);
+
+      expr=body;
+    }
+  }
+}
