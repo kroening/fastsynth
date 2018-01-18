@@ -4,6 +4,6 @@ main.c
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSION -> parameter1 >= parameter0 \? parameter1 : parameter0$
+^Result: EXPRESSION -> (parameter1 >= parameter0 \? parameter1 : parameter0)|(parameter0 >= parameter1 \? parameter0 : parameter1)$
 --
 ^warning: ignoring
