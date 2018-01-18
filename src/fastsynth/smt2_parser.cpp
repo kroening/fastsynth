@@ -698,7 +698,7 @@ exprt new_smt2_parsert::expression()
         fix_ite_operation_result_type(result);
         return result;
       }
-      else if(buffer=="=>" || buffer=="implies")
+      else if(id=="=>" || id=="implies")
       {
         implies_exprt result;
         result.operands()=op;
