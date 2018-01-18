@@ -402,6 +402,7 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
     {
       // get op2
       result.op2() = let_expression(false);
+      result.type() = result.op2().type();
     }
     else
     {
@@ -410,6 +411,7 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
       if(peek()!= OPEN)
         error("let expects where here");
       result.op2() = expression();
+      result.type()=result.op2().type();
       next_token(); // eat the final ')' that closes the let exprt
     }
   }
