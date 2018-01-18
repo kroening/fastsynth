@@ -97,10 +97,6 @@ void sygus_parsert::command(const std::string &c)
 
     variable_map[id]=sort();
   }
-  else if(c=="synth-fun")
-  {
-    ignore_command();
-  }
   else if(c=="constraint")
   {
     constraints.push_back(expression());
