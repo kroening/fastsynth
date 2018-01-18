@@ -86,6 +86,8 @@ void sygus_parsert::command(const std::string &c)
     auto &f=function_map[id];
     f.type=signature;
     f.body=nil_exprt();
+
+    synth_fun_set.insert(id);
   }
   else if(c=="declare-var")
   {
