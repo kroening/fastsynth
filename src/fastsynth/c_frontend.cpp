@@ -130,6 +130,9 @@ cegist::problemt generate_cegis_problem(
   for(const auto &c : result.constraints)
     get_free_variables(c, result.free_variables);
 
+  for(const auto &c : result.side_conditions)
+    get_free_variables(c, result.free_variables);
+
   return result;
 }
 
