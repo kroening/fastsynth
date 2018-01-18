@@ -29,13 +29,6 @@ void sygus_parsert::command(const std::string &c)
 
     logic=buffer;
     std::cout << "Logic: " << logic << '\n';
-    if(logic=="BitVec" || logic =="BV")
-      default_type=unsignedbv_typet(32);
-    else if(logic=="LIA" || logic=="SLIA")
-      default_type=integer_typet();
-    else
-      default_type=unsignedbv_typet(32);
-
   }
   else if(c=="define-fun")
   {
