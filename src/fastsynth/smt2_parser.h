@@ -95,6 +95,7 @@ protected:
   typet sort();
   exprt::operandst operands();
   function_typet function_signature();
+  exprt expand_function(irep_idt ID, exprt::operandst op);
   void fix_ite_operation_result_type(if_exprt &expr);
 
   struct functiont
