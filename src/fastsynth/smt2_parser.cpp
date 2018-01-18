@@ -482,18 +482,32 @@ void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
 {
   if(expr.operands().size()!=2)
     error("binary operation expects 2 operands");
-  if(expr.op0().type()!=expr.op1().type() &&
-      !(expr.op0().id()==ID_constant || expr.op1().id()==ID_constant))
-    error("mismatching types for binary operand" + expr.id_string());
-
-  if(expr.op0().id()==ID_constant && expr.op1().id()!=ID_constant)
-    expr.op0().type()=expr.op1().type();
-
-  if(expr.op1().id()==ID_constant && expr.op0().id()!=ID_constant)
-    expr.op1().type()=expr.op0().type();
+  if(expr.op0().type()!=expr.op1().type())
+  {
+   // default type is unsigned bitvector
+    if(expr.op0().type().id()==ID_unsignedbv)
+      expr.op1().type()=expr.op0().type();
+    else if(expr.op1().type().id()==ID_unsignedbv)
+      expr.op0().type()=expr.op1().type();
+    else if(expr.op0().type().id()==ID_signedbv)
+    {
+      unsignedbv_typet type(to_signedbv_type(expr.op0().type()).get_width());
+      expr.op0().type()=type;
+      expr.op1().type()=type;
+    }
+    else if(expr.op1().type().id()==ID_signedbv)
+    {
+      unsignedbv_typet type(to_signedbv_type(expr.op1().type()).get_width());
+      expr.op0().type()=type;
+      expr.op1().type()=type;
+    }
+    else
+      error("mismatching types for binary operand" + expr.id_string());
+  }
 
   expr.type()=expr.op0().type();
 }
+
 
 exprt new_smt2_parsert::expression()
 {
@@ -515,7 +529,10 @@ exprt new_smt2_parsert::expression()
       return symbol_exprt(buffer, variable_map[buffer]);
     }
     else
-      return symbol_exprt(buffer, default_type);
+    {
+      error("unknown symbol " + buffer);
+      return symbol_exprt(buffer, bool_typet());
+    }
 
   case NUMERAL:
     if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')
