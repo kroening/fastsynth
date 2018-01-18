@@ -510,27 +510,27 @@ exprt new_smt2_parsert::expression()
       return symbol_exprt(buffer, bool_typet());
 
   case NUMERAL:
-    if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='x')
+    if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
-      const std::size_t width = 4*buffer.size() - 2;
+      const std::size_t width = 4*(buffer.length() - 2);
       CHECK_RETURN(width!=0 && width%4==0);
-      bv_typet type(width);
+      unsignedbv_typet type(width);
       return from_integer(value, type);
     }
-    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[0]=='b')
+    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='b')
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
       const std::size_t width = buffer.size() - 2;
       CHECK_RETURN(width!=0 && width%2==0);
-      bv_typet type(width);
+      unsignedbv_typet type(width);
       return from_integer(value, type);
     }
     else
     {
-      return constant_exprt();
+      return constant_exprt(buffer, integer_typet());
     }
 
   case OPEN:
