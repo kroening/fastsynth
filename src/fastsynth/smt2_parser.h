@@ -82,13 +82,11 @@ public:
 protected:
   void command_sequence();
 
-  virtual void command(const std::string &)
-  {
-    // by default, we ignore
-    ignore_command();
-  }
+  virtual void command(const std::string &);
 
   void ignore_command();
+  void declare_var();
+  void define_fun();
 
   exprt expression();
   let_exprt let_expression(bool first_in_chain);

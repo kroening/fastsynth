@@ -851,3 +851,57 @@ function_typet new_smt2_parsert::function_signature()
 
   return result;
 }
+
+void new_smt2_parsert::command(const std::string &c)
+{
+  if(c=="declare-var")
+  {
+    if(next_token()!=SYMBOL)
+    {
+      error("expected a symbol after declare-var");
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+
+    if(variable_map.find(id)!=variable_map.end())
+    {
+      error("variable declared twice");
+      ignore_command();
+      return;
+    }
+
+    variable_map[id]=sort();
+  }
+  else if(c=="define-fun")
+  {
+    if(next_token()!=SYMBOL)
+    {
+      error("expected a symbol after define-fun");
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+
+    if(function_map.find(id)!=function_map.end())
+    {
+      error("function declared twice");
+      ignore_command();
+      return;
+    }
+
+    local_variable_map.clear();
+
+    auto signature=function_signature();
+    exprt body=expression();
+
+    auto &f=function_map[id];
+    f.type=signature;
+    f.body=body;
+    local_variable_map.clear();
+  }
+  else
+    ignore_command();
+}
