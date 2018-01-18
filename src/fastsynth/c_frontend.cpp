@@ -87,6 +87,20 @@ void show_formula(
   }
 }
 
+void get_free_variables(
+  const exprt &expr,
+  std::set<exprt> &free_variables)
+{
+  for(const auto &op : expr.operands())
+    get_free_variables(op, free_variables);
+
+  if(expr.id()==ID_nondet_symbol)
+  {
+    // record
+    free_variables.insert(expr);
+  }
+}
+
 cegist::problemt generate_cegis_problem(
   const symex_target_equationt &src)
 {
@@ -112,6 +126,9 @@ cegist::problemt generate_cegis_problem(
       result.constraints.push_back(step.cond_expr);
     }
   }
+
+  for(const auto &c : result.constraints)
+    get_free_variables(c, result.free_variables);
 
   return result;
 }
@@ -170,7 +187,6 @@ int c_frontend(const cmdlinet &cmdline)
 
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
-
 
   auto start_time=current_time();
 

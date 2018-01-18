@@ -1,6 +1,8 @@
 #ifndef CPROVER_FASTSYNTH_CEGIS_H_
 #define CPROVER_FASTSYNTH_CEGIS_H_
 
+#include <set>
+
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
@@ -22,6 +24,7 @@ public:
   class problemt
   {
   public:
+    std::set<exprt> free_variables;
     exprt::operandst side_conditions, constraints;
   };
 

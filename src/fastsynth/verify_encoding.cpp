@@ -4,7 +4,7 @@
 
 //#include <langapi/language_util.h>
 
-exprt verify_encodingt::operator()(const exprt &expr)
+exprt verify_encodingt::operator()(const exprt &expr) const
 {
   if(expr.id()==ID_function_application)
   {
@@ -20,12 +20,6 @@ exprt verify_encodingt::operator()(const exprt &expr)
 
     return instance;
   }
-  else if(expr.id()==ID_nondet_symbol)
-  {
-    // record
-    free_variables.insert(expr);
-    return expr;
-  }
   else
   {
     exprt tmp=expr;
@@ -39,7 +33,7 @@ exprt verify_encodingt::operator()(const exprt &expr)
 
 exprt verify_encodingt::instantiate(
   const exprt &expr,
-  const function_application_exprt &e)
+  const function_application_exprt &e) const
 {
   if(expr.id()==ID_symbol)
   {
@@ -68,7 +62,7 @@ exprt verify_encodingt::instantiate(
 }
 
 std::map<exprt, exprt> verify_encodingt::get_counterexample(
-  const decision_proceduret &solver)
+  const decision_proceduret &solver) const
 {
   std::map<exprt, exprt> result;
 

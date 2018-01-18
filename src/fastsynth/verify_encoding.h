@@ -9,20 +9,20 @@
 class verify_encodingt
 {
 public:
-  exprt operator()(const exprt &);
+  exprt operator()(const exprt &) const;
 
   std::map<symbol_exprt, exprt> expressions;
+  std::set<exprt> free_variables;
 
   using counterexamplet=std::map<exprt, exprt>;
 
-  counterexamplet get_counterexample(const decision_proceduret &);
+  counterexamplet get_counterexample(
+    const decision_proceduret &) const;
 
 protected:
-  std::set<exprt> free_variables;
-
   exprt instantiate(
     const exprt &expr,
-    const function_application_exprt &e);
+    const function_application_exprt &e) const;
 };
 
 #endif /* CPROVER_FASTSYNTH_VERIFY_ENCODING_H_ */
