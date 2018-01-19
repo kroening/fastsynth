@@ -36,7 +36,7 @@ int sygus_frontend(const cmdlinet &cmdline)
 
   sygus_parsert parser(in);
 
-  parser();
+  parser.parse();
 
   if(!parser)
     return 20;

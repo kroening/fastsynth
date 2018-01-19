@@ -37,7 +37,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_simple_symbol()
   buffer.clear();
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(is_simple_symbol_character(ch))
     {
@@ -45,7 +45,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_simple_symbol()
     }
     else
     {
-      in.unget(); // put back
+      in->unget(); // put back
       return SYMBOL;
     }
   }
@@ -64,7 +64,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_decimal_numeral()
   buffer.clear();
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(isdigit(ch) || ch=='.')
     {
@@ -72,7 +72,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_decimal_numeral()
     }
     else
     {
-      in.unget(); // put back
+      in->unget(); // put back
       return NUMERAL;
     }
   }
@@ -93,7 +93,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_bin_numeral()
   buffer+='b';
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(ch=='0' || ch=='1')
     {
@@ -101,7 +101,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_bin_numeral()
     }
     else
     {
-      in.unget(); // put back
+      in->unget(); // put back
       return NUMERAL;
     }
   }
@@ -122,7 +122,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_hex_numeral()
   buffer+='x';
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(isxdigit(ch))
     {
@@ -130,7 +130,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_hex_numeral()
     }
     else
     {
-      in.unget(); // put back
+      in->unget(); // put back
       return NUMERAL;
     }
   }
@@ -152,7 +152,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_quoted_symbol()
   buffer.clear();
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(ch=='|')
       return SYMBOL; // done
@@ -169,19 +169,19 @@ smt2_tokenizert::tokent smt2_tokenizert::get_string_literal()
   buffer.clear();
 
   char ch;
-  while(in.get(ch))
+  while(in->get(ch))
   {
     if(ch=='"')
     {
       // quotes may be escaped by repeating
-      if(in.get(ch))
+      if(in->get(ch))
       {
         if(ch=='"')
         {
         }
         else
         {
-          in.unget();
+          in->unget();
           return STRING_LITERAL; // done
         }
       }
@@ -204,7 +204,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
 
   char ch;
 
-  while(in.get(ch))
+  while(in->get(ch))
   {
     switch(ch)
     {
@@ -218,7 +218,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
 
     case ';': // comment
       // skip until newline
-      while(in.get(ch) && ch!='\n')
+      while(in->get(ch) && ch!='\n')
       {
         // ignore
       }
@@ -242,7 +242,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
       return token=get_simple_symbol();
 
     case '#':
-      if(in.get(ch))
+      if(in->get(ch))
       {
         if(ch=='b')
           return token=get_bin_numeral();
@@ -266,16 +266,16 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
     default: // likely a simple symbol or a numeral
       if(isdigit(ch))
       {
-        in.unget();
+        in->unget();
         return token=get_decimal_numeral();
       }
       else if(ch == '-')
       {
-        if(in.get(ch))
+        if(in->get(ch))
         {
           if(isdigit(ch)) // a negative number
           {
-            in.unget();
+            in->unget();
             get_decimal_numeral();
             std::string id = buffer;
             buffer = '-' + id;
@@ -283,15 +283,15 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
           }
           else
           {
-            in.unget();
-            in.unget();
+            in->unget();
+            in->unget();
             return token = get_simple_symbol();
           }
         }
       }
       else if(is_simple_symbol_character(ch))
       {
-        in.unget();
+        in->unget();
         return token=get_simple_symbol();
       }
       else
