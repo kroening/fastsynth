@@ -54,7 +54,7 @@ void sygus_parsert::command(const std::string &c)
     f.body=body;
     local_variable_map.clear();
   }
-  else if(c=="synth-fun")
+  else if(c=="synth-fun" || c=="synth-inv")
   {
     if(next_token()!=SYMBOL)
     {
@@ -67,12 +67,14 @@ void sygus_parsert::command(const std::string &c)
 
     if(function_map.find(id)!=function_map.end())
     {
-      error() << "function `" << id << "' declared twice" << eom;
+      error() << "function `" << id << " declared twice" << eom;
       ignore_command();
       return;
     }
 
-    auto signature=function_signature();
+    auto signature=(c=="synth-inv")?
+        inv_function_signature() : function_signature();
+
     NTDef_seq();
 
     auto &f=function_map[id];
@@ -103,9 +105,45 @@ void sygus_parsert::command(const std::string &c)
 
     variable_map[id]=sort();
   }
+  else if(c=="declare-primed-var")
+  {
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected a symbol after declare-primed-var" << eom;
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+    irep_idt id_prime=buffer+"!";
+
+    if(variable_map.find(id)!=variable_map.end())
+    {
+      error() << "variable declared twice" << eom;
+      ignore_command();
+      return;
+    }
+
+    variable_map[id]=sort();
+
+    if(variable_map.find(id_prime)!=variable_map.end())
+    {
+      error() << "variable declared twice" << eom;
+      ignore_command();
+      return;
+    }
+
+    variable_map[id_prime]=variable_map[id];
+
+  }
   else if(c=="constraint")
   {
     constraints.push_back(expression());
+  }
+  else if(c=="inv-constraint")
+  {
+    ignore_command();
+    generate_invariant_constraints();
   }
   else if(c=="set-options")
   {
@@ -118,6 +156,132 @@ void sygus_parsert::command(const std::string &c)
   }
   else
     ignore_command();
+}
+
+function_typet sygus_parsert::inv_function_signature()
+{
+  function_typet result;
+
+  if(next_token()!=OPEN)
+  {
+    error() << "expected '(' at beginning of signature" << eom;
+    return result;
+  }
+
+  while(peek()!=CLOSE)
+  {
+    if(next_token()!=OPEN)
+    {
+      error() << "expected '(' at beginning of parameter" << eom;
+      return result;
+    }
+
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected symbol in parameter" << eom;
+      return result;
+    }
+
+    auto &var=result.add_variable();
+    std::string id=buffer;
+    var.set_identifier(id);
+    var.type()=sort();
+    local_variable_map[id]=var.type();
+
+    if(next_token()!=CLOSE)
+    {
+      error() << "expected ')' at end of parameter" << eom;
+      return result;
+    }
+  }
+
+  next_token(); // eat the ')'
+
+  result.range()=bool_typet();
+
+  return result;
+}
+
+
+void sygus_parsert::apply_function_to_variables(
+    function_application_exprt &expr,
+    invariant_constraint_functiont function_type,
+    invariant_variablet var_use)
+{
+  std::string suffix;
+  if(var_use == PRIMED)
+    suffix = "!";
+
+  std::string id;
+  switch(function_type)
+  {
+  case PRE:
+    id = "pre-f";
+    break;
+  case INV:
+    id = "inv-f";
+    break;
+  case TRANS:
+    id = "trans-f";
+    break;
+  case POST:
+    id = "post-f";
+    break;
+  }
+
+  expr.function() = symbol_exprt(id, bool_typet());
+  if(function_map.find(id) == function_map.end())
+  {
+    error() << "undeclared function " << id << eom;
+    return;
+  }
+  const auto &f = function_map[id];
+  expr.type() = f.type.range();
+  expr.arguments().resize(f.type.variables().size());
+  // get arguments
+  for(std::size_t i = 0; i < f.type.variables().size(); i++)
+  {
+    std::string var_id = id2string(f.type.variables()[i].get_identifier())
+        + suffix;
+
+    if(variable_map.find(var_id) == variable_map.end())
+      error() << "use of undeclared variable " << var_id << eom;
+    symbol_exprt operand(var_id, f.type.variables()[i].type());
+    expr.arguments()[i] = operand;
+  }
+}
+
+
+void sygus_parsert::generate_invariant_constraints()
+{
+  // pre-condition application
+  function_application_exprt pre_f;
+  apply_function_to_variables(pre_f, PRE, UNPRIMED);
+
+  // invariant application
+  function_application_exprt inv;
+  function_application_exprt primed_inv;
+  apply_function_to_variables(inv, INV, UNPRIMED);
+  apply_function_to_variables(primed_inv, INV, PRIMED);
+
+  // transition function application
+  function_application_exprt trans_f;
+  apply_function_to_variables(trans_f, TRANS, UNPRIMED);
+
+  //post-condition function application
+  function_application_exprt post_f;
+  apply_function_to_variables(post_f, POST, UNPRIMED);
+
+  // create constraints
+  implies_exprt pre_condition(pre_f, inv);
+  constraints.push_back(pre_condition);
+
+  and_exprt inv_and_transition(inv, trans_f);
+  implies_exprt transition_condition(inv_and_transition, primed_inv);
+  constraints.push_back(transition_condition);
+
+  implies_exprt post_condition(inv, post_f);
+  constraints.push_back(post_condition);
 }
 
 void sygus_parsert::NTDef_seq()

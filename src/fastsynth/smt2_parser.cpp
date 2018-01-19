@@ -570,7 +570,7 @@ exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
     return expr;
   }
 
- signedbv_typet signed_type(to_unsignedbv_type(expr.op1().type()).get_width());
+ signedbv_typet signed_type(to_unsignedbv_type(expr.type()).get_width());
  typecast_exprt result(expr, signed_type);
  result.op0()=expr;
  result.type()=signed_type;
@@ -580,7 +580,7 @@ exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
 
 exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
 {
-  if(expr.type().id()==ID_unsignedbv) //no need to cast
+  if(expr.type().id()==ID_unsignedbv) // no need to cast
     return expr;
 
   if(expr.type().id()!=ID_signedbv)
@@ -589,7 +589,7 @@ exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
     return expr;
   }
 
-  unsignedbv_typet unsigned_type(to_signedbv_type(expr.op1().type()).get_width());
+  unsignedbv_typet unsigned_type(to_signedbv_type(expr.type()).get_width());
   typecast_exprt result(expr, unsigned_type);
   result.op0()=expr;
   result.type()=unsigned_type;
@@ -1008,7 +1008,7 @@ typet new_smt2_parsert::sort()
     }
 
   default:
-    error() << "unexpected token in a sort" << eom;
+    error() << "unexpected token in a sort " << buffer << eom;
     return nil_typet();
   }
 }
