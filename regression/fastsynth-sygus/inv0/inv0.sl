@@ -2,6 +2,9 @@
 
 (synth-fun inv () (BitVec 32) )
 
+; help
+(constraint (< inv #x00000020))
+
 ; base case
 (constraint (< #x00000000 inv))
 
