@@ -106,10 +106,12 @@ protected:
   typet sort();
   exprt::operandst operands();
   function_typet function_signature();
-  exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
-  void fix_binary_operation_result_type(exprt &expr);
+  exprt function_application(const irep_idt &identifier, exprt::operandst &op);
+  void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
-
+  exprt cast_bv_to_signed(exprt &expr);
+  exprt cast_bv_to_unsigned(exprt &expr);
+  void check_bitvector_operands(exprt &expr);
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
