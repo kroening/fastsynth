@@ -6,15 +6,8 @@
 
 #include <cassert>
 #include <fstream>
-#include <iostream>
 
 #include "function.h"
-
-void sygus_parsert::error(const std::string &s)
-{
-  std::cerr << "Parsing error: " << s << '\n';
-  ok=false;
-}
 
 void sygus_parsert::command(const std::string &c)
 {
@@ -22,19 +15,21 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after set-logic");
+      ok=false;
+      error() << "expected a symbol after set-logic" << eom;
       ignore_command();
       return;
     }
 
     logic=buffer;
-    std::cout << "Logic: " << logic << '\n';
+    status() << "Logic: " << logic << eom;
   }
   else if(c=="define-fun")
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after define-fun");
+      ok=false;
+      error() << "expected a symbol after define-fun" << eom;
       ignore_command();
       return;
     }
@@ -43,7 +38,8 @@ void sygus_parsert::command(const std::string &c)
 
     if(function_map.find(id)!=function_map.end())
     {
-      error("function declared twice");
+      ok=false;
+      error() << "function `" << id << "' declared twice" << eom;
       ignore_command();
       return;
     }
@@ -62,7 +58,7 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after synth-fun");
+      error() << "expected a symbol after synth-fun" << eom;
       ignore_command();
       return;
     }
@@ -71,7 +67,7 @@ void sygus_parsert::command(const std::string &c)
 
     if(function_map.find(id)!=function_map.end())
     {
-      error("function declared twice");
+      error() << "function `" << id << "' declared twice" << eom;
       ignore_command();
       return;
     }
@@ -89,7 +85,8 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after declare-var");
+      ok=false;
+      error() << "expected a symbol after declare-var" << eom;
       ignore_command();
       return;
     }
@@ -98,7 +95,8 @@ void sygus_parsert::command(const std::string &c)
 
     if(variable_map.find(id)!=variable_map.end())
     {
-      error("variable declared twice");
+      ok=false;
+      error() << "variable `" << id << "' declared twice" << eom;
       ignore_command();
       return;
     }
@@ -116,7 +114,7 @@ void sygus_parsert::command(const std::string &c)
   else if(c=="check-synth")
   {
     action=c;
-    std::cout << "Action: " << action << '\n';
+    status() << "Action: " << action << eom;
   }
   else
     ignore_command();
@@ -149,7 +147,8 @@ void sygus_parsert::NTDef()
   // (Symbol Sort GTerm+)
   if(next_token()!=OPEN)
   {
-    error("NTDef must begin with '('");
+    ok=false;
+    error() << "NTDef must begin with '('" << eom;
     return;
   }
 
@@ -158,7 +157,8 @@ void sygus_parsert::NTDef()
 
   if(next_token()!=SYMBOL)
   {
-    error("NTDef must have a symbol");
+    ok=false;
+    error() << "NTDef must have a symbol" << eom;
     return;
   }
 
@@ -168,7 +168,8 @@ void sygus_parsert::NTDef()
 
   if(next_token()!=CLOSE)
   {
-    error("NTDef must end with ')'");
+    ok=false;
+    error() << "NTDef must end with ')'" << eom;
     return;
   }
 }
@@ -194,7 +195,7 @@ void sygus_parsert::GTerm()
     break;
 
   default:
-    error("Unexpected GTerm");
+    error() << "Unexpected GTerm" << eom;
     return;
   }
 }

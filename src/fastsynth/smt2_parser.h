@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/parser.h>
 
-#include <iosfwd>
 #include <string>
 #include <util/std_expr.h>
 
@@ -39,9 +38,6 @@ protected:
   using tokent=enum { NONE, END_OF_FILE, ERROR, STRING_LITERAL,
                       NUMERAL, SYMBOL, OPEN, CLOSE };
   tokent token;
-
-  // parse errors
-  virtual void error(const std::string &) = 0;
 
   tokent next_token();
 

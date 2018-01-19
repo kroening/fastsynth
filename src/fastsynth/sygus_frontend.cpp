@@ -14,7 +14,6 @@
 #include <langapi/mode.h>
 
 #include <fstream>
-#include <iostream>
 
 int sygus_frontend(const cmdlinet &cmdline)
 {
@@ -35,6 +34,7 @@ int sygus_frontend(const cmdlinet &cmdline)
   }
 
   sygus_parsert parser(in);
+  parser.set_message_handler(message_handler);
 
   parser.parse();
 
