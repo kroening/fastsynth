@@ -72,7 +72,7 @@ void sygus_parsert::command(const std::string &c)
       return;
     }
 
-    auto signature=(c=="synth-inv")?
+    auto signature=(id=="inv-f")?
         inv_function_signature() : function_signature();
 
     NTDef_seq();
