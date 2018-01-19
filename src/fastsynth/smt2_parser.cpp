@@ -11,6 +11,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 
 #include <istream>
+#include <iostream>
 
 #include "function.h"
 
@@ -437,11 +438,9 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
   return result;
 }
 
-#include <iostream>
-
 exprt new_smt2_parsert::function_application(
   const irep_idt &identifier,
-  const exprt::operandst &op)
+  exprt::operandst &op)
 {
   const auto &f = function_map[identifier];
 
@@ -461,12 +460,18 @@ exprt new_smt2_parsert::function_application(
   {
     if(op[i].type()!=f.type.variables()[i].type())
     {
-      std::cout << identifier;
-      error("wrong type for arguments for function ");
-      std::cout<<"\nwrong type: expected: " << f.type.variables()[i].type().id_string();
-      std::cout<<" got: "<<op[i].type().id()<<std::endl;
-
-      return nil_exprt();
+      if(op[i].id() == ID_constant)
+      {
+        op[i].type() = f.type.variables()[i].type();
+      }
+      else
+      {
+        std::cout << identifier;
+        error("wrong type for arguments for function ");
+        std::cout << "\nwrong type: expected: "
+            << f.type.variables()[i].type().id_string();
+        std::cout << " got: " << op[i].type().id() << std::endl;
+      }
     }
   }
 
@@ -479,30 +484,43 @@ void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
   if(expr.operands().size()!=3)
     error("ite operation expects 3 operands");
-  if(expr.op1().type()!=expr.op2().type() &&
-      !(expr.op1().id()==ID_constant || expr.op2().id()==ID_constant))
-    error("mismatching types for ite operands");
 
   if(expr.op0().id()!=ID_bool)
-  {
     expr.op0().type()=bool_typet();
+
+  if(expr.op1().type()!=expr.op2().type())
+  {
+   // default type is unsigned bitvector
+    if(expr.op1().type().id()==ID_unsignedbv)
+      expr.op2().type()=expr.op1().type();
+    else if(expr.op1().type().id()==ID_unsignedbv)
+      expr.op1().type()=expr.op2().type();
+    else if(expr.op1().type().id()==ID_signedbv)
+    {
+      unsignedbv_typet type(to_signedbv_type(expr.op1().type()).get_width());
+      expr.op1().type()=type;
+      expr.op2().type()=type;
+    }
+    else if(expr.op2().type().id()==ID_signedbv)
+    {
+      unsignedbv_typet type(to_signedbv_type(expr.op2().type()).get_width());
+      expr.op1().type()=type;
+      expr.op2().type()=type;
+    }
+
+    // throw error if still mismatching. Could be because bitvector widths are different
+    if(expr.op1().type()!=expr.op2().type())
+      error("mismatching types for ite operand" + expr.id_string());
   }
 
-  if(expr.op1().id()==ID_constant && expr.op2().id()!=ID_constant)
-    expr.op1().type()=expr.op2().type();
-
-  if(expr.op2().id()==ID_constant && expr.op1().id()!=ID_constant)
-    expr.op2().type()=expr.op1().type();
-
   expr.type()=expr.op1().type();
-
 }
 
-void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
+void new_smt2_parsert::fix_binary_operation_operand_types(exprt &expr)
 {
   // TODO: deal with different widths of bitvector
   if(expr.operands().size()!=2)
-    error("binary operation expects 2 operands");
+    error("2 operands expected for binary operation " + expr.id_string());
   if(expr.op0().type()!=expr.op1().type())
   {
    // default type is unsigned bitvector
@@ -522,12 +540,13 @@ void new_smt2_parsert::fix_binary_operation_result_type(exprt &expr)
       expr.op0().type()=type;
       expr.op1().type()=type;
     }
-    else
+
+    // throw error if still mismatching. Could be because bitvector widths are different
+    if(expr.op0().type()!=expr.op1().type())
       error("mismatching types for binary operand" + expr.id_string());
   }
-
-  expr.type()=expr.op0().type();
 }
+
 
 exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
 {
@@ -615,7 +634,7 @@ exprt new_smt2_parsert::expression()
         return let_expression(true);
       }
 
-      const auto op=operands();
+      auto op=operands();
 
       if(id=="and")
       {
@@ -645,12 +664,17 @@ exprt new_smt2_parsert::expression()
       {
         equal_exprt result;
         result.operands()=op;
+        fix_binary_operation_operand_types(result);
+        result.type()=bool_typet();
         return result;
       }
       else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
         predicate_exprt result(ID_le);
         result.operands()=op;
+
+        fix_binary_operation_operand_types(result);
+        result.type()=bool_typet();
 
         if(id=="bvsle")
         {
@@ -663,6 +687,9 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_ge);
         result.operands()=op;
+        fix_binary_operation_operand_types(result);
+        result.type()=bool_typet();
+
         if(id=="bvsge")
         {
           result.op0()=cast_bv_to_signed(result.op0());
@@ -675,6 +702,10 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_lt);
         result.operands()=op;
+
+        fix_binary_operation_operand_types(result);
+        result.type()=bool_typet();
+
         if(id=="bvslt")
         {
           result.op0()=cast_bv_to_signed(result.op0());
@@ -686,6 +717,9 @@ exprt new_smt2_parsert::expression()
       {
         predicate_exprt result(ID_gt);
         result.operands()=op;
+        fix_binary_operation_operand_types(result);
+        result.type()=bool_typet();
+
         if(id=="bvsgt")
         {
           result.op0()=cast_bv_to_signed(result.op0());
@@ -730,55 +764,64 @@ exprt new_smt2_parsert::expression()
       {
         bitand_exprt result;
         result.operands()=op;
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
+
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvor")
       {
         bitor_exprt result;
         result.operands()=op;
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvxor")
       {
         bitxor_exprt result;
         result.operands()=op;
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvnot" || id=="bvneg")
       {
         bitnot_exprt result;
         result.operands()=op;
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvadd" || id=="+")
       {
         plus_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvsub" || id=="-")
       {
         minus_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvmul" || id=="*")
       {
         mult_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvsdiv" || id=="bvudiv")
       {
         div_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         if(id=="bvsdiv")
         {
           result.op0()=cast_bv_to_signed(result.op0());
@@ -791,14 +834,16 @@ exprt new_smt2_parsert::expression()
       {
         div_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
         return result;
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
         mod_exprt result;
         result.operands()=op;
-        fix_binary_operation_result_type(result);
+        fix_binary_operation_operand_types(result);
+        result.type()=result.op0().type();
 
         if(id=="bvsrem")
         {
