@@ -19,8 +19,6 @@ public:
 
   std::set<irep_idt> synth_fun_set;
 
-  virtual void error(const std::string &s) override;
-
   void expand_function_applications(exprt &);
 
 protected:

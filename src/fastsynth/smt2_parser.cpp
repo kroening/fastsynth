@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/arith_tools.h>
 
 #include <istream>
-#include <iostream>
 
 #include "function.h"
 
@@ -160,7 +159,8 @@ smt2_tokenizert::tokent smt2_tokenizert::get_quoted_symbol()
   }
 
   // Hmpf. Eof before end of quoted symbol. This is an error.
-  error("EOF within quoted symbol");
+  ok=false;
+  error() << "EOF within quoted symbol" << eom;
   return ERROR;
 }
 
@@ -193,7 +193,7 @@ smt2_tokenizert::tokent smt2_tokenizert::get_string_literal()
 
   // Hmpf. Eof before end of string literal. This is an error.
   ok=false;
-  error("EOF within string literal");
+  error() << "EOF within string literal" << eom;
   return ERROR;
 }
 
@@ -251,14 +251,14 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
         else
         {
           ok=false;
-          error("unknown numeral token");
+          error() << "unknown numeral token" << eom;
           return token=ERROR;
         }
       }
       else
       {
         ok=false;
-        error("unexpected EOF in numeral token");
+        error() << "unexpected EOF in numeral token" << eom;
         return token=ERROR;
       }
       break;
@@ -298,7 +298,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
       {
         // illegal character, error
         ok=false;
-        error("unexpected character");
+        error() << "unexpected character `" << ch << '\'' << eom;
         return token=ERROR;
       }
     }
@@ -314,7 +314,7 @@ void new_smt2_parsert::command_sequence()
     if(next_token()!=SYMBOL)
     {
       ok=false;
-      error("expected symbol as command");
+      error() << "expected symbol as command" << eom;
       return;
     }
 
@@ -324,7 +324,7 @@ void new_smt2_parsert::command_sequence()
     {
     case END_OF_FILE:
       ok=false;
-      error("expected closing parenthesis at end of command, but got EOF");
+      error() << "expected closing parenthesis at end of command, but got EOF" << eom;
       return;
 
     case CLOSE:
@@ -333,7 +333,7 @@ void new_smt2_parsert::command_sequence()
 
     default:
       ok=false;
-      error("expected end of command");
+      error() << "expected end of command" << eom;
       return;
     }
   }
@@ -341,7 +341,7 @@ void new_smt2_parsert::command_sequence()
   if(token!=END_OF_FILE)
   {
     ok=false;
-    error("unexpected token: "+buffer);
+    error() << "unexpected token in command sequence" << eom;
   }
 }
 
@@ -367,7 +367,7 @@ void new_smt2_parsert::ignore_command()
 
     case END_OF_FILE:
       ok=false;
-      error("unexpected EOF in command");
+      error() << "unexpected EOF in command" << eom;
       return;
 
     default:
@@ -404,15 +404,21 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
     {
       next_token(); // eat the '('that starts the bindings list
     }
+
     next_token(); // eat the '(' that starts the next binding
+
     // get op0
-    if(next_token() == SYMBOL)
+    if(next_token()==SYMBOL)
     {
       symbol_exprt operand0(buffer, sort());
       result.op0() = operand0;
     }
     else
-      error("expected symbol");
+    {
+      ok=false;
+      error() << "expected symbol in let expression" << eom;
+      return result;
+    }
 
     // get op1
     result.op1() = expression();
@@ -428,8 +434,14 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
     {
       // we are at the end of the chain
       next_token(); // eat the ')' that closes the bindings list
-      if(peek()!= OPEN)
-        error("let expects where here");
+
+      if(peek()!=OPEN)
+      {
+        ok=false;
+        error() << "let expects where here" << eom;
+        return result;
+      }
+
       result.op2() = expression();
       result.type()=result.op2().type();
       next_token(); // eat the final ')' that closes the let exprt
@@ -452,7 +464,8 @@ exprt new_smt2_parsert::function_application(
   // check the arguments
   if(op.size()!=f.type.variables().size())
   {
-    error("wrong number of arguments for function");
+    ok=false;
+    error() << "wrong number of arguments for function" << eom;
     return nil_exprt();
   }
 
@@ -460,11 +473,9 @@ exprt new_smt2_parsert::function_application(
   {
     if(op[i].type() != f.type.variables()[i].type())
     {
-      std::cout << identifier;
-      error("wrong type for arguments for function ");
-      std::cout << "\nwrong type: expected: "
-          << f.type.variables()[i].type().id_string();
-      std::cout << " got: " << op[i].type().id() << std::endl;
+      ok=false;
+      error() << "wrong type for arguments for function" << eom;
+      return result;
     }
   }
 
@@ -475,9 +486,6 @@ exprt new_smt2_parsert::function_application(
 
 void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
-  if(expr.operands().size()!=3)
-    error("ite operation expects 3 operands");
-
   if(expr.op0().id()!=ID_bool)
     expr.op0().type()=bool_typet();
 
@@ -503,7 +511,10 @@ void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op1().type()!=expr.op2().type())
-      error("mismatching types for ite operand" + expr.id_string());
+    {
+      ok=false;
+      error() << "mismatching types for ite operand" << eom;
+    }
   }
 
   expr.type()=expr.op1().type();
@@ -513,10 +524,14 @@ void new_smt2_parsert::fix_binary_operation_operand_types(exprt &expr)
 {
   // TODO: deal with different widths of bitvector
   if(expr.operands().size()!=2)
-    error("2 operands expected for binary operation " + expr.id_string());
+  {
+    error() << "two operands expected for binary operation " << expr.id() << eom;
+    return;
+  }
+
   if(expr.op0().type()!=expr.op1().type())
   {
-   // default type is unsigned bitvector
+    // default type is unsigned bitvector
     if(expr.op0().type().id()==ID_unsignedbv)
       expr.op1().type()=expr.op0().type();
     else if(expr.op1().type().id()==ID_unsignedbv)
@@ -536,7 +551,10 @@ void new_smt2_parsert::fix_binary_operation_operand_types(exprt &expr)
 
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op0().type()!=expr.op1().type())
-      error("mismatching types for binary operand" + expr.id_string());
+    {
+      ok=false;
+      error() << "mismatching types for binary operand" << expr.id() << eom;
+    }
   }
 }
 
@@ -545,12 +563,18 @@ exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
 {
   if(expr.type().id()==ID_signedbv) // no need to cast
     return expr;
+
   if(expr.type().id()!=ID_unsignedbv)
-    error("expected unsigned bitvector");
+  {
+    error() << "expected unsigned bitvector" << eom;
+    return expr;
+  }
+
  signedbv_typet signed_type(to_unsignedbv_type(expr.op1().type()).get_width());
  typecast_exprt result(expr, signed_type);
  result.op0()=expr;
  result.type()=signed_type;
+
  return result;
 }
 
@@ -558,13 +582,18 @@ exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
 {
   if(expr.type().id()==ID_unsignedbv) //no need to cast
     return expr;
+
   if(expr.type().id()!=ID_signedbv)
-    error("expected signed bitvector");
- unsignedbv_typet unsigned_type(to_signedbv_type(expr.op1().type()).get_width());
- typecast_exprt result(expr, unsigned_type);
- result.op0()=expr;
- result.type()=unsigned_type;
- return result;
+  {
+    error() << "expected signed bitvector" << eom;
+    return expr;
+  }
+
+  unsignedbv_typet unsigned_type(to_signedbv_type(expr.op1().type()).get_width());
+  typecast_exprt result(expr, unsigned_type);
+  result.op0()=expr;
+  result.type()=unsigned_type;
+  return result;
 }
 
 exprt new_smt2_parsert::expression()
@@ -599,7 +628,8 @@ exprt new_smt2_parsert::expression()
       }
       else
       {
-        error("unknown symbol "+buffer);
+        ok=false;
+        error() << "unknown symbol " << buffer << eom;
         return symbol_exprt(identifier, bool_typet());
       }
     }
@@ -736,7 +766,11 @@ exprt new_smt2_parsert::expression()
       else if(id=="bvashr")
       {
         if(op.size()!=2)
-          error("bit shift must have 2 operands");
+        {
+          ok=false;
+          error() << "bit shift must have 2 operands" << eom;
+          return nil_exprt();
+        }
 
         ashr_exprt result(op[0], op[1]);
         bv_typet type(0u);
@@ -747,23 +781,33 @@ exprt new_smt2_parsert::expression()
       else if(id=="bvlshr" || id=="bvshr")
       {
         if(op.size()!=2)
-          error("bit shift must have 2 operands");
+        {
+          ok=false;
+          error() << "bit shift must have two operands" << eom;
+          return nil_exprt();
+        }
 
         lshr_exprt result(op[0], op[1]);
         bv_typet type(0u);
         type.remove(ID_width);
         result.type()=type;
+
         return result;
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
         if(op.size()!=2)
-          error("bit shift must have 2 operands");
+        {
+          ok=false;
+          error() << "bit shift must have two operands" << eom;
+          return nil_exprt();
+        }
 
         shl_exprt result(op[0], op[1]);
         bv_typet type(0u);
         type.remove(ID_width);
         result.type()=type;
+
         return result;
       }
       else if(id=="bvand")
@@ -773,6 +817,7 @@ exprt new_smt2_parsert::expression()
 
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
+
         return result;
       }
       else if(id=="bvor")
@@ -828,12 +873,14 @@ exprt new_smt2_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
+
         if(id=="bvsdiv")
         {
           result.op0()=cast_bv_to_signed(result.op0());
           result.op1()=cast_bv_to_signed(result.op1());
           return cast_bv_to_unsigned(result);
         }
+
         return result;
       }
       else if(id=="/" || id=="div")
@@ -857,6 +904,7 @@ exprt new_smt2_parsert::expression()
           result.op1()=cast_bv_to_signed(result.op1());
           return cast_bv_to_unsigned(result);
         }
+
         return result;
       }
       else if(id=="ite")
@@ -890,22 +938,23 @@ exprt new_smt2_parsert::expression()
         }
         else
         {
-          error("use of undeclared symbol or function"+id2string(id));
+          error() << "use of undeclared symbol or function " << id << eom;
+          return nil_exprt();
         }
       }
     }
     else
     {
-      error("expected symbol after '(' in an expression");
+      error() << "expected symbol after '(' in an expression" << eom;
       return nil_exprt();
     }
 
   case END_OF_FILE:
-    error("EOF in an expression");
+    error() << "EOF in an expression" << eom;
     return nil_exprt();
 
   default:
-    error("unexpected token in an expression");
+    error() << "unexpected token in an expression" << eom;
     return nil_exprt();
   }
 }
@@ -923,14 +972,14 @@ typet new_smt2_parsert::sort()
       return real_typet();
     else
     {
-      error("unexpected sort: "+buffer);
+      error() << "unexpected sort: " << buffer << eom;
       return nil_typet();
     }
 
   case OPEN:
     if(next_token()!=SYMBOL)
     {
-      error("expected symbol after '(' in a sort");
+      error() << "expected symbol after '(' in a sort" << eom;
       return nil_typet();
     }
 
@@ -938,7 +987,7 @@ typet new_smt2_parsert::sort()
     {
       if(next_token()!=NUMERAL)
       {
-        error("expected number after BitVec");
+        error() << "expected number after BitVec" << eom;
         return nil_typet();
       }
 
@@ -946,7 +995,7 @@ typet new_smt2_parsert::sort()
 
       if(next_token()!=CLOSE)
       {
-        error("expected ')' after BitVec width");
+        error() << "expected ')' after BitVec width" << eom;
         return nil_typet();
       }
 
@@ -954,12 +1003,12 @@ typet new_smt2_parsert::sort()
     }
     else
     {
-      error("unexpected sort: " + buffer);
+      error() << "unexpected sort: " << buffer << eom;
       return nil_typet();
     }
 
   default:
-    error("unexpected token in a sort");
+    error() << "unexpected token in a sort" << eom;
     return nil_typet();
   }
 }
@@ -970,7 +1019,7 @@ function_typet new_smt2_parsert::function_signature()
 
   if(next_token()!=OPEN)
   {
-    error("expected '(' at beginning of signature");
+    error() << "expected '(' at beginning of signature" << eom;
     return result;
   }
 
@@ -978,13 +1027,13 @@ function_typet new_smt2_parsert::function_signature()
   {
     if(next_token()!=OPEN)
     {
-      error("expected '(' at beginning of parameter");
+      error() << "expected '(' at beginning of parameter" << eom;
       return result;
     }
 
     if(next_token()!=SYMBOL)
     {
-      error("expected symbol in parameter");
+      error() << "expected symbol in parameter" << eom;
       return result;
     }
 
@@ -996,7 +1045,7 @@ function_typet new_smt2_parsert::function_signature()
 
     if(next_token()!=CLOSE)
     {
-      error("expected ')' at end of parameter");
+      error() << "expected ')' at end of parameter" << eom;
       return result;
     }
   }
@@ -1014,7 +1063,7 @@ void new_smt2_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after declare-var");
+      error() << "expected a symbol after declare-var" << eom;
       ignore_command();
       return;
     }
@@ -1023,7 +1072,7 @@ void new_smt2_parsert::command(const std::string &c)
 
     if(variable_map.find(id)!=variable_map.end())
     {
-      error("variable declared twice");
+      error() << "variable declared twice" << eom;
       ignore_command();
       return;
     }
@@ -1034,7 +1083,7 @@ void new_smt2_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      error("expected a symbol after define-fun");
+      error() << "expected a symbol after define-fun" << eom;
       ignore_command();
       return;
     }
@@ -1043,7 +1092,7 @@ void new_smt2_parsert::command(const std::string &c)
 
     if(function_map.find(id)!=function_map.end())
     {
-      error("function declared twice");
+      error() << "function declared twice" << eom;
       ignore_command();
       return;
     }
