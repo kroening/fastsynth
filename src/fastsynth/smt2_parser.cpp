@@ -1008,7 +1008,7 @@ typet new_smt2_parsert::sort()
     }
 
   default:
-    error() << "unexpected token in a sort" << eom;
+    error() << "unexpected token in a sort " << buffer << eom;
     return nil_typet();
   }
 }
