@@ -106,7 +106,7 @@ protected:
   typet sort();
   exprt::operandst operands();
   function_typet function_signature();
-  exprt function_application(const irep_idt &identifier, exprt::operandst &op);
+  exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
   exprt cast_bv_to_signed(exprt &expr);

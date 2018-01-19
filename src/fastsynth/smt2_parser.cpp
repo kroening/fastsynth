@@ -440,7 +440,7 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
 
 exprt new_smt2_parsert::function_application(
   const irep_idt &identifier,
-  exprt::operandst &op)
+  const exprt::operandst &op)
 {
   const auto &f = function_map[identifier];
 
@@ -458,20 +458,13 @@ exprt new_smt2_parsert::function_application(
 
   for(std::size_t i=0; i<op.size(); i++)
   {
-    if(op[i].type()!=f.type.variables()[i].type())
+    if(op[i].type() != f.type.variables()[i].type())
     {
-      if(op[i].id() == ID_constant)
-      {
-        op[i].type() = f.type.variables()[i].type();
-      }
-      else
-      {
-        std::cout << identifier;
-        error("wrong type for arguments for function ");
-        std::cout << "\nwrong type: expected: "
-            << f.type.variables()[i].type().id_string();
-        std::cout << " got: " << op[i].type().id() << std::endl;
-      }
+      std::cout << identifier;
+      error("wrong type for arguments for function ");
+      std::cout << "\nwrong type: expected: "
+          << f.type.variables()[i].type().id_string();
+      std::cout << " got: " << op[i].type().id() << std::endl;
     }
   }
 
