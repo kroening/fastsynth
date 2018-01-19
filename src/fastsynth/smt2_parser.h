@@ -9,7 +9,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 #define CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 
-#include <util/expr.h>
+#include <util/parser.h>
 
 #include <iosfwd>
 #include <string>
@@ -19,12 +19,13 @@ Author: Daniel Kroening, kroening@kroening.com
 
 class function_typet;
 
-class smt2_tokenizert
+class smt2_tokenizert:public parsert
 {
 public:
   explicit smt2_tokenizert(std::istream &_in):
-    in(_in), ok(true), peeked(false), token(NONE)
+    ok(true), peeked(false), token(NONE)
   {
+    in=&_in;
   }
 
   operator bool()
@@ -33,7 +34,6 @@ public:
   }
 
 protected:
-  std::istream &in;
   std::string buffer;
   bool ok, peeked;
   using tokent=enum { NONE, END_OF_FILE, ERROR, STRING_LITERAL,
@@ -74,9 +74,10 @@ public:
   {
   }
 
-  void operator()()
+  virtual bool parse() override
   {
     command_sequence();
+    return !ok;
   }
 
   struct functiont
