@@ -12,6 +12,9 @@ public:
   {
   }
 
+  enum invariant_variablet {PRIMED, UNPRIMED};
+  enum invariant_constraint_functiont {PRE, INV, TRANS, POST};
+
   virtual void command(const std::string &) override;
 
   exprt::operandst constraints;
@@ -19,7 +22,14 @@ public:
 
   std::set<irep_idt> synth_fun_set;
 
+  function_typet inv_function_signature();
   void expand_function_applications(exprt &);
+  void generate_invariant_constraints();
+  void apply_function_to_variables(
+      function_application_exprt &expr,
+      invariant_constraint_functiont id,
+      invariant_variablet variable_use);
+
 
 protected:
   void NTDef_seq();
