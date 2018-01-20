@@ -1,0 +1,9 @@
+KNOWNBUG
+main.c
+
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+^Result: EXPRESSION -> \(unsigned short int\)parameter0$
+--
+^warning: ignoring
