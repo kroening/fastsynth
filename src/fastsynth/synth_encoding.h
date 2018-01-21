@@ -108,13 +108,14 @@ protected:
 class synth_encodingt
 {
 public:
-  synth_encodingt():program_size(1)
-  {
-  }
+  synth_encodingt():program_size(1) { }
 
-  exprt operator()(const exprt &);
+  /// Virtual destructor for defined behaviour.
+  virtual ~synth_encodingt() { }
 
-  std::map<symbol_exprt, exprt> get_expressions(
+  virtual exprt operator()(const exprt &);
+
+  virtual std::map<symbol_exprt, exprt> get_expressions(
     const decision_proceduret &solver) const;
 
   std::string suffix;
