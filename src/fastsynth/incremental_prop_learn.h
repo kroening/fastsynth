@@ -9,16 +9,12 @@
 
 #include <memory>
 
+#include "prop_learn.h"
+
 /// Generates a constraint using synth_encodingt and solves it incrementally
 /// using a configurable propt instance.
-class incremental_prop_learnt:public learnt
+class incremental_prop_learnt:public prop_learn_baset
 {
-  /// Namespace passed on to decision procedure.
-  const namespacet &ns;
-
-  /// Synthesis problem to solve.
-  const cegist::problemt &problem;
-
   /// Solver instance.
   std::unique_ptr<propt> synth_satcheck;
 

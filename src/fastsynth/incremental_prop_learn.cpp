@@ -8,9 +8,7 @@ incremental_prop_learnt::incremental_prop_learnt(
   const cegist::problemt &_problem,
   bool _use_simp_solver,
   message_handlert &_message_handler)
-  : learnt(_message_handler),
-    ns(_ns),
-    problem(_problem),
+  : prop_learn_baset(_ns, _problem, _message_handler),
     synth_satcheck(new satcheck_no_simplifiert()),
     synth_solver(new bv_pointerst(ns, *synth_satcheck)),
     program_size(1u),
@@ -31,7 +29,7 @@ void incremental_prop_learnt::init()
   synth_encoding.program_size = program_size;
   synth_satcheck->set_message_handler(get_message_handler());
   synth_solver->set_message_handler(get_message_handler());
-  add_problem(ns, get_message_handler(), problem, synth_encoding, *synth_solver);
+  add_problem(synth_encoding, *synth_solver);
   freeze_expression_symbols();
 }
 
@@ -54,9 +52,9 @@ void incremental_prop_learnt::set_program_size(const size_t program_size)
      {
        synth_encoding.suffix = "$ce" + std::to_string(counter);
        synth_encoding.constraints.clear();
-       add_counterexample(ns, get_message_handler(), c, synth_encoding, *synth_solver);
+       add_counterexample(c, synth_encoding, *synth_solver);
 
-       add_problem(ns, get_message_handler(), problem, synth_encoding, *synth_solver);
+       add_problem(synth_encoding, *synth_solver);
 
        counter++;
      }
@@ -83,8 +81,8 @@ void incremental_prop_learnt::add(
 
   synth_encoding.suffix = "$ce" + std::to_string(counterexample_counter);
 
-  add_counterexample(ns, get_message_handler(), counterexample, synth_encoding, *synth_solver);
-  add_problem(ns, get_message_handler(), problem, synth_encoding, *synth_solver);
+  add_counterexample(counterexample, synth_encoding, *synth_solver);
+  add_problem(synth_encoding, *synth_solver);
 
   freeze_expression_symbols();
   counterexample_counter++;
