@@ -25,6 +25,19 @@ int sygus_frontend(const cmdlinet &cmdline)
   console_message_handlert message_handler;
   messaget message(message_handler);
 
+  // this is our default verbosity
+  unsigned int v=messaget::M_STATISTICS;
+
+  if(cmdline.isset("verbosity"))
+  {
+    v=std::stol(
+        cmdline.get_value("verbosity"));;
+    if(v>10)
+      v=10;
+  }
+
+  message_handler.set_verbosity(v);
+
   std::ifstream in(cmdline.args.front());
 
   if(!in)
