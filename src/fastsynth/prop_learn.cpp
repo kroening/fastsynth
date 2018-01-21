@@ -17,7 +17,7 @@ prop_learn_baset::prop_learn_baset(
 void prop_learn_baset::add_counterexample(
   const verify_encodingt::counterexamplet &ce,
   synth_encodingt &synth_encoding,
-  prop_convt &prop_conv)
+  decision_proceduret &solver)
 {
   for(const auto &it : ce)
   {
@@ -26,31 +26,31 @@ void prop_learn_baset::add_counterexample(
 
     exprt encoded = synth_encoding(equal_exprt(symbol, value));
     debug() << "ce: " << from_expr(ns, "", encoded) << eom;
-    prop_conv.set_to_true(encoded);
+    solver.set_to_true(encoded);
   }
 }
 
 void prop_learn_baset::add_problem(
   synth_encodingt &encoding,
-  prop_convt &prop_conv)
+  decision_proceduret &solver)
 {
   for(const exprt &e : problem.side_conditions)
   {
     const exprt encoded = encoding(e);
     debug() << "sc: " << from_expr(ns, "", encoded) << eom;
-    prop_conv.set_to_true(encoded);
+    solver.set_to_true(encoded);
   }
 
   for(const auto &e : problem.constraints)
   {
     const exprt encoded = encoding(e);
     debug() << "co: " << from_expr(ns, "", encoded) << eom;
-    prop_conv.set_to_true(encoded);
+    solver.set_to_true(encoded);
   }
 
   for(const auto &c : encoding.constraints)
   {
-    prop_conv.set_to_true(c);
+    solver.set_to_true(c);
     debug() << "ec: " << from_expr(ns, "", c) << eom;
   }
 }

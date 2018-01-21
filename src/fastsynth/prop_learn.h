@@ -14,29 +14,24 @@ protected:
   const cegist::problemt &problem;
 
   /// Addds an additional counterexample to the constraint.
-  /// \param ns Decision procedure namespace.
-  /// \param msg Message sink.
   /// \param ce Counterexample to insert.
   /// \param synth_encoding Synthesis encoding to extend by the counterexample.
-  /// \param prop_conv Solver instance.
+  /// \param solver Solver instance.
   void add_counterexample(
     const verify_encodingt::counterexamplet &,
     synth_encodingt &,
-    prop_convt &);
+    decision_proceduret &);
 
   /// Inserts the base synthesis problem without counterexamples into the
   /// constraint.
-  /// \param ns Decision procedure namespace.
-  /// \param msg Message sink.
-  /// \param problem Synthesis problem definition.
   /// \param encoding Synthesis encoding to initialise with the base problem.
-  /// \param prop_conv Solver instance.
-  void add_problem(synth_encodingt &, prop_convt &);
+  /// \param solver Solver instance.
+  void add_problem(synth_encodingt &, decision_proceduret &);
 
   /// Creates the base class.
-  /// \param msg \see msg prop_learnt::msg
   /// \param ns \see ns prop_learnt::ns
   /// \param problem \see prop_learnt::problem
+  /// \param msg \see msg prop_learnt::msg
   prop_learn_baset(
     const namespacet &,
     const cegist::problemt &,
