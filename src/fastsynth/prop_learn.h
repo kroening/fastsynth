@@ -20,9 +20,9 @@ protected:
   /// \param synth_encoding Synthesis encoding to extend by the counterexample.
   /// \param prop_conv Solver instance.
   void add_counterexample(
-    const verify_encodingt::counterexamplet &ce,
-    synth_encodingt &synth_encoding,
-    prop_convt &prop_conv);
+    const verify_encodingt::counterexamplet &,
+    synth_encodingt &,
+    prop_convt &);
 
   /// Inserts the base synthesis problem without counterexamples into the
   /// constraint.
@@ -31,9 +31,7 @@ protected:
   /// \param problem Synthesis problem definition.
   /// \param encoding Synthesis encoding to initialise with the base problem.
   /// \param prop_conv Solver instance.
-  void add_problem(
-    synth_encodingt &encoding,
-    prop_convt &prop_conv);
+  void add_problem(synth_encodingt &, prop_convt &);
 
   /// Creates the base class.
   /// \param msg \see msg prop_learnt::msg
@@ -78,8 +76,7 @@ public:
   std::map<symbol_exprt, exprt> get_expressions() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add(const verify_encodingt::counterexamplet &counterexample) override;
+  void add(const verify_encodingt::counterexamplet &) override;
 };
-
 
 #endif /* CPROVER_FASTSYNTH_PROP_LEARN_H_ */

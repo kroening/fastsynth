@@ -47,8 +47,8 @@ public:
   /// \param problem \see incremental_prop_learnt::problem
   /// \param use_simp_solver indicates whether to use simplifying solver
   incremental_prop_learnt(
-    const namespacet &ns,
-    const cegist::problemt &problem,
+    const namespacet &,
+    const cegist::problemt &,
     bool use_simp_solver,
     message_handlert &);
 
@@ -62,7 +62,7 @@ public:
   std::map<symbol_exprt, exprt> get_expressions() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add(const verify_encodingt::counterexamplet &counterexample) override;
+  void add(const verify_encodingt::counterexamplet &) override;
 
   /// \brief freezes variables in the sat solver associated to the
   /// expression to be synthesised. Needed when the incremental solver with

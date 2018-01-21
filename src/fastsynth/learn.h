@@ -29,7 +29,7 @@ public:
 
   /// Adds an additional counterexample to the search constraint.
   /// \param counterexample New counterexample.
-  virtual void add(const verify_encodingt::counterexamplet &counterexample) = 0;
+  virtual void add(const verify_encodingt::counterexamplet &) = 0;
 };
 
 #endif /* CPROVER_FASTSYNTH_LEARN_H_ */
