@@ -1,4 +1,5 @@
 #include <fastsynth/incremental_prop_learn.h>
+#include <fastsynth/synth_encoding.h>
 #include <fastsynth/synth_encoding_constraints.h>
 
 #include <solvers/flattening/bv_pointers.h>
@@ -10,12 +11,15 @@ template <class satcheckt>
 incremental_prop_learnt<satcheckt>::incremental_prop_learnt(
   messaget &msg,
   const namespacet &ns,
-  const cegist::problemt &problem)
+  const cegist::problemt &problem,
+  const synth_encoding_factoryt synth_encoding_factory)
   : msg(msg),
     ns(ns),
     problem(problem),
+    synth_encoding_factory(synth_encoding_factory),
     synth_satcheck(new cancellable_solvert<satcheckt>()),
     synth_solver(new bv_pointerst(ns, *synth_satcheck)),
+    synth_encoding(synth_encoding_factory()),
     program_size(1u),
     counterexample_counter(0u)
 {
@@ -25,12 +29,12 @@ incremental_prop_learnt<satcheckt>::incremental_prop_learnt(
 template <class satcheckt>
 void incremental_prop_learnt<satcheckt>::init()
 {
-  synth_encoding.program_size = program_size;
+  synth_encoding->program_size = program_size;
   synth_satcheck->set_message_handler(msg.get_message_handler());
   synth_solver->set_message_handler(msg.get_message_handler());
 
   generate_constraint(
-      ns, msg, problem, counterexamples, synth_encoding, *synth_solver);
+      ns, msg, problem, counterexamples, *synth_encoding, *synth_solver);
 
   freeze_expression_symbols();
 }
@@ -46,7 +50,7 @@ void incremental_prop_learnt<satcheckt>::set_program_size(
 
   synth_satcheck.reset(new cancellable_solvert<satcheckt>());
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
-  synth_encoding = synth_encodingt();
+  synth_encoding = synth_encoding_factory();
   init();
 }
 
@@ -61,7 +65,7 @@ template <class satcheckt>
 std::map<symbol_exprt, exprt>
 incremental_prop_learnt<satcheckt>::get_expressions() const
 {
-  return synth_encoding.get_expressions(*synth_solver);
+  return synth_encoding->get_expressions(*synth_solver);
 }
 
 template <class satcheckt>
@@ -70,12 +74,12 @@ void incremental_prop_learnt<satcheckt>::add(
 {
   counterexamples.emplace_back(counterexample);
 
-  synth_encoding.constraints.clear();
+  synth_encoding->constraints.clear();
 
-  synth_encoding.suffix = "$ce" + std::to_string(counterexample_counter);
+  synth_encoding->suffix = "$ce" + std::to_string(counterexample_counter);
 
-  add_counterexample(ns, msg, counterexample, synth_encoding, *synth_solver);
-  add_problem(ns, msg, problem, synth_encoding, *synth_solver);
+  add_counterexample(ns, msg, counterexample, *synth_encoding, *synth_solver);
+  add_problem(ns, msg, problem, *synth_encoding, *synth_solver);
 
   freeze_expression_symbols();
   counterexample_counter++;
