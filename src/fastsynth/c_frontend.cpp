@@ -141,6 +141,19 @@ int c_frontend(const cmdlinet &cmdline)
   console_message_handlert mh;
   messaget message(mh);
 
+  // this is our default verbosity
+  unsigned int v=messaget::M_STATISTICS;
+
+  if(cmdline.isset("verbosity"))
+  {
+    v=std::stol(
+        cmdline.get_value("verbosity"));;
+    if(v>10)
+      v=10;
+  }
+
+  mh.set_verbosity(v);
+
   register_language(new_ansi_c_language);
 
   config.set(cmdline);
