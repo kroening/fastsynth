@@ -60,31 +60,4 @@ public:
   void cancel() override;
 };
 
-/// Addds an additional counterexample to the constraint.
-/// \param ns Decision procedure namespace.
-/// \param msg Message sink.
-/// \param ce Counterexample to insert.
-/// \param synth_encoding Synthesis encoding to extend by the counterexample.
-/// \param prop_conv Solver instance.
-void add_counterexample(
-  const namespacet &ns,
-  messaget &msg,
-  const verify_encodingt::counterexamplet &ce,
-  synth_encodingt &synth_encoding,
-  prop_convt &prop_conv);
-
-/// Inserts the base synthesis problem without counterexamples into the
-/// constraint.
-/// \param ns Decision procedure namespace.
-/// \param msg Message sink.
-/// \param problem Synthesis problem definition.
-/// \param encoding Synthesis encoding to initialise with the base problem.
-/// \param prop_conv Solver instance.
-void add_problem(
-  const namespacet &ns,
-  messaget &msg,
-  const cegist::problemt &problem,
-  synth_encodingt &encoding,
-  prop_convt &prop_conv);
-
 #endif /* CPROVER_FASTSYNTH_PROP_LEARN_H_ */
