@@ -5,11 +5,16 @@
 
 /// Interface for classes which provide new candidate solutions for
 /// counterexamples.
-class learnt
+class learnt:public messaget
 {
 public:
   /// Virtual destructor for defined behaviour.
   virtual ~learnt() { }
+
+  explicit learnt(message_handlert &_message_handler):
+    messaget(_message_handler)
+  {
+  }
 
   /// Sets the maximum program size permitted.
   virtual void set_program_size(size_t program_size) = 0;

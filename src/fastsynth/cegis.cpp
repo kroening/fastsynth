@@ -17,13 +17,14 @@ decision_proceduret::resultt cegist::operator()(
   if(incremental_solving)
   {
     status() << "** incremental CEGIS" << eom;
-    incremental_prop_learnt learn(*this, ns, problem, use_simp_solver);
+    incremental_prop_learnt learn(
+      ns, problem, use_simp_solver, get_message_handler());
     return loop(problem, learn);
   }
   else
   {
     status() << "** non-incremental CEGIS" << eom;
-    prop_learnt learn(*this, ns, problem);
+    prop_learnt learn(ns, problem, get_message_handler());
     return loop(problem, learn);
   }
 }

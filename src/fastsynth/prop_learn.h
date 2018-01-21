@@ -8,9 +8,6 @@
 /// and solves it using a configurable propt instance.
 class prop_learnt : public learnt
 {
-  /// Message handler for decision procedure messages.
-  messaget &msg;
-
   /// Namespace passed on to decision procedure.
   const namespacet &ns;
 
@@ -32,9 +29,9 @@ public:
   /// \param ns \see ns prop_learnt::ns
   /// \param problem \see prop_learnt::problem
   prop_learnt(
-    messaget &msg,
-    const namespacet &ns,
-    const cegist::problemt &problem);
+    const namespacet &,
+    const cegist::problemt &,
+    message_handlert &);
 
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
@@ -57,7 +54,7 @@ public:
 /// \param prop_conv Solver instance.
 void add_counterexample(
   const namespacet &ns,
-  messaget &msg,
+  message_handlert &,
   const verify_encodingt::counterexamplet &ce,
   synth_encodingt &synth_encoding,
   prop_convt &prop_conv);
@@ -71,7 +68,7 @@ void add_counterexample(
 /// \param prop_conv Solver instance.
 void add_problem(
   const namespacet &ns,
-  messaget &msg,
+  message_handlert &,
   const cegist::problemt &problem,
   synth_encodingt &encoding,
   prop_convt &prop_conv);

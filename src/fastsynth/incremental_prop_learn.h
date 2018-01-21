@@ -11,11 +11,8 @@
 
 /// Generates a constraint using synth_encodingt and solves it incrementally
 /// using a configurable propt instance.
-class incremental_prop_learnt : public learnt
+class incremental_prop_learnt:public learnt
 {
-  /// Message handler for decision procedure messages.
-  messaget &msg;
-
   /// Namespace passed on to decision procedure.
   const namespacet &ns;
 
@@ -54,10 +51,10 @@ public:
   /// \param problem \see incremental_prop_learnt::problem
   /// \param use_simp_solver indicates whether to use simplifying solver
   incremental_prop_learnt(
-    messaget &msg,
     const namespacet &ns,
     const cegist::problemt &problem,
-    bool use_simp_solver);
+    bool use_simp_solver,
+    message_handlert &);
 
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
