@@ -11,8 +11,12 @@
 prop_learnt::prop_learnt(
   message_handlert &msg,
   const namespacet &ns,
-  const cegist::problemt &problem)
-  : ns(ns), problem(problem), program_size(1u)
+  const cegist::problemt &problem,
+  const synth_encoding_factoryt synth_encoding_factory)
+  : ns(ns),
+    problem(problem),
+    synth_encoding_factory(synth_encoding_factory),
+    program_size(1u)
 {
   set_message_handler(msg);
 }
@@ -39,19 +43,19 @@ decision_proceduret::resultt prop_learnt::operator()()
   bv_pointerst synth_solver(ns, *synth_satcheck);
   synth_solver.set_message_handler(get_message_handler());
 
-  synth_encodingt synth_encoding;
-  synth_encoding.program_size = program_size;
+  const std::unique_ptr<synth_encodingt> synth_enc(synth_encoding_factory());
+  synth_enc->program_size = program_size;
 
   generate_constraint(
     ns, get_message_handler(), problem, counterexamples,
-    synth_encoding, synth_solver);
+    *synth_enc, synth_solver);
 
   lock.unlock();
   const decision_proceduret::resultt result(synth_solver());
   lock.lock();
 
   if(decision_proceduret::resultt::D_SATISFIABLE == result)
-    last_solution = synth_encoding.get_expressions(synth_solver);
+    last_solution = synth_enc->get_expressions(synth_solver);
 
   return result;
 }

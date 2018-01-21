@@ -4,6 +4,7 @@
 #include <fastsynth/learn.h>
 #include <fastsynth/cegis.h>
 #include <fastsynth/cancellable_solver.h>
+#include <fastsynth/synth_encoding_factory.h>
 
 #include <solvers/sat/satcheck.h>
 
@@ -18,6 +19,10 @@ class prop_learnt : public learnt
 
   /// Synthesis problem to solve.
   const cegist::problemt &problem;
+
+  /// Instantiates constraint generators to use for learning phase. This makes
+  /// e.g. the instruction set to use configurable.
+  const synth_encoding_factoryt synth_encoding_factory;
 
   /// \see learnt::set_program_size(size_t)
   size_t program_size;
@@ -36,10 +41,13 @@ public:
   /// \see messaget::messaget(message_handlert &)
   /// \param ns \see ns prop_learnt::ns
   /// \param problem \see prop_learnt::problem
+  /// \param synth_encoding_factory \see prop_learnt::synth_encoding_factory
   prop_learnt(
     message_handlert &msg,
     const namespacet &ns,
-    const cegist::problemt &problem);
+    const cegist::problemt &problem,
+    synth_encoding_factoryt synth_encoding_factory =
+      default_synth_encoding_factory());
 
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
