@@ -2,6 +2,7 @@ SRC = fastsynth.cpp verify_solver.cpp cegis.cpp \
       prop_learn.cpp incremental_prop_learn.cpp \
       composite_learn.cpp \
       synth_encoding.cpp verify_encoding.cpp \
+      synth_encoding_constraints.cpp \
       c_frontend.cpp sygus_frontend.cpp smt2_parser.cpp \
       sygus_parser.cpp local_search.cpp
 

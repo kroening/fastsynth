@@ -1,5 +1,5 @@
 #include <fastsynth/incremental_prop_learn.h>
-#include <fastsynth/prop_learn.h>
+#include <fastsynth/synth_encoding_constraints.h>
 
 #include <solvers/flattening/bv_pointers.h>
 
@@ -28,7 +28,10 @@ void incremental_prop_learnt<satcheckt>::init()
   synth_encoding.program_size = program_size;
   synth_satcheck->set_message_handler(msg.get_message_handler());
   synth_solver->set_message_handler(msg.get_message_handler());
-  add_problem(ns, msg, problem, synth_encoding, *synth_solver);
+
+  generate_constraint(
+      ns, msg, problem, counterexamples, synth_encoding, *synth_solver);
+
   freeze_expression_symbols();
 }
 
@@ -45,23 +48,6 @@ void incremental_prop_learnt<satcheckt>::set_program_size(
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
   synth_encoding = synth_encodingt();
   init();
-
-  // re-add counterexamples
-  if(counterexample_counter != 0u)
-  {
-    std::size_t counter = 0;
-    for(const auto &c : counterexamples)
-    {
-      synth_encoding.suffix = "$ce" + std::to_string(counter);
-      synth_encoding.constraints.clear();
-      add_counterexample(ns, msg, c, synth_encoding, *synth_solver);
-
-      add_problem(ns, msg, problem, synth_encoding, *synth_solver);
-
-      counter++;
-    }
-    freeze_expression_symbols();
-  }
 }
 
 template <class satcheckt>
