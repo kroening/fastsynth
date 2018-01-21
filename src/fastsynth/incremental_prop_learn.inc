@@ -30,7 +30,8 @@ void incremental_prop_learnt<satcheckt>::init()
   synth_solver->set_message_handler(msg.get_message_handler());
 
   generate_constraint(
-      ns, msg, problem, counterexamples, synth_encoding, *synth_solver);
+    ns, get_message_handler(), problem, counterexamples,
+    synth_encoding, *synth_solver);
 
   freeze_expression_symbols();
 }
@@ -74,8 +75,8 @@ void incremental_prop_learnt<satcheckt>::add(
 
   synth_encoding.suffix = "$ce" + std::to_string(counterexample_counter);
 
-  add_counterexample(ns, msg, counterexample, synth_encoding, *synth_solver);
-  add_problem(ns, msg, problem, synth_encoding, *synth_solver);
+  add_counterexample(ns, get_message_handler(), counterexample, synth_encoding, *synth_solver);
+  add_problem(ns, get_message_handler(), problem, synth_encoding, *synth_solver);
 
   freeze_expression_symbols();
   counterexample_counter++;

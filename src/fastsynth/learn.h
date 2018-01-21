@@ -5,7 +5,7 @@
 
 /// Interface for classes which provide new candidate solutions for
 /// counterexamples.
-class learnt
+class learnt:public messaget
 {
 public:
   /// Virtual destructor for defined behaviour.

@@ -13,9 +13,6 @@
 /// and solves it using a configurable propt instance.
 class prop_learnt : public learnt
 {
-  /// Message handler for decision procedure messages.
-  messaget &msg;
-
   /// Namespace passed on to decision procedure.
   const namespacet &ns;
 

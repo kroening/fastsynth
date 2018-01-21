@@ -12,7 +12,7 @@ prop_learnt::prop_learnt(
   messaget &msg,
   const namespacet &ns,
   const cegist::problemt &problem)
-  : msg(msg), ns(ns), problem(problem), program_size(1u)
+  : ns(ns), problem(problem), program_size(1u)
 {
 }
 
@@ -33,16 +33,17 @@ decision_proceduret::resultt prop_learnt::operator()()
     std::make_shared<cancellable_solvert<satcheckt>>());
   this->synth_satcheck = synth_satcheck;
 
-  synth_satcheck->set_message_handler(msg.get_message_handler());
+  synth_satcheck->set_message_handler(get_message_handler());
 
   bv_pointerst synth_solver(ns, *synth_satcheck);
-  synth_solver.set_message_handler(msg.get_message_handler());
+  synth_solver.set_message_handler(get_message_handler());
 
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
 
   generate_constraint(
-      ns, msg, problem, counterexamples, synth_encoding, synth_solver);
+    ns, get_message_handler(), problem, counterexamples,
+    synth_encoding, synth_solver);
 
   lock.unlock();
   const decision_proceduret::resultt result(synth_solver());
