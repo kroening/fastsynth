@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "prop_learn.h"
+#include "solver_learn.h"
 
 /// Generates a constraint using synth_encodingt and solves it incrementally
 /// using a configurable propt instance.

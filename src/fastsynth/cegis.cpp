@@ -1,6 +1,6 @@
 #include "cegis.h"
-#include "incremental_prop_learn.h"
-#include "prop_learn.h"
+#include "incremental_solver_learn.h"
+#include "solver_learn.h"
 #include "synth_encoding.h"
 #include "verify_encoding.h"
 

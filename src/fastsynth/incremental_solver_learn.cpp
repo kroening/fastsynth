@@ -1,5 +1,4 @@
-#include <fastsynth/incremental_prop_learn.h>
-#include <fastsynth/prop_learn.h>
+#include <fastsynth/incremental_solver_learn.h>
 
 #include <solvers/flattening/bv_pointers.h>
 

@@ -1,4 +1,4 @@
-#include <fastsynth/prop_learn.h>
+#include <fastsynth/solver_learn.h>
 #include <fastsynth/synth_encoding.h>
 
 #include <solvers/flattening/bv_pointers.h>

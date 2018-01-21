@@ -1,5 +1,5 @@
 SRC = fastsynth.cpp verify_solver.cpp cegis.cpp \
-      prop_learn.cpp incremental_prop_learn.cpp \
+      solver_learn.cpp incremental_solver_learn.cpp \
       synth_encoding.cpp verify_encoding.cpp \
       c_frontend.cpp sygus_frontend.cpp smt2_parser.cpp \
       sygus_parser.cpp
