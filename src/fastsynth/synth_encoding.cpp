@@ -473,15 +473,6 @@ exprt synth_encodingt::operator()(const exprt &expr)
   }
 }
 
-exprt synth_encodingt::get_expression(
-  const symbol_exprt &function_symbol,
-  const decision_proceduret &solver) const
-{
-  const auto it=e_data_map.find(function_symbol);
-  if(it==e_data_map.end()) return nil_exprt();
-  return it->second.get_expression(solver);
-}
-
 std::map<symbol_exprt, exprt> synth_encodingt::get_expressions(
   const decision_proceduret &solver) const
 {
@@ -494,4 +485,3 @@ std::map<symbol_exprt, exprt> synth_encodingt::get_expressions(
 
   return result;
 }
-

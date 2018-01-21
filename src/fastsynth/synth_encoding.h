@@ -114,10 +114,6 @@ public:
 
   exprt operator()(const exprt &);
 
-  exprt get_expression(
-    const symbol_exprt &function_symbol,
-    const decision_proceduret &solver) const;
-
   std::map<symbol_exprt, exprt> get_expressions(
     const decision_proceduret &solver) const;
 
