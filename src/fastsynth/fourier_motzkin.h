@@ -53,6 +53,8 @@ protected:
       a.negate();
   }
 
+  static void collate(std::vector<addendt> &addends);
+
   class boundt
   {
   public:
@@ -65,11 +67,13 @@ protected:
     std::vector<addendt>::const_iterator find(const exprt &src) const;
     std::vector<addendt>::const_iterator end() const { return addends.end(); }
     void eliminate_weak();
+    bool is_inconsistent() const;
 
   protected:
     bool failed;
     void collect_addends(const exprt &, bool negate);
   };
+
 
   std::string as_string(const std::vector<addendt> &) const;
   std::string as_string(const boundt &) const;
