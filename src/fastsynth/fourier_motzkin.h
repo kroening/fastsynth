@@ -16,6 +16,11 @@ public:
   {
   }
 
+  std::string decision_procedure_text() const override
+  {
+    return "Fourier-Motzkin variable elimination";
+  }
+
 protected:
   struct constraintt
   {
