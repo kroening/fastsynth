@@ -33,11 +33,11 @@ class prop_learnt : public learnt
 
 public:
   /// Creates a non-incremental learner.
-  /// \param msg \see msg prop_learnt::msg
+  /// \see messaget::messaget(message_handlert &)
   /// \param ns \see ns prop_learnt::ns
   /// \param problem \see prop_learnt::problem
   prop_learnt(
-    messaget &msg,
+    message_handlert &msg,
     const namespacet &ns,
     const cegist::problemt &problem);
 

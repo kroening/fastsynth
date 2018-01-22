@@ -9,11 +9,12 @@
 #include <mutex>
 
 prop_learnt::prop_learnt(
-  messaget &msg,
+  message_handlert &msg,
   const namespacet &ns,
   const cegist::problemt &problem)
   : ns(ns), problem(problem), program_size(1u)
 {
+  set_message_handler(msg);
 }
 
 void prop_learnt::set_program_size(const size_t program_size)

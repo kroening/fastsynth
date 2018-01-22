@@ -8,17 +8,17 @@
 
 template <class satcheckt>
 incremental_prop_learnt<satcheckt>::incremental_prop_learnt(
-  messaget &msg,
+  message_handlert &msg,
   const namespacet &ns,
   const cegist::problemt &problem)
-  : msg(msg),
-    ns(ns),
+  : ns(ns),
     problem(problem),
     synth_satcheck(new cancellable_solvert<satcheckt>()),
     synth_solver(new bv_pointerst(ns, *synth_satcheck)),
     program_size(1u),
     counterexample_counter(0u)
 {
+  set_message_handler(msg);
   init();
 }
 
@@ -26,8 +26,8 @@ template <class satcheckt>
 void incremental_prop_learnt<satcheckt>::init()
 {
   synth_encoding.program_size = program_size;
-  synth_satcheck->set_message_handler(msg.get_message_handler());
-  synth_solver->set_message_handler(msg.get_message_handler());
+  synth_satcheck->set_message_handler(get_message_handler());
+  synth_solver->set_message_handler(get_message_handler());
 
   generate_constraint(
     ns, get_message_handler(), problem, counterexamples,

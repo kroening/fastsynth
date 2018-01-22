@@ -14,24 +14,26 @@
 decision_proceduret::resultt cegist::operator()(
   const problemt &problem)
 {
+  message_handlert &msg=get_message_handler();
+
   if(incremental_solving)
   {
     status() << "** incremental CEGIS" << eom;
     if(use_simp_solver)
     {
-      incremental_prop_learnt<satcheckt> learn(*this, ns, problem);
+      incremental_prop_learnt<satcheckt> learn(msg, ns, problem);
       return loop(problem, learn);
     }
     else
     {
-      incremental_prop_learnt<satcheck_no_simplifiert> inc(*this, ns, problem);
+      incremental_prop_learnt<satcheck_no_simplifiert> inc(msg, ns, problem);
       return loop(problem, inc);
     }
   }
   else
   {
     status() << "** non-incremental CEGIS" << eom;
-    prop_learnt learn(*this, ns, problem);
+    prop_learnt learn(msg, ns, problem);
     return loop(problem, learn);
   }
 }
