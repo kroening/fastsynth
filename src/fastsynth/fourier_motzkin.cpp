@@ -7,9 +7,30 @@
 literalt fourier_motzkint::convert_rest(const exprt &expr)
 {
   // record
-  literalt l=prop.new_variable();
-  constraints.push_back(constraintt(l, expr));
-  return l;
+  if(expr.id()==ID_lt || expr.id()==ID_le ||
+     expr.id()==ID_gt || expr.id()==ID_ge)
+  {
+    literalt l=prop.new_variable();
+    constraints.push_back(constraintt(l, expr));
+    return l;
+  }
+  else if(expr.id()==ID_equal || expr.id()==ID_notequal)
+  {
+    // need to split into <=, >=
+    literalt l_le, l_ge;
+
+    l_le=convert_rest(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
+    l_ge=convert_rest(binary_predicate_exprt(expr.op0(), ID_ge, expr.op1()));
+
+    literalt l_equal=prop.land(l_le, l_ge);
+
+    return expr.id()==ID_equal?l_equal:!l_equal;
+  }
+  else
+  {
+    // ignore
+    return prop.new_variable();
+  }
 }
 
 #if 0
