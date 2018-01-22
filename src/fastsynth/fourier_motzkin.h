@@ -36,4 +36,40 @@ protected:
   constraintst constraints;
 
   void assignment();
+  void eliminate();
+  static exprt negate(const exprt &);
+
+  struct addendt
+  {
+    bool negative;
+    exprt expr;
+    void negate() { negative=!negative; }
+    addendt():negative(false) { }
+  };
+
+  static void negate(std::vector<addendt> &addends)
+  {
+    for(auto &a : addends)
+      a.negate();
+  }
+
+  class boundt
+  {
+  public:
+    std::vector<addendt> addends;
+    bool is_weak;
+    void flip();
+    explicit boundt(const exprt &);
+    operator bool() const { return failed; }
+
+    std::vector<addendt>::const_iterator find(const exprt &src) const;
+    std::vector<addendt>::const_iterator end() const { return addends.end(); }
+
+  protected:
+    bool failed;
+    void collect_addends(const exprt &, bool negate);
+  };
+
+  std::string as_string(const std::vector<addendt> &) const;
+  std::string as_string(const boundt &) const;
 };
