@@ -30,6 +30,9 @@ public:
   /// \see learnt::cancel()
   void cancel() override;
 
+  /// \see messaget::set_message_handler(message_handlert &)
+  void set_message_handler(message_handlert &_message_handler) override;
+
   /// Adds a new learner to the composite.
   /// \tparam T Type of the learner.
   /// \tparam argst Types of the learner's constructor arguments.

@@ -123,3 +123,9 @@ void composite_learnt::cancel()
 {
   for_each(begin(learners), end(learners), std::mem_fn(&learnt::cancel));
 }
+
+void composite_learnt::set_message_handler(message_handlert &message_handler)
+{
+  for(const std::unique_ptr<learnt> &message : learners)
+    message->set_message_handler(message_handler);
+}

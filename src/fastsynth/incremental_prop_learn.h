@@ -15,9 +15,6 @@
 template <class satcheckt>
 class incremental_prop_learnt : public learnt
 {
-  /// Message handler for decision procedure messages.
-  messaget &msg;
-
   /// Namespace passed on to decision procedure.
   const namespacet &ns;
 
@@ -53,11 +50,11 @@ class incremental_prop_learnt : public learnt
 
 public:
   /// Creates an incremental learner.
-  /// \param msg \see msg incremental_prop_learnt::msg
+  /// \see messaget::messaget(message_handlert &)
   /// \param ns \see ns incremental_prop_learnt::ns
   /// \param problem \see incremental_prop_learnt::problem
   incremental_prop_learnt(
-    messaget &msg,
+    message_handlert &msg,
     const namespacet &ns,
     const cegist::problemt &problem);
 
