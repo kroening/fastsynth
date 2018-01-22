@@ -68,6 +68,7 @@ protected:
     std::vector<addendt>::const_iterator end() const { return addends.end(); }
     void eliminate_weak();
     bool is_inconsistent() const;
+    bool is_empty() const { return addends.empty(); }
 
   protected:
     bool failed;

@@ -220,7 +220,12 @@ std::string fourier_motzkint::as_string(const std::vector<addendt> &addends) con
 
 std::string fourier_motzkint::as_string(const boundt &b) const
 {
-  std::string result=as_string(b.addends);
+  std::string result;
+
+  if(b.is_empty())
+    result+="0";
+  else
+    result+=as_string(b.addends);
 
   result+=' ';
 
@@ -327,19 +332,41 @@ void fourier_motzkint::assignment()
   }
 
   eliminate();
+
+  // block it
+  bvt blocking_clause;
+
+  for(const auto &c : constraints)
+  {
+    tvt value=prop.l_get(c.l);
+    if(value.is_unknown())
+      continue;
+
+    if(value.is_true())
+      blocking_clause.push_back(!c.l);
+    else
+      blocking_clause.push_back(c.l);
+  }
+
+  prop.lcnf(blocking_clause);
 }
 
 decision_proceduret::resultt fourier_motzkint::dec_solve()
 {
+  unsigned iteration=0;
+
   while(true)
   {
+    iteration++;
+
+    status() << "******** DPLL(FM) iteration " << iteration << eom;
     propt::resultt result=prop.prop_solve();
 
     switch(result)
     {
     case propt::resultt::P_SATISFIABLE:
       assignment();
-      return resultt::D_SATISFIABLE;
+      break; // next iteration
 
     case propt::resultt::P_UNSATISFIABLE:
       return resultt::D_UNSATISFIABLE;
