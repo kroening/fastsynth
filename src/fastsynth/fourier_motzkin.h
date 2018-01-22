@@ -58,12 +58,13 @@ protected:
   public:
     std::vector<addendt> addends;
     bool is_weak;
-    void flip();
+    void negate();
     explicit boundt(const exprt &);
     operator bool() const { return failed; }
 
     std::vector<addendt>::const_iterator find(const exprt &src) const;
     std::vector<addendt>::const_iterator end() const { return addends.end(); }
+    void eliminate_weak();
 
   protected:
     bool failed;

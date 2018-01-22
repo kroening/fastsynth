@@ -1,5 +1,7 @@
 #include "fourier_motzkin.h"
 
+#include <util/arith_tools.h>
+
 #include <langapi/language_util.h>
 
 literalt fourier_motzkint::convert_rest(const exprt &expr)
@@ -27,13 +29,32 @@ exprt fourier_motzkint::drop_ite(const exprt &src)
 }
 #endif
 
-void fourier_motzkint::boundt::flip()
+void fourier_motzkint::boundt::negate()
 {
   is_weak=!is_weak;
-  negate(addends);
+  fourier_motzkint::negate(addends);
 }
 
-fourier_motzkint::boundt::boundt(const exprt &src):is_weak(false), failed(true)
+void fourier_motzkint::boundt::eliminate_weak()
+{
+  if(is_weak)
+  {
+    // integers only! X<0 <=> X+1<=0
+    typet t;
+    if(!addends.empty())
+      t=addends.front().expr.type();
+    else
+      t=integer_typet();
+
+    is_weak=false;
+    addends.push_back(addendt());
+    addends.back().negative=false;
+    addends.back().expr=from_integer(1, t);
+  }
+}
+
+fourier_motzkint::boundt::boundt(const exprt &src):
+  is_weak(false), failed(true)
 {
   if(src.id()==ID_lt && src.operands().size()==2)
   {
@@ -158,7 +179,9 @@ void fourier_motzkint::eliminate()
     if(!b)
     {
       if(value.is_false())
-        b.flip();
+        b.negate();
+
+      b.eliminate_weak();
 
       bounds.push_back(b);
     }
@@ -168,7 +191,7 @@ void fourier_motzkint::eliminate()
   {
     debug() << "FM Eliminating: " << from_expr(ns, "", s) << eom;
 
-    std::vector<addendt> lower_bound, upper_bound;
+    std::list<boundt> lower_bounds, upper_bounds;
 
     for(const auto &b : bounds)
     {
@@ -188,18 +211,17 @@ void fourier_motzkint::eliminate()
             debug() << "FM LOWER: " << as_string(new_b)
                     << (b.is_weak?" < ":" <= ") << from_expr(ns, "", s) << eom;
           else
+          {
+            negate(new_b);
             debug() << "FM UPPER: " << from_expr(ns, "", s)
                     << (b.is_weak?" < ":" <= ") << as_string(new_b) << eom;
+          }
         }
 
-        for(const auto &a : b.addends)
-          if(a.expr!=s)
-          {
-            if(it->negative)
-              lower_bound.push_back(a);
-            else
-              upper_bound.push_back(a);
-          }
+        if(it->negative)
+          lower_bounds.push_back(b);
+        else
+          upper_bounds.push_back(b);
       }
     }
   }
