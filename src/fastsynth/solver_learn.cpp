@@ -6,6 +6,8 @@
 
 #include <langapi/language_util.h>
 
+#include "fourier_motzkin.h"
+
 prop_learn_baset::prop_learn_baset(
   const namespacet &_ns,
   const cegist::problemt &_problem,
@@ -71,6 +73,14 @@ void prop_learnt::set_program_size(const size_t program_size)
 
 decision_proceduret::resultt prop_learnt::operator()()
 {
+  {
+    satcheckt fm_satcheck;
+    fourier_motzkint fm_solver(ns, fm_satcheck);
+    synth_encodingt synth_encoding;
+    synth_encoding.program_size = program_size;
+    add_problem(synth_encoding, fm_solver);
+  }
+
   satcheckt synth_satcheck;
   synth_satcheck.set_message_handler(get_message_handler());
 

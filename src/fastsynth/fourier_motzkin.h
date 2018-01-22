@@ -1,3 +1,5 @@
+#include <set>
+
 #include <solvers/prop/prop_conv.h>
 
 class fourier_motzkint:public prop_conv_solvert
@@ -6,6 +8,13 @@ public:
   virtual literalt convert_rest(const exprt &) override;
 
   decision_proceduret::resultt dec_solve() override;
+
+  std::set<exprt> existential_variables;
+
+  fourier_motzkint(const namespacet &_ns, propt &_prop):
+    prop_conv_solvert(_ns, _prop)
+  {
+  }
 
 protected:
   struct constraintt
@@ -20,4 +29,6 @@ protected:
 
   using constraintst=std::vector<constraintt>;
   constraintst constraints;
+
+  void assignment();
 };
