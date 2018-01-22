@@ -16,9 +16,9 @@ void fourier_motzkint::assignment()
   {
     tvt value=prop.l_get(c.l);
 
-    debug().width(7);
-    debug() << std::left << value.to_string()
-            << ": " << from_expr(ns, "", c.expr) << eom;
+    debug().width(9);
+    debug() << std::left << std::string(value.to_string())+": "
+            << from_expr(ns, "", c.expr) << eom;
   }
 }
 
