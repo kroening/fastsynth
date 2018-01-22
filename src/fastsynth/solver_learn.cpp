@@ -77,6 +77,7 @@ decision_proceduret::resultt prop_learnt::operator()()
     satcheckt fm_satcheck;
     fourier_motzkint fm_solver(ns, fm_satcheck);
     fm_solver.set_message_handler(get_message_handler());
+    fm_solver.existential_variables=problem.free_variables;
     synth_encodingt synth_encoding;
     synth_encoding.program_size = program_size;
     add_problem(synth_encoding, fm_solver);
