@@ -74,7 +74,7 @@ void prop_learnt::set_program_size(const size_t program_size)
 decision_proceduret::resultt prop_learnt::operator()()
 {
   {
-    satcheckt fm_satcheck;
+    satcheck_no_simplifiert fm_satcheck;
     fourier_motzkint fm_solver(ns, fm_satcheck);
     fm_solver.set_message_handler(get_message_handler());
     fm_solver.existential_variables=problem.free_variables;
