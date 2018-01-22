@@ -4,6 +4,8 @@
 
 #include <langapi/language_util.h>
 
+#include <algorithm>
+
 literalt fourier_motzkint::convert_rest(const exprt &expr)
 {
   // record
@@ -109,6 +111,10 @@ void fourier_motzkint::collate(std::vector<addendt> &addends)
     else
       it++;
   }
+
+  // sort
+  std::sort(addends.begin(), addends.end(),
+    [](const addendt &A, const addendt &B) { return A.expr<B.expr; });
 }
 
 bool fourier_motzkint::boundt::is_inconsistent() const
@@ -337,6 +343,18 @@ void fourier_motzkint::eliminate()
         new_bounds.push_back(new_bound);
         debug() << "FM NEW:   " << as_string(new_bound) << eom;
       }
+
+    for(const auto &b : new_bounds)
+      if(b.is_inconsistent())
+      {
+        debug() << "FM INCONSISTENT" << eom;
+        return;
+      }
+
+    if(new_bounds.empty())
+      debug() << "FM TAUTOLOGY" << eom;
+    else
+      debug() << "FM CONSISTENT" << eom;
   }
 }
 
