@@ -18,7 +18,7 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
-    // need to split into <=, >=
+    // need to split into <=, >=, i.e., x=y <-> x<=y && x>=y
     literalt l_le, l_ge;
 
     l_le=convert_rest(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
