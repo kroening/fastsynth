@@ -26,6 +26,9 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
 
     literalt l_equal=prop.land(l_le, l_ge);
 
+    // one of them is always true
+    prop.lcnf(l_le, l_ge);
+
     return expr.id()==ID_equal?l_equal:!l_equal;
   }
   else
@@ -125,6 +128,7 @@ bool fourier_motzkint::boundt::is_inconsistent() const
   {
     mp_integer i;
     to_integer(addends.front().expr, i);
+    if(addends.front().negative) i.negate();
     if(i>0) return true;
   }
 
@@ -168,14 +172,14 @@ fourier_motzkint::boundt::boundt(const exprt &src):
   }
   else if(src.id()==ID_gt && src.operands().size()==2)
   {
-    is_weak=false;
+    is_weak=true;
     collect_addends(src.op0(), true);
     collect_addends(src.op1(), false);
     failed=false;
   }
   else if(src.id()==ID_ge && src.operands().size()==2)
   {
-    is_weak=true;
+    is_weak=false;
     collect_addends(src.op0(), true);
     collect_addends(src.op1(), false);
     failed=false;
@@ -294,14 +298,16 @@ void fourier_motzkint::eliminate()
     debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
 
     // collect the lower and upper bounds on 'x'
-    std::list<boundt> lower_bounds, upper_bounds;
+    std::list<boundt> lower_bounds, upper_bounds, unrelated;
 
     for(const auto &b : bounds)
     {
       debug() << "FM BOUND: " << as_string(b) << eom;
       auto it=b.find(x);
 
-      if(it!=b.end())
+      if(it==b.end())
+        unrelated.push_back(b);
+      else
       {
         {
           std::vector<addendt> new_b;
@@ -343,6 +349,9 @@ void fourier_motzkint::eliminate()
         new_bounds.push_back(new_bound);
         debug() << "FM NEW:   " << as_string(new_bound) << eom;
       }
+
+    for(const auto &b : unrelated)
+      debug() << "FM UNREL: " << as_string(b) << eom;
 
     for(const auto &b : new_bounds)
       if(b.is_inconsistent())
