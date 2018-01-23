@@ -1,63 +1,165 @@
+******** DPLL(FM) iteration 3
+FM TRUE:    0 < inv_inst0_result_0
+FM TRUE:    x < inv_inst0_result_0
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 255
+FM TRUE:    x + 1 >= 255
+FM FALSE:   x + 1 < inv_inst0_result_0
+FM x='x'
+FM BOUND: 1-inv_inst0_result_0 <= 0
+FM BOUND: 1-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -1+inv_inst0_result_0
+FM BOUND: 10-x <= 0
+FM LOWER: 10 <= x
+FM BOUND: 9-x <= 0
+FM LOWER: 9 <= x
+FM BOUND: -254+x <= 0
+FM UPPER: x <= 254
+FM BOUND: 254-x <= 0
+FM LOWER: 254 <= x
+FM BOUND: -1+inv_inst0_result_0-x <= 0
+FM LOWER: -1+inv_inst0_result_0 <= x
 FM NEW:   11-inv_inst0_result_0 <= 0
+FM NEW:   -244 <= 0
+FM NEW:   10-inv_inst0_result_0 <= 0
+FM NEW:   -245 <= 0
+FM NEW:   255-inv_inst0_result_0 <= 0
+FM NEW:   0 <= 0
+FM NEW:   0 <= 0
+FM NEW:   -255+inv_inst0_result_0 <= 0
+FM UNREL: 1-inv_inst0_result_0 <= 0
+FM CONSISTENT
+STRONGEST: 255 <= inv_inst0_result_0 <= 255
+
+******** DPLL(FM) iteration 5
+FM TRUE:    0 < inv_inst0_result_0
+FM TRUE:    x < inv_inst0_result_0
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 255
+FM TRUE:    x + 1 >= 255
+FM TRUE:    x + 1 < inv_inst0_result_0
+FM x='x'
+FM BOUND: 1-inv_inst0_result_0 <= 0
+FM BOUND: 1-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -1+inv_inst0_result_0
+FM BOUND: 10-x <= 0
+FM LOWER: 10 <= x
+FM BOUND: 9-x <= 0
+FM LOWER: 9 <= x
+FM BOUND: -254+x <= 0
+FM UPPER: x <= 254
+FM BOUND: 254-x <= 0
+FM LOWER: 254 <= x
+FM BOUND: 2-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -2+inv_inst0_result_0
 FM NEW:   11-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
-FM NEW:   0 <= 0
-FM CONSISTENT
-256 <= inv_inst0_result_0
-NEG: inv_inst0_result_0 >= 257
-XXX
-
-FM NEW:   0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM CONSISTENT
-inv_inst0_result_0 <= 10
-NEG: inv_inst0_result_0 >= 11
-XXX
-
-FM NEW:   -9+inv_inst0_result_0 <= 0
-FM NEW:   -9+inv_inst0_result_0 <= 0
-FM NEW:   -254+inv_inst0_result_0 <= 0
-FM NEW:   -254+inv_inst0_result_0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM CONSISTENT
-inv_inst0_result_0 <= 255
-NEG: inv_inst0_result_0 >= 256
-XXX
-
-FM NEW:   0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -10+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM NEW:   -255+inv_inst0_result_0 <= 0
-FM CONSISTENT
-inv_inst0_result_0 <= 10
-NEG: inv_inst0_result_0 >= 11
-XXX
-
-FM NEW:   11-inv_inst0_result_0 <= 0
+FM NEW:   -244 <= 0
 FM NEW:   12-inv_inst0_result_0 <= 0
+FM NEW:   10-inv_inst0_result_0 <= 0
+FM NEW:   -245 <= 0
 FM NEW:   11-inv_inst0_result_0 <= 0
-FM NEW:   12-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
-FM NEW:   257-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
-FM NEW:   257-inv_inst0_result_0 <= 0
-FM CONSISTENT
-257 <= inv_inst0_result_0
-NEG: inv_inst0_result_0 <= 258
-
-FM NEW:   11-inv_inst0_result_0 <= 0
-FM NEW:   11-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
-FM NEW:   256-inv_inst0_result_0 <= 0
+FM NEW:   255-inv_inst0_result_0 <= 0
 FM NEW:   0 <= 0
+FM NEW:   256-inv_inst0_result_0 <= 0
+FM UNREL: 1-inv_inst0_result_0 <= 0
 FM CONSISTENT
-11 <= inv_inst0_result_0
-NEG: inv_inst0_result_0 <= 10
+STRONGEST: 256 <= inv_inst0_result_0
+
+******** DPLL(FM) iteration 6
+FM TRUE:    0 < inv_inst0_result_0
+FM TRUE:    x < inv_inst0_result_0
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM FALSE:   x + 1 <= 255
+FM TRUE:    x + 1 >= 255
+FM FALSE:   x + 1 < inv_inst0_result_0
+FM x='x'
+FM BOUND: 1-inv_inst0_result_0 <= 0
+FM BOUND: 1-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -1+inv_inst0_result_0
+FM BOUND: 10-x <= 0
+FM LOWER: 10 <= x
+FM BOUND: 9-x <= 0
+FM LOWER: 9 <= x
+FM BOUND: 255-x <= 0
+FM LOWER: 255 <= x
+FM BOUND: 254-x <= 0
+FM LOWER: 254 <= x
+FM BOUND: -1+inv_inst0_result_0-x <= 0
+FM LOWER: -1+inv_inst0_result_0 <= x
+FM NEW:   11-inv_inst0_result_0 <= 0
+FM NEW:   10-inv_inst0_result_0 <= 0
+FM NEW:   256-inv_inst0_result_0 <= 0
+FM NEW:   255-inv_inst0_result_0 <= 0
+FM NEW:   0 <= 0
+FM UNREL: 1-inv_inst0_result_0 <= 0
+FM CONSISTENT
+STRONGEST: 256 <= inv_inst0_result_0
+
+******** DPLL(FM) iteration 7
+FM TRUE:    0 < inv_inst0_result_0
+FM TRUE:    x < inv_inst0_result_0
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 255
+FM FALSE:   x + 1 >= 255
+FM FALSE:   x + 1 < inv_inst0_result_0
+FM x='x'
+FM BOUND: 1-inv_inst0_result_0 <= 0
+FM BOUND: 1-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -1+inv_inst0_result_0
+FM BOUND: 10-x <= 0
+FM LOWER: 10 <= x
+FM BOUND: 9-x <= 0
+FM LOWER: 9 <= x
+FM BOUND: -254+x <= 0
+FM UPPER: x <= 254
+FM BOUND: -253+x <= 0
+FM UPPER: x <= 253
+FM BOUND: -1+inv_inst0_result_0-x <= 0
+FM LOWER: -1+inv_inst0_result_0 <= x
+FM NEW:   11-inv_inst0_result_0 <= 0
+FM NEW:   -244 <= 0
+FM NEW:   -243 <= 0
+FM NEW:   10-inv_inst0_result_0 <= 0
+FM NEW:   -245 <= 0
+FM NEW:   -244 <= 0
+FM NEW:   0 <= 0
+FM NEW:   -255+inv_inst0_result_0 <= 0
+FM NEW:   -254+inv_inst0_result_0 <= 0
+FM UNREL: 1-inv_inst0_result_0 <= 0
+FM CONSISTENT
+STRONGEST: 11 <= inv_inst0_result_0 <= 254
+
+******** DPLL(FM) iteration 8
+FM TRUE:    0 < inv_inst0_result_0
+FM TRUE:    x < inv_inst0_result_0
+FM TRUE:    x + 1 <= 10
+FM FALSE:   x + 1 >= 10
+FM TRUE:    x + 1 <= 255
+FM FALSE:   x + 1 >= 255
+FM FALSE:   x + 1 < inv_inst0_result_0
+FM x='x'
+FM BOUND: 1-inv_inst0_result_0 <= 0
+FM BOUND: 1-inv_inst0_result_0+x <= 0
+FM UPPER: x <= -1+inv_inst0_result_0
+FM BOUND: -9+x <= 0
+FM UPPER: x <= 9
+FM BOUND: -8+x <= 0
+FM UPPER: x <= 8
+FM BOUND: -254+x <= 0
+FM UPPER: x <= 254
+FM BOUND: -253+x <= 0
+FM UPPER: x <= 253
+FM BOUND: -1+inv_inst0_result_0-x <= 0
+FM LOWER: -1+inv_inst0_result_0 <= x
+FM NEW:   0 <= 0
+FM NEW:   -10+inv_inst0_result_0 <= 0
+FM NEW:   -9+inv_inst0_result_0 <= 0
+FM NEW:   -255+inv_inst0_result_0 <= 0
+FM NEW:   -254+inv_inst0_result_0 <= 0
+FM UNREL: 1-inv_inst0_result_0 <= 0
+FM CONSISTENT
+STRONGEST: 1 <= inv_inst0_result_0 <= 9
