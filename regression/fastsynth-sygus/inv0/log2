@@ -4,6 +4,8 @@ FM NEW:   256-inv_inst0_result_0 <= 0
 FM NEW:   256-inv_inst0_result_0 <= 0
 FM NEW:   0 <= 0
 FM CONSISTENT
+256 <= inv_inst0_result_0
+NEG: inv_inst0_result_0 >= 257
 
 FM NEW:   0 <= 0
 FM NEW:   -10+inv_inst0_result_0 <= 0
@@ -11,6 +13,8 @@ FM NEW:   -10+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
+inv_inst0_result_0 <= 10
+NEG: inv_inst0_result_0 >= 11
 
 FM NEW:   -9+inv_inst0_result_0 <= 0
 FM NEW:   -9+inv_inst0_result_0 <= 0
@@ -21,6 +25,8 @@ FM NEW:   -10+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
+inv_inst0_result_0 <= 255
+NEG: inv_inst0_result_0 >= 256
 
 FM NEW:   0 <= 0
 FM NEW:   -10+inv_inst0_result_0 <= 0
@@ -28,6 +34,8 @@ FM NEW:   -10+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
+inv_inst0_result_0 <= 10
+NEG: inv_inst0_result_0 >= 11
 
 FM NEW:   11-inv_inst0_result_0 <= 0
 FM NEW:   12-inv_inst0_result_0 <= 0
@@ -38,6 +46,8 @@ FM NEW:   257-inv_inst0_result_0 <= 0
 FM NEW:   256-inv_inst0_result_0 <= 0
 FM NEW:   257-inv_inst0_result_0 <= 0
 FM CONSISTENT
+257 <= inv_inst0_result_0
+NEG: inv_inst0_result_0 <= 258
 
 FM NEW:   11-inv_inst0_result_0 <= 0
 FM NEW:   11-inv_inst0_result_0 <= 0
@@ -45,3 +55,5 @@ FM NEW:   256-inv_inst0_result_0 <= 0
 FM NEW:   256-inv_inst0_result_0 <= 0
 FM NEW:   0 <= 0
 FM CONSISTENT
+11 <= inv_inst0_result_0
+NEG: inv_inst0_result_0 <= 10
