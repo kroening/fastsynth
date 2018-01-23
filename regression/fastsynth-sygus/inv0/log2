@@ -6,6 +6,7 @@ FM NEW:   0 <= 0
 FM CONSISTENT
 256 <= inv_inst0_result_0
 NEG: inv_inst0_result_0 >= 257
+XXX
 
 FM NEW:   0 <= 0
 FM NEW:   -10+inv_inst0_result_0 <= 0
@@ -15,6 +16,7 @@ FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
 inv_inst0_result_0 <= 10
 NEG: inv_inst0_result_0 >= 11
+XXX
 
 FM NEW:   -9+inv_inst0_result_0 <= 0
 FM NEW:   -9+inv_inst0_result_0 <= 0
@@ -27,6 +29,7 @@ FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
 inv_inst0_result_0 <= 255
 NEG: inv_inst0_result_0 >= 256
+XXX
 
 FM NEW:   0 <= 0
 FM NEW:   -10+inv_inst0_result_0 <= 0
@@ -36,6 +39,7 @@ FM NEW:   -255+inv_inst0_result_0 <= 0
 FM CONSISTENT
 inv_inst0_result_0 <= 10
 NEG: inv_inst0_result_0 >= 11
+XXX
 
 FM NEW:   11-inv_inst0_result_0 <= 0
 FM NEW:   12-inv_inst0_result_0 <= 0
