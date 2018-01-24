@@ -35,10 +35,6 @@ protected:
   using constraintst=std::vector<constraintt>;
   constraintst constraints;
 
-  void assignment();
-  void eliminate();
-  static exprt negate(const exprt &);
-
   struct addendt
   {
     bool negative;
@@ -61,8 +57,6 @@ protected:
       a.negate();
   }
 
-  static void collate(addendst &addends);
-
   class rowt
   {
   public:
@@ -79,6 +73,7 @@ protected:
     bool is_inconsistent() const;
     bool is_tautology() const { return addends.empty() && !is_inconsistent(); }
     bool is_empty() const { return addends.empty(); }
+    void normalize();
 
   protected:
     bool failed;
@@ -89,4 +84,9 @@ protected:
   std::string as_string(const rowt &) const;
 
   void subsumption(std::list<rowt> &);
+
+  void assignment();
+  void eliminate();
+
+  resultt eliminate(const exprt &x, std::list<rowt> &rows);
 };
