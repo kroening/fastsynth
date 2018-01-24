@@ -216,19 +216,32 @@ exprt fourier_motzkint::rowt::as_expr() const
   else
   {
     assert(!addends.empty());
-    exprt lhs;
     if(addends.size()==1)
-      lhs=addends.front().as_expr();
+    {
+      if(addends.front().negative)
+      {
+        exprt lhs=addends.front().expr;
+        exprt rhs=from_integer(-bound, lhs.type());
+        return binary_predicate_exprt(lhs, is_strict?ID_gt:ID_ge, rhs);
+      }
+      else
+      {
+        exprt lhs=addends.front().expr;
+        exprt rhs=from_integer(bound, lhs.type());
+        return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
+      }
+    }
     else
     {
-      lhs=plus_exprt();
+      plus_exprt lhs;
+
       for(const auto &a : addends)
         lhs.copy_to_operands(a.as_expr());
       lhs.type()=lhs.op0().type();
-    }
 
-    exprt rhs=from_integer(bound, lhs.type());
-    return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
+      exprt rhs=from_integer(bound, lhs.type());
+      return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
+    }
   }
 }
 
