@@ -64,34 +64,6 @@ void fourier_motzkint::rowt::negate()
 
 void fourier_motzkint::collate(std::vector<addendt> &addends)
 {
-  // constants
-  for(auto it1=addends.begin(); it1!=addends.end(); it1++)
-  {
-    if(it1->expr.is_constant())
-    {
-      mp_integer it1_i, it2_i, sum;
-      to_integer(it1->expr, it1_i);
-      if(it1->negative) it1_i.negate();
-      sum=it1_i;
-
-      for(auto it2=std::next(it1); it2!=addends.end(); it2++)
-      {
-        if(it2->expr.is_constant())
-        {
-          to_integer(it2->expr, it2_i);
-          if(it2->negative) it2_i.negate();
-          sum+=it2_i;
-          it2->expr=from_integer(0, it2->expr.type());
-        }
-      }
-
-      it1->negative=(sum<0);
-      if(it1->negative) sum.negate();
-      it1->expr=from_integer(sum, it1->expr.type());
-      break; // done
-    }
-  }
-
   std::map<exprt, mp_integer> coefficients;
 
   for(const auto &a : addends)
