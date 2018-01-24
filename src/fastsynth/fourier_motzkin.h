@@ -11,8 +11,8 @@ public:
 
   std::set<exprt> existential_variables;
 
-  // result of quantification goes here; this is a disjunction
-  std::vector<exprt> result;
+  // result of quantification
+  exprt get_result() const;
 
   fourier_motzkint(const namespacet &_ns, propt &_prop):
     prop_conv_solvert(_ns, _prop)
@@ -97,4 +97,6 @@ protected:
 
   std::set<exprt> variables;
   void get_variables(const exprt &);
+
+  std::vector<exprt> result_disjuncts;
 };

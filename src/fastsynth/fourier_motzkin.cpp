@@ -6,6 +6,20 @@
 
 #include <algorithm>
 
+exprt fourier_motzkint::get_result() const
+{
+  std::set<exprt> disjunct_set;
+  std::vector<exprt> unique_disjuncts;
+
+  for(const auto &d : result_disjuncts)
+  {
+    if(disjunct_set.insert(d).second)
+      unique_disjuncts.push_back(d);
+  }
+
+  return disjunction(unique_disjuncts);
+}
+
 literalt fourier_motzkint::convert_rest(const exprt &expr)
 {
   // record
@@ -483,7 +497,7 @@ void fourier_motzkint::eliminate()
   for(const auto &r: projection_result)
     conjuncts.push_back(r.as_expr());
 
-  result.push_back(conjunction(conjuncts));
+  result_disjuncts.push_back(conjunction(conjuncts));
 }
 
 void fourier_motzkint::assignment()

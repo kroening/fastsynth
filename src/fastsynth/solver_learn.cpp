@@ -73,6 +73,15 @@ void prop_learnt::set_program_size(const size_t program_size)
 
 decision_proceduret::resultt prop_learnt::operator()()
 {
+  satcheckt synth_satcheck;
+  synth_satcheck.set_message_handler(get_message_handler());
+
+  bv_pointerst synth_solver(ns, synth_satcheck);
+  synth_solver.set_message_handler(get_message_handler());
+
+  synth_encodingt synth_encoding;
+  synth_encoding.program_size = program_size;
+
   {
     satcheck_no_simplifiert fm_satcheck;
     fourier_motzkint fm_solver(ns, fm_satcheck);
@@ -81,9 +90,7 @@ decision_proceduret::resultt prop_learnt::operator()()
 
     synth_encodingt synth_encoding;
     synth_encoding.program_size = program_size;
-    #if 0
-    add_problem(synth_encoding, fm_solver);
-    #else
+
     for(const auto &e : problem.side_conditions)
     {
       const exprt encoded=synth_encoding(e);
@@ -94,20 +101,12 @@ decision_proceduret::resultt prop_learnt::operator()()
     const exprt encoded=synth_encoding(conjunction(problem.constraints));
     debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
     fm_solver.set_to_false(encoded);
-    #endif
 
     fm_solver();
-    //exit(0);
+
+    exprt r=fm_solver.get_result();
+    debug() << "FM RESULT: " << from_expr(ns, "", r) << eom;
   }
-
-  satcheckt synth_satcheck;
-  synth_satcheck.set_message_handler(get_message_handler());
-
-  bv_pointerst synth_solver(ns, synth_satcheck);
-  synth_solver.set_message_handler(get_message_handler());
-
-  synth_encodingt synth_encoding;
-  synth_encoding.program_size = program_size;
 
   if(counterexamples.empty())
   {
