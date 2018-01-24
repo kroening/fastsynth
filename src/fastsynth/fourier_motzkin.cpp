@@ -57,6 +57,7 @@ exprt fourier_motzkint::drop_ite(const exprt &src)
 
 void fourier_motzkint::rowt::negate()
 {
+  // ! (x<b) <--> (x>=b) <--> (-x<=-b)
   is_strict=!is_strict;
   fourier_motzkint::negate(addends);
   bound.negate();
