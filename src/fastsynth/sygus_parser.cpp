@@ -382,7 +382,10 @@ void sygus_parsert::expand_function_applications(exprt &expr)
       const auto &f=f_it->second;
 
       if(synth_fun_set.find(identifier)!=synth_fun_set.end())
+      {
+        app.function().set_identifier("EXPRESSION"+id2string(identifier));
         return; // do not expand
+      }
 
       assert(f.type.variables().size()==
              app.arguments().size());
