@@ -108,6 +108,8 @@ decision_proceduret::resultt prop_learnt::operator()()
 
     exprt r=fm_solver.get_result();
     debug() << "FM RESULT: " << from_expr(ns, "", r) << eom;
+
+    synth_solver.set_to_false(r);
   }
 
   if(counterexamples.empty())
