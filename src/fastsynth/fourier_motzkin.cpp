@@ -199,6 +199,39 @@ fourier_motzkint::rowt::find(const exprt &src) const
   return addends.end();
 }
 
+exprt fourier_motzkint::addendt::as_expr() const
+{
+  if(negative)
+    return unary_minus_exprt(expr);
+  else
+    return expr;
+}
+
+exprt fourier_motzkint::rowt::as_expr() const
+{
+  if(is_inconsistent())
+    return false_exprt();
+  else if(is_tautology())
+    return true_exprt();
+  else
+  {
+    assert(!addends.empty());
+    exprt lhs;
+    if(addends.size()==1)
+      lhs=addends.front().as_expr();
+    else
+    {
+      lhs=plus_exprt();
+      for(const auto &a : addends)
+        lhs.copy_to_operands(a.as_expr());
+      lhs.type()=lhs.op0().type();
+    }
+
+    exprt rhs=from_integer(bound, lhs.type());
+    return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
+  }
+}
+
 std::string fourier_motzkint::as_string(const std::vector<addendt> &addends) const
 {
   std::string result;
@@ -414,6 +447,9 @@ void fourier_motzkint::eliminate()
       return;
   }
 
+  // remember what we have now
+  auto projection_result=rows;
+
   // run a bit more, in case the rest is inconsistent
   for(const auto &x : variables)
   {
@@ -429,6 +465,12 @@ void fourier_motzkint::eliminate()
   }
 
   debug() << "FM DONE!" << eom;
+
+  exprt::operandst conjuncts;
+  for(const auto &r: projection_result)
+    conjuncts.push_back(r.as_expr());
+
+  result.push_back(conjunction(conjuncts));
 }
 
 void fourier_motzkint::assignment()

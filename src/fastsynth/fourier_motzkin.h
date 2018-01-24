@@ -11,6 +11,9 @@ public:
 
   std::set<exprt> existential_variables;
 
+  // result of quantification goes here; this is a disjunction
+  std::vector<exprt> result;
+
   fourier_motzkint(const namespacet &_ns, propt &_prop):
     prop_conv_solvert(_ns, _prop)
   {
@@ -41,6 +44,7 @@ protected:
     exprt expr;
     void negate() { negative=!negative; }
     addendt():negative(false) { }
+    exprt as_expr() const;
   };
 
   friend bool operator<(const addendt &a, const addendt &b)
@@ -74,6 +78,7 @@ protected:
     bool is_tautology() const { return addends.empty() && !is_inconsistent(); }
     bool is_empty() const { return addends.empty(); }
     void normalize();
+    exprt as_expr() const;
 
   protected:
     bool failed;
