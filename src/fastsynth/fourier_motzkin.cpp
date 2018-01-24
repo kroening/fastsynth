@@ -349,27 +349,39 @@ fourier_motzkint::resultt fourier_motzkint::eliminate(
       return resultt::D_UNSATISFIABLE;
     }
 
+  for(const auto &r : unrelated)
+    new_rows.push_back(r);
+
   if(new_rows.empty())
-    debug() << "FM TAUTOLOGY" << eom;
+    debug() << "FM CONSISTENT (TAUTOLOGY)" << eom;
   else
-  {
     debug() << "FM CONSISTENT" << eom;
 
-    for(const auto &r : unrelated)
-      new_rows.push_back(r);
+  // subsumption check
+  subsumption(new_rows);
 
-    // subsumption check
-    subsumption(new_rows);
+  for(const auto &r : new_rows)
+    debug() << "FM FINAL: " << as_string(r) << eom;
 
-    for(const auto &r : new_rows)
-      debug() << "FM FINAL: " << as_string(r) << eom;
-  }
+  rows.swap(new_rows);
 
   return resultt::D_SATISFIABLE;
 }
 
+void fourier_motzkint::get_variables(const exprt &src)
+{
+  for(const auto &op : src.operands())
+    get_variables(op);
+
+  if(src.id()==ID_symbol)
+    variables.insert(src);
+}
+
 void fourier_motzkint::eliminate()
 {
+  for(const auto &c : constraints)
+    get_variables(c.expr);
+
   std::list<rowt> rows;
 
   for(const auto &c : constraints)
@@ -391,6 +403,7 @@ void fourier_motzkint::eliminate()
     }
   }
 
+  // first do the existential ones
   for(const auto &x : existential_variables)
   {
     debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
@@ -400,6 +413,22 @@ void fourier_motzkint::eliminate()
     if(result==resultt::D_UNSATISFIABLE)
       return;
   }
+
+  // run a bit more, in case the rest is inconsistent
+  for(const auto &x : variables)
+  {
+    if(existential_variables.find(x)!=existential_variables.end())
+      continue; // done already
+
+    debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
+
+    auto result=eliminate(x, rows);
+
+    if(result==resultt::D_UNSATISFIABLE)
+      return;
+  }
+
+  debug() << "FM DONE!" << eom;
 }
 
 void fourier_motzkint::assignment()

@@ -89,4 +89,7 @@ protected:
   void eliminate();
 
   resultt eliminate(const exprt &x, std::list<rowt> &rows);
+
+  std::set<exprt> variables;
+  void get_variables(const exprt &);
 };
