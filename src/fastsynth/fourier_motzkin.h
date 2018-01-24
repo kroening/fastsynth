@@ -61,8 +61,6 @@ protected:
       a.negate();
   }
 
-  static void collate(addendst &addends);
-
   class rowt
   {
   public:
@@ -79,6 +77,7 @@ protected:
     bool is_inconsistent() const;
     bool is_tautology() const { return addends.empty() && !is_inconsistent(); }
     bool is_empty() const { return addends.empty(); }
+    void normalize();
 
   protected:
     bool failed;

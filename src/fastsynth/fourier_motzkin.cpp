@@ -62,7 +62,7 @@ void fourier_motzkint::rowt::negate()
   bound.negate();
 }
 
-void fourier_motzkint::collate(std::vector<addendt> &addends)
+void fourier_motzkint::rowt::normalize()
 {
   std::map<exprt, mp_integer> coefficients;
 
@@ -95,7 +95,6 @@ void fourier_motzkint::collate(std::vector<addendt> &addends)
 
 bool fourier_motzkint::rowt::is_inconsistent() const
 {
-  // we assume that collate() has been run
   if(addends.empty())
   {
     if(is_strict) // 0 < b
@@ -296,7 +295,7 @@ void fourier_motzkint::eliminate()
         r.negate();
 
       r.eliminate_strict();
-      collate(r.addends);
+      r.normalize();
 
       rows.push_back(r);
     }
@@ -357,7 +356,7 @@ void fourier_motzkint::eliminate()
           new_row.addends.push_back(a);
         new_row.bound+=upper.bound;
 
-        collate(new_row.addends);
+        new_row.normalize();
         new_rows.push_back(new_row);
         debug() << "FM NEW:   " << as_string(new_row) << eom;
       }
