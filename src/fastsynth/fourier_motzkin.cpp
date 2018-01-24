@@ -247,6 +247,38 @@ std::string fourier_motzkint::as_string(const rowt &r) const
   return result;
 }
 
+void fourier_motzkint::subsumption(std::list<rowt> &rows)
+{
+  // delete tautologies
+  for(auto r_it=rows.begin(); r_it!=rows.end();)
+  {
+    if(r_it->is_tautology())
+      r_it=rows.erase(r_it);
+    else
+      r_it++;
+  }
+
+  std::map<addendst, mp_integer> smallest_bounds;
+
+  for(const auto &r : rows)
+  {
+    auto b_it=smallest_bounds.find(r.addends);
+    if(b_it==smallest_bounds.end())
+      smallest_bounds[r.addends]=r.bound;
+    else
+      b_it->second=std::min(b_it->second, r.bound);
+  }
+
+  // delete subsumed ones
+  for(auto r_it=rows.begin(); r_it!=rows.end();)
+  {
+    if(smallest_bounds[r_it->addends]==r_it->bound)
+      r_it++; // strongest
+    else
+      r_it=rows.erase(r_it); // subsumed
+  }
+}
+
 void fourier_motzkint::eliminate()
 {
   std::vector<rowt> rows;
@@ -330,11 +362,11 @@ void fourier_motzkint::eliminate()
         debug() << "FM NEW:   " << as_string(new_row) << eom;
       }
 
-    for(const auto &b : unrelated)
-      debug() << "FM UNREL: " << as_string(b) << eom;
+    for(const auto &r : unrelated)
+      debug() << "FM UNREL: " << as_string(r) << eom;
 
-    for(const auto &b : new_rows)
-      if(b.is_inconsistent())
+    for(const auto &r : new_rows)
+      if(r.is_inconsistent())
       {
         debug() << "FM INCONSISTENT" << eom;
         return;
@@ -343,7 +375,18 @@ void fourier_motzkint::eliminate()
     if(new_rows.empty())
       debug() << "FM TAUTOLOGY" << eom;
     else
+    {
       debug() << "FM CONSISTENT" << eom;
+
+      for(const auto &r : unrelated)
+        new_rows.push_back(r);
+
+      // subsumption check
+      subsumption(new_rows);
+
+      for(const auto &r : new_rows)
+        debug() << "FM FINAL: " << as_string(r) << eom;
+    }
   }
 }
 

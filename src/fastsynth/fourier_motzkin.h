@@ -47,18 +47,26 @@ protected:
     addendt():negative(false) { }
   };
 
-  static void negate(std::vector<addendt> &addends)
+  friend bool operator<(const addendt &a, const addendt &b)
+  {
+    if(a.expr<b.expr) return true;
+    return a.negative < b.negative;
+  }
+
+  using addendst=std::vector<addendt>;
+
+  static void negate(addendst &addends)
   {
     for(auto &a : addends)
       a.negate();
   }
 
-  static void collate(std::vector<addendt> &addends);
+  static void collate(addendst &addends);
 
   class rowt
   {
   public:
-    std::vector<addendt> addends;
+    addendst addends;
     bool is_strict;
     void negate();
     explicit rowt(const exprt &);
@@ -69,6 +77,7 @@ protected:
     std::vector<addendt>::const_iterator end() const { return addends.end(); }
     void eliminate_strict();
     bool is_inconsistent() const;
+    bool is_tautology() const { return addends.empty() && !is_inconsistent(); }
     bool is_empty() const { return addends.empty(); }
 
   protected:
@@ -78,4 +87,6 @@ protected:
 
   std::string as_string(const std::vector<addendt> &) const;
   std::string as_string(const rowt &) const;
+
+  void subsumption(std::list<rowt> &);
 };
