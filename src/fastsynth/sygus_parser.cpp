@@ -400,7 +400,7 @@ void sygus_parsert::expand_function_applications(exprt &expr)
 
       exprt body=f.body;
       replace_symbol(body);
-
+      expand_function_applications(body);
       expr=body;
     }
   }
