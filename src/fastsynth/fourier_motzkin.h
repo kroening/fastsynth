@@ -63,6 +63,7 @@ protected:
     void negate();
     explicit rowt(const exprt &);
     operator bool() const { return failed; }
+    mp_integer bound;
 
     std::vector<addendt>::const_iterator find(const exprt &src) const;
     std::vector<addendt>::const_iterator end() const { return addends.end(); }

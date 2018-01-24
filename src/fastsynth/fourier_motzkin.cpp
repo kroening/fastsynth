@@ -59,6 +59,7 @@ void fourier_motzkint::rowt::negate()
 {
   is_weak=!is_weak;
   fourier_motzkint::negate(addends);
+  bound.negate();
 }
 
 void fourier_motzkint::collate(std::vector<addendt> &addends)
@@ -123,13 +124,12 @@ void fourier_motzkint::collate(std::vector<addendt> &addends)
 bool fourier_motzkint::rowt::is_inconsistent() const
 {
   // we assume that collate() has been run
-  if(addends.size()==1 &&
-     addends.front().expr.is_constant())
+  if(addends.empty())
   {
-    mp_integer i;
-    to_integer(addends.front().expr, i);
-    if(addends.front().negative) i.negate();
-    if(i>0) return true;
+    if(is_weak) // 0 < b
+      return bound<=0;
+    else // 0 <= b
+      return bound<0;
   }
 
   return false;
@@ -139,17 +139,9 @@ void fourier_motzkint::rowt::eliminate_weak()
 {
   if(is_weak)
   {
-    // integers only! X<0 <=> X+1<=0
-    typet t;
-    if(!addends.empty())
-      t=addends.front().expr.type();
-    else
-      t=integer_typet();
-
+    // integers only! X<b <=> X<=b-1
     is_weak=false;
-    addends.push_back(addendt());
-    addends.back().negative=false;
-    addends.back().expr=from_integer(1, t);
+    bound-=1;
   }
 }
 
@@ -200,6 +192,18 @@ void fourier_motzkint::rowt::collect_addends(
   else if(src.id()==ID_unary_minus)
   {
     collect_addends(to_unary_minus_expr(src).op(), !negate);
+  }
+  else if(src.id()==ID_constant)
+  {
+    mp_integer i;
+    if(to_integer(src, i))
+      failed=true;
+    else
+    {
+      // constants go to the right hand side of the inequality
+      if(!negate) i.negate();
+      bound+=i;
+    }
   }
   else
   {
@@ -266,7 +270,7 @@ std::string fourier_motzkint::as_string(const rowt &r) const
     result+="<=";
 
   result+=' ';
-  result+='0';
+  result+=integer2string(r.bound);
 
   return result;
 }
@@ -319,12 +323,14 @@ void fourier_motzkint::eliminate()
 
           if(it->negative)
             debug() << "FM LOWER: " << as_string(new_r)
+                    << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
                     << (r.is_weak?" < ":" <= ") << from_expr(ns, "", x) << eom;
           else
           {
             negate(new_r);
             debug() << "FM UPPER: " << from_expr(ns, "", x)
-                    << (r.is_weak?" < ":" <= ") << as_string(new_r) << eom;
+                    << (r.is_weak?" < ":" <= ") << as_string(new_r)
+                    << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << eom;
           }
         }
 
@@ -345,6 +351,7 @@ void fourier_motzkint::eliminate()
         rowt new_row=lower;
         for(const auto &a : upper.addends)
           new_row.addends.push_back(a);
+        new_row.bound+=upper.bound;
 
         collate(new_row.addends);
         new_rows.push_back(new_row);
