@@ -8,7 +8,7 @@
 
 #include "fourier_motzkin.h"
 
-prop_learn_baset::prop_learn_baset(
+solver_learn_baset::solver_learn_baset(
   const namespacet &_ns,
   const cegist::problemt &_problem,
   message_handlert &_message_handler):
@@ -16,7 +16,7 @@ prop_learn_baset::prop_learn_baset(
 {
 }
 
-void prop_learn_baset::add_counterexample(
+void solver_learn_baset::add_counterexample(
   const verify_encodingt::counterexamplet &ce,
   synth_encodingt &synth_encoding,
   decision_proceduret &solver)
@@ -32,7 +32,7 @@ void prop_learn_baset::add_counterexample(
   }
 }
 
-void prop_learn_baset::add_problem(
+void solver_learn_baset::add_problem(
   synth_encodingt &encoding,
   decision_proceduret &solver)
 {
@@ -57,22 +57,22 @@ void prop_learn_baset::add_problem(
   }
 }
 
-prop_learnt::prop_learnt(
+solver_learnt::solver_learnt(
   const namespacet &_ns,
   const cegist::problemt &_problem,
   message_handlert &_message_handler):
-  prop_learn_baset(_ns, _problem, _message_handler),
+  solver_learn_baset(_ns, _problem, _message_handler),
   program_size(1u),
   use_fm(false)
 {
 }
 
-void prop_learnt::set_program_size(const size_t program_size)
+void solver_learnt::set_program_size(const size_t program_size)
 {
   this->program_size = program_size;
 }
 
-decision_proceduret::resultt prop_learnt::operator()()
+decision_proceduret::resultt solver_learnt::operator()()
 {
   satcheckt synth_satcheck;
   synth_satcheck.set_message_handler(get_message_handler());
@@ -141,12 +141,12 @@ decision_proceduret::resultt prop_learnt::operator()()
   return result;
 }
 
-std::map<symbol_exprt, exprt> prop_learnt::get_expressions() const
+std::map<symbol_exprt, exprt> solver_learnt::get_expressions() const
 {
   return last_solution;
 }
 
-void prop_learnt::add(const verify_encodingt::counterexamplet &counterexample)
+void solver_learnt::add(const verify_encodingt::counterexamplet &counterexample)
 {
   counterexamples.emplace_back(counterexample);
 }

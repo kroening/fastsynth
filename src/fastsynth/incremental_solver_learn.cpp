@@ -2,12 +2,12 @@
 
 #include <solvers/flattening/bv_pointers.h>
 
-incremental_prop_learnt::incremental_prop_learnt(
+incremental_solver_learnt::incremental_solver_learnt(
   const namespacet &_ns,
   const cegist::problemt &_problem,
   bool _use_simp_solver,
   message_handlert &_message_handler)
-  : prop_learn_baset(_ns, _problem, _message_handler),
+  : solver_learn_baset(_ns, _problem, _message_handler),
     synth_satcheck(new satcheck_no_simplifiert()),
     synth_solver(new bv_pointerst(ns, *synth_satcheck)),
     program_size(1u),
@@ -17,7 +17,7 @@ incremental_prop_learnt::incremental_prop_learnt(
   init();
 }
 
-void incremental_prop_learnt::init()
+void incremental_solver_learnt::init()
 {
   if(use_simp_solver)
   {
@@ -32,7 +32,7 @@ void incremental_prop_learnt::init()
   freeze_expression_symbols();
 }
 
-void incremental_prop_learnt::set_program_size(const size_t program_size)
+void incremental_solver_learnt::set_program_size(const size_t program_size)
 {
   PRECONDITION(program_size >= this->program_size);
   if(program_size == this->program_size)
@@ -61,17 +61,17 @@ void incremental_prop_learnt::set_program_size(const size_t program_size)
   }
 }
 
-decision_proceduret::resultt incremental_prop_learnt::operator()()
+decision_proceduret::resultt incremental_solver_learnt::operator()()
 {
   return (*synth_solver)();
 }
 
-std::map<symbol_exprt, exprt> incremental_prop_learnt::get_expressions() const
+std::map<symbol_exprt, exprt> incremental_solver_learnt::get_expressions() const
 {
   return synth_encoding.get_expressions(*synth_solver);
 }
 
-void incremental_prop_learnt::add(
+void incremental_solver_learnt::add(
   const verify_encodingt::counterexamplet &counterexample)
 {
   counterexamples.emplace_back(counterexample);
@@ -87,7 +87,7 @@ void incremental_prop_learnt::add(
   counterexample_counter++;
 }
 
-void incremental_prop_learnt::freeze_expression_symbols()
+void incremental_solver_learnt::freeze_expression_symbols()
 {
   if(!use_simp_solver)
     return;

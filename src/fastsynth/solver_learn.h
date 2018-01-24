@@ -4,7 +4,7 @@
 #include <fastsynth/learn.h>
 #include <fastsynth/cegis.h>
 
-class prop_learn_baset:public learnt
+class solver_learn_baset:public learnt
 {
 protected:
   /// Namespace passed on to decision procedure.
@@ -29,10 +29,10 @@ protected:
   void add_problem(synth_encodingt &, decision_proceduret &);
 
   /// Creates the base class.
-  /// \param ns \see ns prop_learnt::ns
-  /// \param problem \see prop_learnt::problem
-  /// \param msg \see msg prop_learnt::msg
-  prop_learn_baset(
+  /// \param ns \see ns solver_learnt::ns
+  /// \param problem \see solver_learnt::problem
+  /// \param msg \see msg solver_learnt::msg
+  solver_learn_baset(
     const namespacet &,
     const cegist::problemt &,
     message_handlert &);
@@ -40,7 +40,7 @@ protected:
 
 /// Default learner implementation. Generates a constraint using synth_encodingt
 /// and solves it using a configurable propt instance.
-class prop_learnt:public prop_learn_baset
+class solver_learnt:public solver_learn_baset
 {
   /// \see learnt::set_program_size(size_t)
   size_t program_size;
@@ -48,15 +48,15 @@ class prop_learnt:public prop_learn_baset
   /// Counterexample set to synthesise against.
   std::vector<verify_encodingt::counterexamplet> counterexamples;
 
-  /// Solution created in the last invocation of prop_learnt::operator()().
+  /// Solution created in the last invocation of solver_learnt::operator()().
   std::map<symbol_exprt, exprt> last_solution;
 
 public:
   /// Creates a non-incremental learner.
-  /// \param msg \see msg prop_learnt::msg
-  /// \param ns \see ns prop_learnt::ns
-  /// \param problem \see prop_learnt::problem
-  prop_learnt(
+  /// \param msg \see msg solver_learnt::msg
+  /// \param ns \see ns solver_learnt::ns
+  /// \param problem \see solver_learnt::problem
+  solver_learnt(
     const namespacet &,
     const cegist::problemt &,
     message_handlert &);

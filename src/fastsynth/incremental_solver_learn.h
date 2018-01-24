@@ -13,7 +13,7 @@
 
 /// Generates a constraint using synth_encodingt and solves it incrementally
 /// using a configurable propt instance.
-class incremental_prop_learnt:public prop_learn_baset
+class incremental_solver_learnt:public solver_learn_baset
 {
   /// Solver instance.
   std::unique_ptr<propt> synth_satcheck;
@@ -42,11 +42,11 @@ class incremental_prop_learnt:public prop_learn_baset
 
 public:
   /// Creates an incremental learner.
-  /// \param msg \see msg incremental_prop_learnt::msg
-  /// \param ns \see ns incremental_prop_learnt::ns
-  /// \param problem \see incremental_prop_learnt::problem
+  /// \param msg \see msg incremental_solver_learnt::msg
+  /// \param ns \see ns incremental_solver_learnt::ns
+  /// \param problem \see incremental_solver_learnt::problem
   /// \param use_simp_solver indicates whether to use simplifying solver
-  incremental_prop_learnt(
+  incremental_solver_learnt(
     const namespacet &,
     const cegist::problemt &,
     bool use_simp_solver,
