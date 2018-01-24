@@ -35,10 +35,6 @@ protected:
   using constraintst=std::vector<constraintt>;
   constraintst constraints;
 
-  void assignment();
-  void eliminate();
-  static exprt negate(const exprt &);
-
   struct addendt
   {
     bool negative;
@@ -88,4 +84,9 @@ protected:
   std::string as_string(const rowt &) const;
 
   void subsumption(std::list<rowt> &);
+
+  void assignment();
+  void eliminate();
+
+  resultt eliminate(const exprt &x, std::list<rowt> &rows);
 };

@@ -278,9 +278,98 @@ void fourier_motzkint::subsumption(std::list<rowt> &rows)
   }
 }
 
+fourier_motzkint::resultt fourier_motzkint::eliminate(
+  const exprt &x,
+  std::list<rowt> &rows)
+{
+  // collect the lower and upper bounds on 'x'
+  std::list<rowt> lower_bounds, upper_bounds, unrelated;
+
+  for(const auto &r : rows)
+  {
+    debug() << "FM BOUND: " << as_string(r) << eom;
+    auto it=r.find(x);
+
+    if(it==r.end())
+      unrelated.push_back(r);
+    else
+    {
+      {
+        std::vector<addendt> new_r;
+
+        for(const auto &a : r.addends)
+          if(a.expr!=x)
+            new_r.push_back(a);
+
+        if(it->negative)
+          debug() << "FM LOWER: " << as_string(new_r)
+                  << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
+                  << (r.is_strict?" < ":" <= ") << from_expr(ns, "", x) << eom;
+        else
+        {
+          negate(new_r);
+          debug() << "FM UPPER: " << from_expr(ns, "", x)
+                  << (r.is_strict?" < ":" <= ") << as_string(new_r)
+                  << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << eom;
+        }
+      }
+
+      if(it->negative)
+        lower_bounds.push_back(r);
+      else
+        upper_bounds.push_back(r);
+    }
+  }
+
+  std::list<rowt> new_rows;
+
+  // now form new constraints,
+  // considering all pairs of upper and lower bounds
+  for(const auto &lower : lower_bounds)
+    for(const auto &upper: upper_bounds)
+    {
+      rowt new_row=lower;
+      for(const auto &a : upper.addends)
+        new_row.addends.push_back(a);
+      new_row.bound+=upper.bound;
+
+      new_row.normalize();
+      new_rows.push_back(new_row);
+      debug() << "FM NEW:   " << as_string(new_row) << eom;
+    }
+
+  for(const auto &r : unrelated)
+    debug() << "FM UNREL: " << as_string(r) << eom;
+
+  for(const auto &r : new_rows)
+    if(r.is_inconsistent())
+    {
+      debug() << "FM INCONSISTENT" << eom;
+      return resultt::D_UNSATISFIABLE;
+    }
+
+  if(new_rows.empty())
+    debug() << "FM TAUTOLOGY" << eom;
+  else
+  {
+    debug() << "FM CONSISTENT" << eom;
+
+    for(const auto &r : unrelated)
+      new_rows.push_back(r);
+
+    // subsumption check
+    subsumption(new_rows);
+
+    for(const auto &r : new_rows)
+      debug() << "FM FINAL: " << as_string(r) << eom;
+  }
+
+  return resultt::D_SATISFIABLE;
+}
+
 void fourier_motzkint::eliminate()
 {
-  std::vector<rowt> rows;
+  std::list<rowt> rows;
 
   for(const auto &c : constraints)
   {
@@ -305,87 +394,10 @@ void fourier_motzkint::eliminate()
   {
     debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
 
-    // collect the lower and upper bounds on 'x'
-    std::list<rowt> lower_bounds, upper_bounds, unrelated;
+    auto result=eliminate(x, rows);
 
-    for(const auto &r : rows)
-    {
-      debug() << "FM BOUND: " << as_string(r) << eom;
-      auto it=r.find(x);
-
-      if(it==r.end())
-        unrelated.push_back(r);
-      else
-      {
-        {
-          std::vector<addendt> new_r;
-
-          for(const auto &a : r.addends)
-            if(a.expr!=x)
-              new_r.push_back(a);
-
-          if(it->negative)
-            debug() << "FM LOWER: " << as_string(new_r)
-                    << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
-                    << (r.is_strict?" < ":" <= ") << from_expr(ns, "", x) << eom;
-          else
-          {
-            negate(new_r);
-            debug() << "FM UPPER: " << from_expr(ns, "", x)
-                    << (r.is_strict?" < ":" <= ") << as_string(new_r)
-                    << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << eom;
-          }
-        }
-
-        if(it->negative)
-          lower_bounds.push_back(r);
-        else
-          upper_bounds.push_back(r);
-      }
-    }
-
-    std::list<rowt> new_rows;
-
-    // now form new constraints,
-    // considering all pairs of upper and lower bounds
-    for(const auto &lower : lower_bounds)
-      for(const auto &upper: upper_bounds)
-      {
-        rowt new_row=lower;
-        for(const auto &a : upper.addends)
-          new_row.addends.push_back(a);
-        new_row.bound+=upper.bound;
-
-        new_row.normalize();
-        new_rows.push_back(new_row);
-        debug() << "FM NEW:   " << as_string(new_row) << eom;
-      }
-
-    for(const auto &r : unrelated)
-      debug() << "FM UNREL: " << as_string(r) << eom;
-
-    for(const auto &r : new_rows)
-      if(r.is_inconsistent())
-      {
-        debug() << "FM INCONSISTENT" << eom;
-        return;
-      }
-
-    if(new_rows.empty())
-      debug() << "FM TAUTOLOGY" << eom;
-    else
-    {
-      debug() << "FM CONSISTENT" << eom;
-
-      for(const auto &r : unrelated)
-        new_rows.push_back(r);
-
-      // subsumption check
-      subsumption(new_rows);
-
-      for(const auto &r : new_rows)
-        debug() << "FM FINAL: " << as_string(r) << eom;
-    }
+    if(result==resultt::D_UNSATISFIABLE)
+      return;
   }
 }
 
