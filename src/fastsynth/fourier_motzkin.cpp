@@ -57,7 +57,7 @@ exprt fourier_motzkint::drop_ite(const exprt &src)
 
 void fourier_motzkint::rowt::negate()
 {
-  is_weak=!is_weak;
+  is_strict=!is_strict;
   fourier_motzkint::negate(addends);
   bound.negate();
 }
@@ -126,7 +126,7 @@ bool fourier_motzkint::rowt::is_inconsistent() const
   // we assume that collate() has been run
   if(addends.empty())
   {
-    if(is_weak) // 0 < b
+    if(is_strict) // 0 < b
       return bound<=0;
     else // 0 <= b
       return bound<0;
@@ -135,43 +135,43 @@ bool fourier_motzkint::rowt::is_inconsistent() const
   return false;
 }
 
-void fourier_motzkint::rowt::eliminate_weak()
+void fourier_motzkint::rowt::eliminate_strict()
 {
-  if(is_weak)
+  if(is_strict)
   {
     // integers only! X<b <=> X<=b-1
-    is_weak=false;
+    is_strict=false;
     bound-=1;
   }
 }
 
 fourier_motzkint::rowt::rowt(const exprt &src):
-  is_weak(false), failed(true)
+  is_strict(false), failed(true)
 {
   if(src.id()==ID_lt && src.operands().size()==2)
   {
-    is_weak=true;
+    is_strict=true;
     collect_addends(src.op0(), false);
     collect_addends(src.op1(), true);
     failed=false;
   }
   else if(src.id()==ID_le && src.operands().size()==2)
   {
-    is_weak=false;
+    is_strict=false;
     collect_addends(src.op0(), false);
     collect_addends(src.op1(), true);
     failed=false;
   }
   else if(src.id()==ID_gt && src.operands().size()==2)
   {
-    is_weak=true;
+    is_strict=true;
     collect_addends(src.op0(), true);
     collect_addends(src.op1(), false);
     failed=false;
   }
   else if(src.id()==ID_ge && src.operands().size()==2)
   {
-    is_weak=false;
+    is_strict=false;
     collect_addends(src.op0(), true);
     collect_addends(src.op1(), false);
     failed=false;
@@ -264,7 +264,7 @@ std::string fourier_motzkint::as_string(const rowt &r) const
 
   result+=' ';
 
-  if(r.is_weak)
+  if(r.is_strict)
     result+='<';
   else
     result+="<=";
@@ -291,7 +291,7 @@ void fourier_motzkint::eliminate()
       if(value.is_false())
         r.negate();
 
-      r.eliminate_weak();
+      r.eliminate_strict();
       collate(r.addends);
 
       rows.push_back(r);
@@ -324,12 +324,12 @@ void fourier_motzkint::eliminate()
           if(it->negative)
             debug() << "FM LOWER: " << as_string(new_r)
                     << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
-                    << (r.is_weak?" < ":" <= ") << from_expr(ns, "", x) << eom;
+                    << (r.is_strict?" < ":" <= ") << from_expr(ns, "", x) << eom;
           else
           {
             negate(new_r);
             debug() << "FM UPPER: " << from_expr(ns, "", x)
-                    << (r.is_weak?" < ":" <= ") << as_string(new_r)
+                    << (r.is_strict?" < ":" <= ") << as_string(new_r)
                     << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << eom;
           }
         }

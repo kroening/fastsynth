@@ -59,7 +59,7 @@ protected:
   {
   public:
     std::vector<addendt> addends;
-    bool is_weak;
+    bool is_strict;
     void negate();
     explicit rowt(const exprt &);
     operator bool() const { return failed; }
@@ -67,7 +67,7 @@ protected:
 
     std::vector<addendt>::const_iterator find(const exprt &src) const;
     std::vector<addendt>::const_iterator end() const { return addends.end(); }
-    void eliminate_weak();
+    void eliminate_strict();
     bool is_inconsistent() const;
     bool is_empty() const { return addends.empty(); }
 
