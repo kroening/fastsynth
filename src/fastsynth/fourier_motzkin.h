@@ -55,13 +55,13 @@ protected:
 
   static void collate(std::vector<addendt> &addends);
 
-  class boundt
+  class rowt
   {
   public:
     std::vector<addendt> addends;
     bool is_weak;
     void negate();
-    explicit boundt(const exprt &);
+    explicit rowt(const exprt &);
     operator bool() const { return failed; }
 
     std::vector<addendt>::const_iterator find(const exprt &src) const;
@@ -75,7 +75,6 @@ protected:
     void collect_addends(const exprt &, bool negate);
   };
 
-
   std::string as_string(const std::vector<addendt> &) const;
-  std::string as_string(const boundt &) const;
+  std::string as_string(const rowt &) const;
 };

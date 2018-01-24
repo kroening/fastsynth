@@ -55,7 +55,7 @@ exprt fourier_motzkint::drop_ite(const exprt &src)
 }
 #endif
 
-void fourier_motzkint::boundt::negate()
+void fourier_motzkint::rowt::negate()
 {
   is_weak=!is_weak;
   fourier_motzkint::negate(addends);
@@ -120,7 +120,7 @@ void fourier_motzkint::collate(std::vector<addendt> &addends)
     [](const addendt &A, const addendt &B) { return A.expr<B.expr; });
 }
 
-bool fourier_motzkint::boundt::is_inconsistent() const
+bool fourier_motzkint::rowt::is_inconsistent() const
 {
   // we assume that collate() has been run
   if(addends.size()==1 &&
@@ -135,7 +135,7 @@ bool fourier_motzkint::boundt::is_inconsistent() const
   return false;
 }
 
-void fourier_motzkint::boundt::eliminate_weak()
+void fourier_motzkint::rowt::eliminate_weak()
 {
   if(is_weak)
   {
@@ -153,7 +153,7 @@ void fourier_motzkint::boundt::eliminate_weak()
   }
 }
 
-fourier_motzkint::boundt::boundt(const exprt &src):
+fourier_motzkint::rowt::rowt(const exprt &src):
   is_weak(false), failed(true)
 {
   if(src.id()==ID_lt && src.operands().size()==2)
@@ -188,7 +188,7 @@ fourier_motzkint::boundt::boundt(const exprt &src):
     failed=true;
 }
 
-void fourier_motzkint::boundt::collect_addends(
+void fourier_motzkint::rowt::collect_addends(
   const exprt &src,
   bool negate)
 {
@@ -210,7 +210,7 @@ void fourier_motzkint::boundt::collect_addends(
 }
 
 std::vector<fourier_motzkint::addendt>::const_iterator
-fourier_motzkint::boundt::find(const exprt &src) const
+fourier_motzkint::rowt::find(const exprt &src) const
 {
   for(auto it=addends.begin();
       it!=addends.end();
@@ -249,30 +249,31 @@ std::string fourier_motzkint::as_string(const std::vector<addendt> &addends) con
   return result;
 }
 
-std::string fourier_motzkint::as_string(const boundt &b) const
+std::string fourier_motzkint::as_string(const rowt &r) const
 {
   std::string result;
 
-  if(b.is_empty())
+  if(r.is_empty())
     result+="0";
   else
-    result+=as_string(b.addends);
+    result+=as_string(r.addends);
 
   result+=' ';
 
-  if(b.is_weak)
+  if(r.is_weak)
     result+='<';
   else
     result+="<=";
 
-  result+=" 0";
+  result+=' ';
+  result+='0';
 
   return result;
 }
 
 void fourier_motzkint::eliminate()
 {
-  std::vector<boundt> bounds;
+  std::vector<rowt> rows;
 
   for(const auto &c : constraints)
   {
@@ -280,16 +281,16 @@ void fourier_motzkint::eliminate()
     if(value.is_unknown())
       continue;
 
-    boundt b(c.expr);
-    if(!b)
+    rowt r(c.expr);
+    if(!r)
     {
       if(value.is_false())
-        b.negate();
+        r.negate();
 
-      b.eliminate_weak();
-      collate(b.addends);
+      r.eliminate_weak();
+      collate(r.addends);
 
-      bounds.push_back(b);
+      rows.push_back(r);
     }
   }
 
@@ -298,69 +299,69 @@ void fourier_motzkint::eliminate()
     debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
 
     // collect the lower and upper bounds on 'x'
-    std::list<boundt> lower_bounds, upper_bounds, unrelated;
+    std::list<rowt> lower_bounds, upper_bounds, unrelated;
 
-    for(const auto &b : bounds)
+    for(const auto &r : rows)
     {
-      debug() << "FM BOUND: " << as_string(b) << eom;
-      auto it=b.find(x);
+      debug() << "FM BOUND: " << as_string(r) << eom;
+      auto it=r.find(x);
 
-      if(it==b.end())
-        unrelated.push_back(b);
+      if(it==r.end())
+        unrelated.push_back(r);
       else
       {
         {
-          std::vector<addendt> new_b;
+          std::vector<addendt> new_r;
 
-          for(const auto &a : b.addends)
+          for(const auto &a : r.addends)
             if(a.expr!=x)
-              new_b.push_back(a);
+              new_r.push_back(a);
 
           if(it->negative)
-            debug() << "FM LOWER: " << as_string(new_b)
-                    << (b.is_weak?" < ":" <= ") << from_expr(ns, "", x) << eom;
+            debug() << "FM LOWER: " << as_string(new_r)
+                    << (r.is_weak?" < ":" <= ") << from_expr(ns, "", x) << eom;
           else
           {
-            negate(new_b);
+            negate(new_r);
             debug() << "FM UPPER: " << from_expr(ns, "", x)
-                    << (b.is_weak?" < ":" <= ") << as_string(new_b) << eom;
+                    << (r.is_weak?" < ":" <= ") << as_string(new_r) << eom;
           }
         }
 
         if(it->negative)
-          lower_bounds.push_back(b);
+          lower_bounds.push_back(r);
         else
-          upper_bounds.push_back(b);
+          upper_bounds.push_back(r);
       }
     }
 
-    std::list<boundt> new_bounds;
+    std::list<rowt> new_rows;
 
-    // now form new bounds,
+    // now form new constraints,
     // considering all pairs of upper and lower bounds
     for(const auto &lower : lower_bounds)
       for(const auto &upper: upper_bounds)
       {
-        boundt new_bound=lower;
+        rowt new_row=lower;
         for(const auto &a : upper.addends)
-          new_bound.addends.push_back(a);
+          new_row.addends.push_back(a);
 
-        collate(new_bound.addends);
-        new_bounds.push_back(new_bound);
-        debug() << "FM NEW:   " << as_string(new_bound) << eom;
+        collate(new_row.addends);
+        new_rows.push_back(new_row);
+        debug() << "FM NEW:   " << as_string(new_row) << eom;
       }
 
     for(const auto &b : unrelated)
       debug() << "FM UNREL: " << as_string(b) << eom;
 
-    for(const auto &b : new_bounds)
+    for(const auto &b : new_rows)
       if(b.is_inconsistent())
       {
         debug() << "FM INCONSISTENT" << eom;
         return;
       }
 
-    if(new_bounds.empty())
+    if(new_rows.empty())
       debug() << "FM TAUTOLOGY" << eom;
     else
       debug() << "FM CONSISTENT" << eom;
