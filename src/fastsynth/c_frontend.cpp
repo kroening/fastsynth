@@ -203,6 +203,7 @@ int c_frontend(const cmdlinet &cmdline)
 
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
+  cegis.use_fm=cmdline.isset("fm");
 
   auto start_time=current_time();
 

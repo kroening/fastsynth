@@ -10,6 +10,7 @@
    "(max-program-size):" \
    "(incremental)" \
    "(simplifying-solver)" \
+   "(fm)" \
    "(verbosity):" \
 
 int main(int argc, const char *argv[])

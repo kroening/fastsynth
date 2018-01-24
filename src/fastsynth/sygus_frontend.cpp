@@ -67,6 +67,7 @@ int sygus_frontend(const cmdlinet &cmdline)
 
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
+  cegis.use_fm=cmdline.isset("fm");
 
   cegist::problemt problem;
   problem.constraints=parser.constraints;

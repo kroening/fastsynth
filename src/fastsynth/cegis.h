@@ -13,10 +13,12 @@ class prop_convt;
 class cegist:public messaget
 {
 public:
+  // constructor
   explicit cegist(const namespacet &_ns):
     max_program_size(0),
     incremental_solving(false),
     use_simp_solver(false),
+    use_fm(false),
     ns(_ns)
   {
   }
@@ -35,6 +37,7 @@ public:
   std::size_t max_program_size;
   bool incremental_solving;
   bool use_simp_solver;
+  bool use_fm;
 
 protected:
   const namespacet &ns;

@@ -25,6 +25,7 @@ decision_proceduret::resultt cegist::operator()(
   {
     status() << "** non-incremental CEGIS" << eom;
     prop_learnt learn(ns, problem, get_message_handler());
+    learn.use_fm=use_fm;
     return loop(problem, learn);
   }
 }

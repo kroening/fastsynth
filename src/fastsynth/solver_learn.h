@@ -61,6 +61,9 @@ public:
     const cegist::problemt &,
     message_handlert &);
 
+  /// Enable Fourier-Motzkin
+  bool use_fm;
+
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
 

@@ -62,7 +62,8 @@ prop_learnt::prop_learnt(
   const cegist::problemt &_problem,
   message_handlert &_message_handler):
   prop_learn_baset(_ns, _problem, _message_handler),
-  program_size(1u)
+  program_size(1u),
+  use_fm(false)
 {
 }
 
@@ -82,6 +83,7 @@ decision_proceduret::resultt prop_learnt::operator()()
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
 
+  if(use_fm)
   {
     satcheck_no_simplifiert fm_satcheck;
     fourier_motzkint fm_solver(ns, fm_satcheck);
