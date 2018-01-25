@@ -104,6 +104,12 @@ decision_proceduret::resultt solver_learnt::operator()()
     debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
     fm_solver.set_to_false(encoded);
 
+    for(const auto &c : synth_encoding.constraints)
+    {
+      fm_solver.set_to_true(c);
+      debug() << "ec: " << from_expr(ns, "", c) << eom;
+    }
+
     fm_solver();
 
     exprt r=fm_solver.get_result();
