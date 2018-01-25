@@ -74,6 +74,9 @@ std::map<symbol_exprt, exprt> incremental_solver_learnt::get_expressions() const
 void incremental_solver_learnt::add(
   const verify_encodingt::counterexamplet &counterexample)
 {
+  if(use_simp_solver)
+    synth_solver->clear_cache();
+
   counterexamples.emplace_back(counterexample);
 
   synth_encoding.constraints.clear();
