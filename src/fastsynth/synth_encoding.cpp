@@ -327,7 +327,8 @@ exprt e_datat::result(const argumentst &arguments)
 }
 
 exprt e_datat::get_expression(
-  const decision_proceduret &solver) const
+  const decision_proceduret &solver,
+  bool constant_variables) const
 {
   assert(!instructions.empty());
 
@@ -397,6 +398,7 @@ exprt e_datat::get_expression(
             result=promotion(result, word_type);
           }
           break;
+
         case instructiont::optiont::ITE:
           {
             const auto &ite_op = *o_it;
@@ -414,6 +416,7 @@ exprt e_datat::get_expression(
               results[ite_op.operand2]);
           }
           break;
+
         default:
           UNREACHABLE;
         }
@@ -423,7 +426,12 @@ exprt e_datat::get_expression(
     // constant, this is the last resort when none of the
     // selectors is true
     if(result.is_nil())
-      result=solver.get(instruction.constant_val);
+    {
+      if(constant_variables)
+        result=instruction.constant_val;
+      else
+        result=solver.get(instruction.constant_val);
+    }
   }
 
   return promotion(results.back(), return_type);
@@ -473,23 +481,16 @@ exprt synth_encodingt::operator()(const exprt &expr)
   }
 }
 
-exprt synth_encodingt::get_expression(
-  const symbol_exprt &function_symbol,
-  const decision_proceduret &solver) const
-{
-  const auto it=e_data_map.find(function_symbol);
-  if(it==e_data_map.end()) return nil_exprt();
-  return it->second.get_expression(solver);
-}
-
 std::map<symbol_exprt, exprt> synth_encodingt::get_expressions(
-  const decision_proceduret &solver) const
+  const decision_proceduret &solver,
+  bool constant_variables) const
 {
   std::map<symbol_exprt, exprt> result;
 
   for(const auto &it : e_data_map)
   {
-    result[it.first]=it.second.get_expression(solver);
+    result[it.first]=
+      it.second.get_expression(solver, constant_variables);
   }
 
   return result;

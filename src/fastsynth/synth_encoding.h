@@ -79,7 +79,9 @@ public:
   typet return_type;
   typet word_type;
 
-  exprt get_expression(const decision_proceduret &) const;
+  exprt get_expression(
+    const decision_proceduret &,
+    bool constant_variables) const;
 
   using constraintst=std::list<exprt>;
   constraintst constraints;
@@ -114,12 +116,9 @@ public:
 
   exprt operator()(const exprt &);
 
-  exprt get_expression(
-    const symbol_exprt &function_symbol,
-    const decision_proceduret &solver) const;
-
   std::map<symbol_exprt, exprt> get_expressions(
-    const decision_proceduret &solver) const;
+    const decision_proceduret &solver,
+    bool constant_variables=false) const;
 
   std::string suffix;
   std::size_t program_size;
