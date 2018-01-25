@@ -26,6 +26,7 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
   if(expr.id()==ID_lt || expr.id()==ID_le ||
      expr.id()==ID_gt || expr.id()==ID_ge)
   {
+    record_ite(expr);
     literalt l=prop.new_variable();
     constraints.push_back(constraintt(l, expr));
     return l;
@@ -35,8 +36,8 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
     // need to split into <=, >=, i.e., x=y <-> x<=y && x>=y
     literalt l_le, l_ge;
 
-    l_le=convert_rest(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
-    l_ge=convert_rest(binary_predicate_exprt(expr.op0(), ID_ge, expr.op1()));
+    l_le=convert(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
+    l_ge=convert(binary_predicate_exprt(expr.op0(), ID_ge, expr.op1()));
 
     literalt l_equal=prop.land(l_le, l_ge);
 
@@ -52,22 +53,37 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
   }
 }
 
-#if 0
-exprt fourier_motzkint::drop_ite(const exprt &src)
+void fourier_motzkint::record_ite(const exprt &src)
 {
+  for(const auto &op : src.operands())
+    record_ite(op);
+
   if(src.id()==ID_if)
   {
-    return src;
-  }
-  else
-  {
-    exprt tmp=src;
-    for(auto &op : tmp.operands())
-      op=drop_ite(op);
-    return tmp;
+    convert(to_if_expr(src).cond());
   }
 }
-#endif
+
+exprt fourier_motzkint::remove_ite(const exprt &src)
+{
+  exprt tmp=src;
+
+  for(auto &op : tmp.operands())
+    op=remove_ite(op);
+
+  if(tmp.id()==ID_if)
+  {
+    literalt l=convert(to_if_expr(tmp).cond());
+    tvt t=prop.l_get(l);
+
+    if(t.is_true())
+      return to_if_expr(tmp).true_case();
+    else
+      return to_if_expr(tmp).false_case();
+  }
+  else
+    return tmp;
+}
 
 void fourier_motzkint::rowt::negate()
 {
@@ -434,7 +450,10 @@ void fourier_motzkint::get_variables(const exprt &src)
     get_variables(op);
 
   if(src.id()==ID_symbol)
-    variables.insert(src);
+  {
+    if(src.type().id()!=ID_bool)
+      variables.insert(src);
+  }
 }
 
 void fourier_motzkint::eliminate()
@@ -450,7 +469,9 @@ void fourier_motzkint::eliminate()
     if(value.is_unknown())
       continue;
 
-    rowt r(c.expr);
+    exprt tmp=remove_ite(c.expr);
+
+    rowt r(tmp);
     if(!r)
     {
       if(value.is_false())
@@ -506,10 +527,12 @@ void fourier_motzkint::assignment()
   {
     tvt value=prop.l_get(c.l);
 
+    exprt tmp=remove_ite(c.expr);
+
     debug() << "FM ";
     debug().width(9);
     debug() << std::left << std::string(value.to_string())+": "
-            << from_expr(ns, "", c.expr) << eom;
+            << from_expr(ns, "", tmp) << eom;
   }
 
   eliminate();

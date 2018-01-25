@@ -5,8 +5,6 @@
 class fourier_motzkint:public prop_conv_solvert
 {
 public:
-  virtual literalt convert_rest(const exprt &) override;
-
   decision_proceduret::resultt dec_solve() override;
 
   std::set<exprt> existential_variables;
@@ -88,8 +86,11 @@ protected:
   std::string as_string(const std::vector<addendt> &) const;
   std::string as_string(const rowt &) const;
 
-  void subsumption(std::list<rowt> &);
+  virtual literalt convert_rest(const exprt &) override;
+  void record_ite(const exprt &);
+  exprt remove_ite(const exprt &);
 
+  void subsumption(std::list<rowt> &);
   void assignment();
   void eliminate();
 
