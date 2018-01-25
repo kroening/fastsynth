@@ -97,7 +97,8 @@ void incremental_solver_learnt::freeze_expression_symbols()
 
   for(const auto &s : synth_solver->get_symbols())
   {
-    if(id2string(s.first).find("EXPRESSION") != std::string::npos)
+    if(has_prefix(id2string(s.first), "synth_fun::") ||
+       has_prefix(id2string(s.first), "EXPRESSION"))
     {
       synth_solver->set_frozen(s.second);
     }
@@ -105,7 +106,8 @@ void incremental_solver_learnt::freeze_expression_symbols()
 
   for(const auto &m : synth_solver->get_map().mapping)
   {
-    if(id2string(m.first).find("EXPRESSION") != std::string::npos)
+    if(has_prefix(id2string(m.first), "synth_fun::") ||
+       has_prefix(id2string(m.first), "EXPRESSION"))
     {
       for(const auto &map_bit : m.second.literal_map)
         synth_solver->set_frozen(map_bit.l);

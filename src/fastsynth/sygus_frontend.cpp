@@ -86,8 +86,11 @@ int sygus_frontend(const cmdlinet &cmdline)
 
     for(const auto &e : cegis.expressions)
     {
+      std::string stripped_id=
+        std::string(id2string(e.first.get_identifier()), 11, std::string::npos);
+
       message.result() << "Result: "
-                       << e.first.get_identifier()
+                       << stripped_id
                        << " -> "
                        << from_expr(ns, "", e.second)
                        << '\n';
