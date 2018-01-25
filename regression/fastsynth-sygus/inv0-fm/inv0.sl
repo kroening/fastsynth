@@ -3,19 +3,19 @@
 (synth-fun inv () (BitVec 32) )
 
 ; help
-;(constraint (< inv #x00000020))
+;(constraint (bvult inv #x00000020))
 
 ; base case
-(constraint (< #x00000000 inv))
+(constraint (bvult #x00000000 inv))
 
 (declare-var x (BitVec 32) )
 
 ; property
-(constraint (=> (and (< x inv) (not (= (+ x #x00000001) #x0000000a)))
-                (not (= (+ x #x00000001) #x000000ff))))
+(constraint (=> (and (bvult x inv) (not (= (bvadd x #x00000001) #x0000000a)))
+                (not (= (bvadd x #x00000001) #x000000ff))))
 
 ; step case
-(constraint (=> (and (< x inv) (not (= (+ x #x00000001) #x0000000a)))
-                (< (+ x #x00000001) inv)))
+(constraint (=> (and (bvult x inv) (not (= (bvadd x #x00000001) #x0000000a)))
+                (bvult (bvadd x #x00000001) inv)))
 
 (check-synth)

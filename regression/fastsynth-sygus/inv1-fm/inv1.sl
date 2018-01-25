@@ -8,11 +8,11 @@
 (declare-var x (BitVec 32) )
 
 ; property
-(constraint (=> (and (inv x) (not (= (+ x #x00000001) #x0000000a)))
-                (not (= (+ x #x00000001) #x0000000f))))
+(constraint (=> (and (inv x) (not (= (bvadd x #x00000001) #x0000000a)))
+                (not (= (bvadd x #x00000001) #x0000000f))))
 
 ; step case
-(constraint (=> (and (inv x) (not (= (+ x #x00000001) #x0000000a)))
-                (inv (+ x #x00000001))))
+(constraint (=> (and (inv x) (not (= (bvadd x #x00000001) #x0000000a)))
+                (inv (bvadd x #x00000001))))
 
 (check-synth)
