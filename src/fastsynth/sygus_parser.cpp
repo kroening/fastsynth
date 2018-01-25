@@ -408,3 +408,59 @@ void sygus_parsert::expand_function_applications(exprt &expr)
     }
   }
 }
+
+typet sygus_parsert::sort()
+{
+  switch(next_token())
+  {
+  case SYMBOL:
+    if(buffer=="Bool")
+      return bool_typet();
+    else if(buffer=="Int")
+      return integer_typet();
+    else if(buffer=="Real")
+      return real_typet();
+    else
+    {
+      error() << "unexpected sort: `" << buffer << '\'' << eom;
+      return nil_typet();
+    }
+
+  case OPEN:
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected symbol after '(' in a sort" << eom;
+      return nil_typet();
+    }
+
+    if(buffer=="BitVec")
+    {
+      // this has slightly different symtax compared to SMT-LIB2
+      if(next_token()!=NUMERAL)
+      {
+        error() << "expected number after BitVec" << eom;
+        return nil_typet();
+      }
+
+      auto width=std::stoll(buffer);
+
+      if(next_token()!=CLOSE)
+      {
+        error() << "expected ')' after BitVec width" << eom;
+        return nil_typet();
+      }
+
+      return unsignedbv_typet(width);
+    }
+    else
+    {
+      error() << "unexpected sort: `" << buffer << '\'' << eom;
+      return nil_typet();
+    }
+
+  default:
+    error() << "unexpected token in a sort " << buffer << eom;
+    return nil_typet();
+  }
+}
+

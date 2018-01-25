@@ -100,7 +100,7 @@ protected:
 
   exprt expression();
   let_exprt let_expression(bool first_in_chain);
-  typet sort();
+  virtual typet sort();
   exprt::operandst operands();
   function_typet function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);

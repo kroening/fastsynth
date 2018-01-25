@@ -983,25 +983,6 @@ typet new_smt2_parsert::sort()
       return nil_typet();
     }
 
-    if(buffer=="BitVec")
-    {
-      if(next_token()!=NUMERAL)
-      {
-        error() << "expected number after BitVec" << eom;
-        return nil_typet();
-      }
-
-      auto width=std::stoll(buffer);
-
-      if(next_token()!=CLOSE)
-      {
-        error() << "expected ')' after BitVec width" << eom;
-        return nil_typet();
-      }
-
-      return unsignedbv_typet(width);
-    }
-    else
     {
       error() << "unexpected sort: `" << buffer << '\'' << eom;
       return nil_typet();

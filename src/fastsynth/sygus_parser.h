@@ -25,16 +25,17 @@ public:
   function_typet inv_function_signature();
   void expand_function_applications(exprt &);
   void generate_invariant_constraints();
-  void apply_function_to_variables(
-      function_application_exprt &expr,
-      invariant_constraint_functiont id,
-      invariant_variablet variable_use);
 
+  void apply_function_to_variables(
+    function_application_exprt &expr,
+    invariant_constraint_functiont id,
+    invariant_variablet variable_use);
 
 protected:
   void NTDef_seq();
   void GTerm_seq();
   void NTDef();
   void GTerm();
+  typet sort() override;
 };
 
