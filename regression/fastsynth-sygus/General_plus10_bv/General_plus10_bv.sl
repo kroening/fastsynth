@@ -7,6 +7,6 @@
 (declare-var A (BitVec 8) )
 (declare-var B (BitVec 8) )
 
-(constraint (= ( fc B ) (+ (fb A ) #x10)))
+(constraint (= ( fc B ) (bvadd (fb A ) #x10)))
 
 (check-synth)
