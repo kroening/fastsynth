@@ -1,4 +1,3 @@
-#include <fastsynth/incremental_prop_learn.h>
 #include <fastsynth/synth_encoding.h>
 #include <fastsynth/synth_encoding_constraints.h>
 
@@ -67,23 +66,6 @@ std::map<symbol_exprt, exprt>
 incremental_prop_learnt<satcheckt>::get_expressions() const
 {
   return synth_encoding->get_expressions(*synth_solver);
-}
-
-template <class satcheckt>
-void incremental_prop_learnt<satcheckt>::add(
-  const verify_encodingt::counterexamplet &counterexample)
-{
-  counterexamples.emplace_back(counterexample);
-
-  synth_encoding->constraints.clear();
-
-  synth_encoding->suffix = "$ce" + std::to_string(counterexample_counter);
-
-  add_counterexample(ns, get_message_handler(), counterexample, *synth_encoding, *synth_solver);
-  add_problem(ns, get_message_handler(), problem, *synth_encoding, *synth_solver);
-
-  freeze_expression_symbols();
-  counterexample_counter++;
 }
 
 template <class satcheckt>

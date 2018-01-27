@@ -26,3 +26,38 @@ void incremental_prop_learnt<satcheckt>::freeze_expression_symbols()
     }
   }
 }
+
+template <>
+void incremental_prop_learnt<satcheckt>::add(
+  const verify_encodingt::counterexamplet &counterexample)
+{
+  synth_solver->clear_cache();
+  counterexamples.emplace_back(counterexample);
+
+  synth_encoding->constraints.clear();
+
+  synth_encoding->suffix = "$ce" + std::to_string(counterexample_counter);
+
+  add_counterexample(ns, get_message_handler(), counterexample, *synth_encoding, *synth_solver);
+  add_problem(ns, get_message_handler(), problem, *synth_encoding, *synth_solver);
+
+  freeze_expression_symbols();
+  counterexample_counter++;
+}
+
+template <>
+void incremental_prop_learnt<satcheck_no_simplifiert>::add(
+  const verify_encodingt::counterexamplet &counterexample)
+{
+  counterexamples.emplace_back(counterexample);
+
+  synth_encoding->constraints.clear();
+
+  synth_encoding->suffix = "$ce" + std::to_string(counterexample_counter);
+
+  add_counterexample(ns, get_message_handler(), counterexample, *synth_encoding, *synth_solver);
+  add_problem(ns, get_message_handler(), problem, *synth_encoding, *synth_solver);
+
+  freeze_expression_symbols();
+  counterexample_counter++;
+}
