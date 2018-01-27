@@ -9,6 +9,7 @@
 class synth_encodingt;
 class verify_encodingt;
 class prop_convt;
+class learnt;
 
 class cegist:public messaget
 {
@@ -42,12 +43,7 @@ public:
 protected:
   const namespacet &ns;
 
-  decision_proceduret::resultt loop(const problemt &, class learnt &);
-
-  void add_problem(
-    const problemt &,
-    verify_encodingt &,
-    prop_convt &);
+  decision_proceduret::resultt loop(const problemt &, learnt &);
 };
 
 void output_expressions(

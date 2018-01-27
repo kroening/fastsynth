@@ -1,13 +1,9 @@
 #include "cegis.h"
 #include "incremental_solver_learn.h"
 #include "solver_learn.h"
-#include "synth_encoding.h"
-#include "verify_encoding.h"
+#include "verify.h"
 
 #include <langapi/language_util.h>
-
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
 
 #include <util/simplify_expr.h>
 
@@ -90,26 +86,13 @@ decision_proceduret::resultt cegist::loop(
 
     status() << "** Verification phase" << eom;
 
-    output_expressions(expressions, ns, debug());
-    debug() << eom;
+    verifyt verify(ns, problem, get_message_handler());
 
-    satcheckt verify_satcheck;
-    verify_satcheck.set_message_handler(get_message_handler());
-
-    bv_pointerst verify_solver(ns, verify_satcheck);
-    verify_solver.set_message_handler(get_message_handler());
-
-    verify_encodingt verify_encoding;
-    verify_encoding.expressions=expressions;
-    verify_encoding.free_variables=problem.free_variables;
-
-    add_problem(problem, verify_encoding, verify_solver);
-
-    switch(verify_solver())
+    switch(verify(expressions))
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
       status() << "** Verification failed" << eom;
-      learn.add(verify_encoding.get_counterexample(verify_solver));
+      learn.add(verify.get_counterexample());
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
@@ -124,33 +107,3 @@ decision_proceduret::resultt cegist::loop(
   }
 }
 
-void cegist::add_problem(
-  const problemt &problem,
-  verify_encodingt &encoding,
-  prop_convt &prop_conv)
-{
-  for(const auto &e : problem.side_conditions)
-  {
-    const exprt encoded=encoding(e);
-    debug() << "sc: " << from_expr(ns, "", encoded) << eom;
-    prop_conv.set_to_true(encoded);
-  }
-
-  const exprt encoded=encoding(conjunction(problem.constraints));
-  debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
-  prop_conv.set_to_false(encoded);
-}
-
-void output_expressions(
-  const std::map<symbol_exprt, exprt> &expressions,
-  const namespacet &ns,
-  std::ostream &out)
-{
-  for(const auto &e : expressions)
-  {
-    out << e.first.get_identifier()
-        << " -> "
-        << from_expr(ns, "", e.second)
-        << '\n';
-  }
-}
