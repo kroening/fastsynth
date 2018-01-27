@@ -16,7 +16,8 @@ public:
 class solutiont
 {
 public:
-  std::map<symbol_exprt, exprt> functions;
+  using functionst=std::map<symbol_exprt, exprt>;
+  functionst functions, s_functions;
 };
 
 class counterexamplet

@@ -50,6 +50,8 @@ class solver_learnt:public solver_learn_baset
   /// Solution created in the last invocation of solver_learnt::operator()().
   solutiont last_solution;
 
+  void generalize(prop_convt &);
+
 public:
   /// Creates a non-incremental learner.
   /// \param msg \see msg solver_learnt::msg
@@ -59,9 +61,6 @@ public:
     const namespacet &,
     const problemt &,
     message_handlert &);
-
-  /// Enable Fourier-Motzkin
-  bool use_fm;
 
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;

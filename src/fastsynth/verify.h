@@ -10,7 +10,7 @@ class prop_convt;
 class verifyt:public messaget
 {
 public:
-  explicit verifyt(
+  verifyt(
     const namespacet &_ns,
     const problemt &_problem,
     message_handlert &_message_handler):
@@ -21,19 +21,23 @@ public:
 
   /// Check a new candidate.
   /// \return \see decision_proceduret::resultt
-  decision_proceduret::resultt operator()(const solutiont &);
+  virtual decision_proceduret::resultt operator()(solutiont &);
     
   const counterexamplet &get_counterexample() const
   {
     return counterexample;
   }
-    
+
 protected:
   const namespacet &ns;
   const problemt &problem;
   counterexamplet counterexample;
 
   void add_problem(verify_encodingt &, prop_convt &);
+
+  void output(
+    const solutiont::functionst &,
+    std::ostream &);
 };
 
 #endif /* CPROVER_FASTSYNTH_VERIFY_H_ */

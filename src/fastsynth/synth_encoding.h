@@ -81,9 +81,8 @@ public:
   typet return_type;
   typet word_type;
 
-  exprt get_function(
-    const decision_proceduret &,
-    bool constant_variables) const;
+  exprt get_function(const decision_proceduret &,
+                     bool symbolic_constants) const;
 
   using constraintst=std::list<exprt>;
   constraintst constraints;
@@ -118,9 +117,7 @@ public:
 
   exprt operator()(const exprt &);
 
-  solutiont get_solution(
-    const decision_proceduret &solver,
-    bool constant_variables=false) const;
+  solutiont get_solution(const decision_proceduret &) const;
 
   std::string suffix;
   std::size_t program_size;

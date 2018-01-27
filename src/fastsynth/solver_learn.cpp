@@ -3,7 +3,6 @@
 
 #include <langapi/language_util.h>
 
-#include "fourier_motzkin.h"
 #include "synth_encoding.h"
 #include "solver_learn.h"
 
@@ -61,8 +60,7 @@ solver_learnt::solver_learnt(
   const problemt &_problem,
   message_handlert &_message_handler):
   solver_learn_baset(_ns, _problem, _message_handler),
-  program_size(1u),
-  use_fm(false)
+  program_size(1u)
 {
 }
 
@@ -81,41 +79,6 @@ decision_proceduret::resultt solver_learnt::operator()()
 
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
-
-  if(use_fm)
-  {
-    satcheck_no_simplifiert fm_satcheck;
-    fourier_motzkint fm_solver(ns, fm_satcheck);
-    fm_solver.set_message_handler(get_message_handler());
-    fm_solver.existential_variables=problem.free_variables;
-
-    synth_encodingt synth_encoding;
-    synth_encoding.program_size = program_size;
-
-    for(const auto &e : problem.side_conditions)
-    {
-      const exprt encoded=synth_encoding(e);
-      debug() << "sc: " << from_expr(ns, "", encoded) << eom;
-      fm_solver.set_to_true(encoded);
-    }
-
-    const exprt encoded=synth_encoding(conjunction(problem.constraints));
-    debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
-    fm_solver.set_to_false(encoded);
-
-    for(const auto &c : synth_encoding.constraints)
-    {
-      fm_solver.set_to_true(c);
-      debug() << "ec: " << from_expr(ns, "", c) << eom;
-    }
-
-    fm_solver();
-
-    exprt r=fm_solver.get_result();
-    debug() << "FM RESULT: " << from_expr(ns, "", r) << eom;
-
-    synth_solver.set_to_false(r);
-  }
 
   if(counterexamples.empty())
   {
@@ -140,6 +103,7 @@ decision_proceduret::resultt solver_learnt::operator()()
   }
 
   const decision_proceduret::resultt result(synth_solver());
+
   if(decision_proceduret::resultt::D_SATISFIABLE == result)
     last_solution = synth_encoding.get_solution(synth_solver);
 

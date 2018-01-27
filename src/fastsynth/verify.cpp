@@ -5,24 +5,23 @@
 
 #include <langapi/language_util.h>
 
-void output_expressions(
-  const std::map<symbol_exprt, exprt> &expressions,
-  const namespacet &ns,
+void verifyt::output(
+  const solutiont::functionst &functions,
   std::ostream &out)
 {
-  for(const auto &e : expressions)
+  for(const auto &f : functions)
   {
-    out << e.first.get_identifier()
+    out << f.first.get_identifier()
         << " -> "
-        << from_expr(ns, "", e.second)
+        << from_expr(ns, "", f.second)
         << '\n';
   }
 }
 
 decision_proceduret::resultt verifyt::operator()(
-  const solutiont &solution)
+  solutiont &solution)
 {
-  output_expressions(solution.functions, ns, debug());
+  output(solution.functions, debug());
   debug() << eom;
 
   satcheckt verify_satcheck;
@@ -37,13 +36,13 @@ decision_proceduret::resultt verifyt::operator()(
 
   add_problem(verify_encoding, verify_solver);
 
-  counterexample.clear();
-
   auto result=verify_solver();
 
   if(result==decision_proceduret::resultt::D_SATISFIABLE)
     counterexample=
       verify_encoding.get_counterexample(verify_solver);
+  else
+    counterexample.clear();
 
   return result;
 }

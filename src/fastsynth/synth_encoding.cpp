@@ -482,15 +482,17 @@ exprt synth_encodingt::operator()(const exprt &expr)
 }
 
 solutiont synth_encodingt::get_solution(
-  const decision_proceduret &solver,
-  bool constant_variables) const
+  const decision_proceduret &solver) const
 {
   solutiont result;
 
   for(const auto &it : e_data_map)
   {
     result.functions[it.first]=
-      it.second.get_function(solver, constant_variables);
+      it.second.get_function(solver, false);
+
+    result.s_functions[it.first]=
+      it.second.get_function(solver, true);
   }
 
   return result;

@@ -2,39 +2,55 @@
 #include "incremental_solver_learn.h"
 #include "solver_learn.h"
 #include "verify.h"
+#include "fm_verify.h"
 
 #include <langapi/language_util.h>
 
 #include <util/simplify_expr.h>
 
+#include <memory>
+
 decision_proceduret::resultt cegist::operator()(
   const problemt &problem)
 {
+  std::unique_ptr<learnt> learner;
+  std::unique_ptr<verifyt> verifier;
+
   if(incremental_solving)
   {
     status() << "** incremental CEGIS" << eom;
-    incremental_solver_learnt learn(
-      ns, problem, use_simp_solver, get_message_handler());
-    return loop(problem, learn);
+    learner=std::unique_ptr<learnt>(new incremental_solver_learnt(
+      ns, problem, use_simp_solver, get_message_handler()));
   }
   else
   {
     status() << "** non-incremental CEGIS" << eom;
-    solver_learnt learn(ns, problem, get_message_handler());
-    learn.use_fm=use_fm;
-    return loop(problem, learn);
+    learner=std::unique_ptr<learnt>(new solver_learnt(
+      ns, problem, get_message_handler()));
   }
+
+  if(use_fm)
+  {
+    verifier=std::unique_ptr<verifyt>(new fm_verifyt(
+      ns, problem, get_message_handler()));
+  }
+  else
+  {
+    verifier=std::unique_ptr<verifyt>(new verifyt(
+      ns, problem, get_message_handler()));
+  }
+
+  return loop(problem, *learner, *verifier);
 }
 
 decision_proceduret::resultt cegist::loop(
   const problemt &problem,
-  learnt &learn)
+  learnt &learn,
+  verifyt &verify)
 {
   unsigned iteration=0;
 
   std::size_t program_size=1;
-
-  verifyt verify(ns, problem, get_message_handler());
 
   // now enter the CEGIS loop
   while(true)
