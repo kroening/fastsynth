@@ -27,7 +27,8 @@ decision_proceduret::resultt cegist::operator()(
 }
 
 decision_proceduret::resultt cegist::loop(
-  const problemt &problem, learnt &learn)
+  const problemt &problem,
+  learnt &learn)
 {
   unsigned iteration=0;
 
