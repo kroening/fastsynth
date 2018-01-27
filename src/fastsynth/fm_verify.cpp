@@ -8,6 +8,7 @@
 #include <langapi/language_util.h>
 
 #include <util/replace_symbol.h>
+#include <util/simplify_expr.h>
 
 void get_symbols(const exprt &src, std::set<symbol_exprt> &dest)
 {
@@ -51,6 +52,8 @@ decision_proceduret::resultt fm_verifyt::operator()(
       verify_encoding.get_counterexample(verify_solver);
 
     // we might be able to generalize
+    for(auto &f_it : solution.s_functions)
+      f_it.second=simplify_expr(f_it.second, ns);
 
     satcheck_no_simplifiert fm_satcheck;
     fourier_motzkint fm_solver(ns, fm_satcheck);
@@ -89,6 +92,7 @@ decision_proceduret::resultt fm_verifyt::operator()(
     {
       exprt tmp=f_it.second;
       replace_symbol(tmp);
+      tmp=simplify_expr(tmp, ns);
       solution.functions[f_it.first]=tmp;
     }
 
