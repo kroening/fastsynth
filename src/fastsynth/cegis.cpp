@@ -33,6 +33,8 @@ decision_proceduret::resultt cegist::loop(
 
   std::size_t program_size=1;
 
+  verifyt verify(ns, problem, get_message_handler());
+
   // now enter the CEGIS loop
   while(true)
   {
@@ -66,6 +68,7 @@ decision_proceduret::resultt cegist::loop(
           return decision_proceduret::resultt::D_ERROR;
         }
       }
+      // proceed to verification phase
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // no candidate
@@ -85,8 +88,6 @@ decision_proceduret::resultt cegist::loop(
     }
 
     status() << "** Verification phase" << eom;
-
-    verifyt verify(ns, problem, get_message_handler());
 
     switch(verify(expressions))
     {
