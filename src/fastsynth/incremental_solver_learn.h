@@ -63,7 +63,7 @@ public:
   std::map<symbol_exprt, exprt> get_expressions() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add(const verify_encodingt::counterexamplet &) override;
+  void add_ce(const verify_encodingt::counterexamplet &) override;
 
   /// \brief freezes variables in the sat solver associated to the
   /// expression to be synthesised. Needed when the incremental solver with

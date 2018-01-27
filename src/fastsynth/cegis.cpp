@@ -94,7 +94,7 @@ decision_proceduret::resultt cegist::loop(
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
       status() << "** Verification failed" << eom;
-      learn.add(verify.get_counterexample());
+      learn.add_ce(verify.get_counterexample());
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution

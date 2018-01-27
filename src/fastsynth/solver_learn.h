@@ -74,7 +74,7 @@ public:
   std::map<symbol_exprt, exprt> get_expressions() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add(const verify_encodingt::counterexamplet &) override;
+  void add_ce(const verify_encodingt::counterexamplet &) override;
 };
 
 #endif /* CPROVER_FASTSYNTH_PROP_LEARN_H_ */

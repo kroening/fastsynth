@@ -152,7 +152,8 @@ std::map<symbol_exprt, exprt> solver_learnt::get_expressions() const
   return last_solution;
 }
 
-void solver_learnt::add(const verify_encodingt::counterexamplet &counterexample)
+void solver_learnt::add_ce(
+  const verify_encodingt::counterexamplet &counterexample)
 {
   counterexamples.emplace_back(counterexample);
 }
