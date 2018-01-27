@@ -6,6 +6,7 @@
 #include <fastsynth/synth_encoding.h>
 
 #include <solvers/sat/satcheck.h>
+#include <solvers/flattening/bv_pointers.h>
 
 #include <memory>
 
