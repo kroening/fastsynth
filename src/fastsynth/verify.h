@@ -4,7 +4,7 @@
 #include "cegis.h"
 #include "verify_encoding.h"
 
-/// Interface for classes that verify candidate solutions
+/// verify a candidate solution
 class verifyt:public messaget
 {
 public:
