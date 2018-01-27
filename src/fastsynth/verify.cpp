@@ -39,19 +39,13 @@ decision_proceduret::resultt verifyt::operator()(
 
   counterexample.clear();
 
-  switch(verify_solver())
-  {
-  case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
+  auto result=verify_solver();
+
+  if(result==decision_proceduret::resultt::D_SATISFIABLE)
     counterexample=
       verify_encoding.get_counterexample(verify_solver);
-    return decision_proceduret::resultt::D_SATISFIABLE;
 
-  case decision_proceduret::resultt::D_UNSATISFIABLE:
-    return decision_proceduret::resultt::D_UNSATISFIABLE;
-
-  case decision_proceduret::resultt::D_ERROR:
-    return decision_proceduret::resultt::D_ERROR;
-  }
+  return result;
 }
 
 void verifyt::add_problem(
