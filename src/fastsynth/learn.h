@@ -1,7 +1,9 @@
 #ifndef CPROVER_FASTSYNTH_LEARN_H_
 #define CPROVER_FASTSYNTH_LEARN_H_
 
-#include "verify_encoding.h"
+#include <util/decision_procedure.h>
+
+#include "cegis_types.h"
 
 /// Interface for classes which provide new candidate solutions for
 /// counterexamples.
@@ -25,11 +27,11 @@ public:
 
   /// Provides the last solution found.
   /// \return \see verify_encodingt::expressions
-  virtual std::map<symbol_exprt, exprt> get_expressions() const = 0;
+  virtual solutiont get_solution() const = 0;
 
   /// Adds an additional counterexample to the search constraint.
   /// \param counterexample New counterexample.
-  virtual void add_ce(const verify_encodingt::counterexamplet &) = 0;
+  virtual void add_ce(const counterexamplet &) = 0;
 };
 
 #endif /* CPROVER_FASTSYNTH_LEARN_H_ */

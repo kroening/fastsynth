@@ -1,6 +1,6 @@
-#include <util/arith_tools.h>
-
 #include "verify_encoding.h"
+
+#include <util/arith_tools.h>
 
 //#include <langapi/language_util.h>
 
@@ -10,10 +10,10 @@ exprt verify_encodingt::operator()(const exprt &expr) const
   {
     const auto &e=to_function_application_expr(expr);
 
-    auto e_it=expressions.find(e.function());
+    auto f_it=functions.find(e.function());
     
-    exprt result=e_it==expressions.end()?
-      from_integer(0, e.type()):e_it->second;
+    exprt result=f_it==functions.end()?
+      from_integer(0, e.type()):f_it->second;
 
     // need to instantiate parameters with arguments
     exprt instance=instantiate(result, e);
@@ -61,16 +61,16 @@ exprt verify_encodingt::instantiate(
   }
 }
 
-std::map<exprt, exprt> verify_encodingt::get_counterexample(
+counterexamplet verify_encodingt::get_counterexample(
   const decision_proceduret &solver) const
 {
-  std::map<exprt, exprt> result;
+  counterexamplet result;
 
   // iterate over nondeterministic symbols, and get their value
   for(const auto &var : free_variables)
   {
     exprt value=solver.get(var);
-    result[var]=value;
+    result.assignment[var]=value;
   }
 
   return result;

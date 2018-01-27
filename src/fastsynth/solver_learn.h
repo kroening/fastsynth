@@ -1,8 +1,7 @@
 #ifndef CPROVER_FASTSYNTH_PROP_LEARN_H_
 #define CPROVER_FASTSYNTH_PROP_LEARN_H_
 
-#include <fastsynth/learn.h>
-#include <fastsynth/cegis.h>
+#include "learn.h"
 
 class solver_learn_baset:public learnt
 {
@@ -11,14 +10,14 @@ protected:
   const namespacet &ns;
 
   /// Synthesis problem to solve.
-  const cegist::problemt &problem;
+  const problemt &problem;
 
   /// Addds an additional counterexample to the constraint.
   /// \param ce Counterexample to insert.
   /// \param synth_encoding Synthesis encoding to extend by the counterexample.
   /// \param solver Solver instance.
   void add_counterexample(
-    const verify_encodingt::counterexamplet &,
+    const counterexamplet &,
     synth_encodingt &,
     decision_proceduret &);
 
@@ -34,7 +33,7 @@ protected:
   /// \param msg \see msg solver_learnt::msg
   solver_learn_baset(
     const namespacet &,
-    const cegist::problemt &,
+    const problemt &,
     message_handlert &);
 };
 
@@ -46,10 +45,10 @@ class solver_learnt:public solver_learn_baset
   size_t program_size;
 
   /// Counterexample set to synthesise against.
-  std::vector<verify_encodingt::counterexamplet> counterexamples;
+  std::vector<counterexamplet> counterexamples;
 
   /// Solution created in the last invocation of solver_learnt::operator()().
-  std::map<symbol_exprt, exprt> last_solution;
+  solutiont last_solution;
 
 public:
   /// Creates a non-incremental learner.
@@ -58,7 +57,7 @@ public:
   /// \param problem \see solver_learnt::problem
   solver_learnt(
     const namespacet &,
-    const cegist::problemt &,
+    const problemt &,
     message_handlert &);
 
   /// Enable Fourier-Motzkin
@@ -71,10 +70,10 @@ public:
   decision_proceduret::resultt operator()() override;
 
   /// \see learnt::get_expressions()
-  std::map<symbol_exprt, exprt> get_expressions() const override;
+  solutiont get_solution() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add_ce(const verify_encodingt::counterexamplet &) override;
+  void add_ce(const counterexamplet &) override;
 };
 
 #endif /* CPROVER_FASTSYNTH_PROP_LEARN_H_ */

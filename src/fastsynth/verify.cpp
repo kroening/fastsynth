@@ -20,9 +20,9 @@ void output_expressions(
 }
 
 decision_proceduret::resultt verifyt::operator()(
-  const std::map<symbol_exprt, exprt> &expressions)
+  const solutiont &solution)
 {
-  output_expressions(expressions, ns, debug());
+  output_expressions(solution.functions, ns, debug());
   debug() << eom;
 
   satcheckt verify_satcheck;
@@ -32,7 +32,7 @@ decision_proceduret::resultt verifyt::operator()(
   verify_solver.set_message_handler(get_message_handler());
 
   verify_encodingt verify_encoding;
-  verify_encoding.expressions=expressions;
+  verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
 
   add_problem(verify_encoding, verify_solver);

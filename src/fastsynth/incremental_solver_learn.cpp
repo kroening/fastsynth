@@ -1,10 +1,10 @@
-#include <fastsynth/incremental_solver_learn.h>
+#include "incremental_solver_learn.h"
 
 #include <solvers/flattening/bv_pointers.h>
 
 incremental_solver_learnt::incremental_solver_learnt(
   const namespacet &_ns,
-  const cegist::problemt &_problem,
+  const problemt &_problem,
   bool _use_simp_solver,
   message_handlert &_message_handler)
   : solver_learn_baset(_ns, _problem, _message_handler),
@@ -66,13 +66,13 @@ decision_proceduret::resultt incremental_solver_learnt::operator()()
   return (*synth_solver)();
 }
 
-std::map<symbol_exprt, exprt> incremental_solver_learnt::get_expressions() const
+solutiont incremental_solver_learnt::get_solution() const
 {
-  return synth_encoding.get_expressions(*synth_solver);
+  return synth_encoding.get_solution(*synth_solver);
 }
 
 void incremental_solver_learnt::add_ce(
-  const verify_encodingt::counterexamplet &counterexample)
+  const counterexamplet &counterexample)
 {
   if(use_simp_solver)
     synth_solver->clear_cache();

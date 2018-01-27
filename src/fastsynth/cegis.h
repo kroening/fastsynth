@@ -1,10 +1,9 @@
 #ifndef CPROVER_FASTSYNTH_CEGIS_H_
 #define CPROVER_FASTSYNTH_CEGIS_H_
 
-#include <set>
-
-#include <util/std_expr.h>
 #include <util/decision_procedure.h>
+
+#include "cegis_types.h"
 
 class synth_encodingt;
 class verify_encodingt;
@@ -24,16 +23,9 @@ public:
   {
   }
 
-  class problemt
-  {
-  public:
-    std::set<exprt> free_variables;
-    exprt::operandst side_conditions, constraints;
-  };
+  solutiont solution;
 
   decision_proceduret::resultt operator()(const problemt &);
-
-  std::map<symbol_exprt, exprt> expressions;
 
   std::size_t max_program_size;
   bool incremental_solving;

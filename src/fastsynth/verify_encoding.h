@@ -6,15 +6,15 @@
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
+#include "cegis_types.h"
+
 class verify_encodingt
 {
 public:
   exprt operator()(const exprt &) const;
 
-  std::map<symbol_exprt, exprt> expressions;
+  std::map<symbol_exprt, exprt> functions;
   std::set<exprt> free_variables;
-
-  using counterexamplet=std::map<exprt, exprt>;
 
   counterexamplet get_counterexample(
     const decision_proceduret &) const;

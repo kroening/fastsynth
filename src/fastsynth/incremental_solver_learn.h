@@ -32,7 +32,7 @@ class incremental_solver_learnt:public solver_learn_baset
   size_t counterexample_counter;
 
   /// Counterexample set to synthesise against.
-  std::vector<verify_encodingt::counterexamplet> counterexamples;
+  std::vector<counterexamplet> counterexamples;
 
   /// Boolean indicates whether to use simplifying solver
   bool use_simp_solver;
@@ -49,7 +49,7 @@ public:
   /// \param use_simp_solver indicates whether to use simplifying solver
   incremental_solver_learnt(
     const namespacet &,
-    const cegist::problemt &,
+    const problemt &,
     bool use_simp_solver,
     message_handlert &);
 
@@ -60,10 +60,10 @@ public:
   decision_proceduret::resultt operator()() override;
 
   /// \see learnt::get_expressions()
-  std::map<symbol_exprt, exprt> get_expressions() const override;
+  solutiont get_solution() const override;
 
   /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
-  void add_ce(const verify_encodingt::counterexamplet &) override;
+  void add_ce(const counterexamplet &) override;
 
   /// \brief freezes variables in the sat solver associated to the
   /// expression to be synthesised. Needed when the incremental solver with

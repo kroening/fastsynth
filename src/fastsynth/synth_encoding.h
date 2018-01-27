@@ -4,6 +4,8 @@
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
+#include "cegis_types.h"
+
 struct e_datat
 {
 public:
@@ -116,7 +118,7 @@ public:
 
   exprt operator()(const exprt &);
 
-  std::map<symbol_exprt, exprt> get_expressions(
+  solutiont get_solution(
     const decision_proceduret &solver,
     bool constant_variables=false) const;
 

@@ -101,10 +101,10 @@ void get_free_variables(
   }
 }
 
-cegist::problemt generate_cegis_problem(
+problemt generate_cegis_problem(
   const symex_target_equationt &src)
 {
-  cegist::problemt result;
+  problemt result;
 
   exprt::operandst assertions;
 
@@ -211,12 +211,12 @@ int c_frontend(const cmdlinet &cmdline)
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
 
-    for(const auto &e : cegis.expressions)
+    for(const auto &f : cegis.solution.functions)
     {
       message.result() << "Result: "
-                       << e.first.get_identifier()
+                       << f.first.get_identifier()
                        << " -> "
-                       << from_expr(ns, "", e.second)
+                       << from_expr(ns, "", f.second)
                        << '\n';
     }
 

@@ -1,27 +1,26 @@
-#include <fastsynth/solver_learn.h>
-#include <fastsynth/synth_encoding.h>
-
 #include <solvers/flattening/bv_pointers.h>
 #include <solvers/sat/satcheck.h>
 
 #include <langapi/language_util.h>
 
 #include "fourier_motzkin.h"
+#include "synth_encoding.h"
+#include "solver_learn.h"
 
 solver_learn_baset::solver_learn_baset(
   const namespacet &_ns,
-  const cegist::problemt &_problem,
+  const problemt &_problem,
   message_handlert &_message_handler):
   learnt(_message_handler), ns(_ns), problem(_problem)
 {
 }
 
 void solver_learn_baset::add_counterexample(
-  const verify_encodingt::counterexamplet &ce,
+  const counterexamplet &ce,
   synth_encodingt &synth_encoding,
   decision_proceduret &solver)
 {
-  for(const auto &it : ce)
+  for(const auto &it : ce.assignment)
   {
     const exprt &symbol = it.first;
     const exprt &value = it.second;
@@ -59,7 +58,7 @@ void solver_learn_baset::add_problem(
 
 solver_learnt::solver_learnt(
   const namespacet &_ns,
-  const cegist::problemt &_problem,
+  const problemt &_problem,
   message_handlert &_message_handler):
   solver_learn_baset(_ns, _problem, _message_handler),
   program_size(1u),
@@ -142,18 +141,18 @@ decision_proceduret::resultt solver_learnt::operator()()
 
   const decision_proceduret::resultt result(synth_solver());
   if(decision_proceduret::resultt::D_SATISFIABLE == result)
-    last_solution = synth_encoding.get_expressions(synth_solver);
+    last_solution = synth_encoding.get_solution(synth_solver);
 
   return result;
 }
 
-std::map<symbol_exprt, exprt> solver_learnt::get_expressions() const
+solutiont solver_learnt::get_solution() const
 {
   return last_solution;
 }
 
 void solver_learnt::add_ce(
-  const verify_encodingt::counterexamplet &counterexample)
+  const counterexamplet &counterexample)
 {
   counterexamples.emplace_back(counterexample);
 }

@@ -50,20 +50,20 @@ decision_proceduret::resultt cegist::loop(
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // got candidate
       {
-        std::map<symbol_exprt, exprt> old_expressions;
-        old_expressions.swap(expressions);
+        std::map<symbol_exprt, exprt> old_functions;
+        old_functions.swap(solution.functions);
 
         #if 0
         synth_solver.print_assignment(debug());
         debug() << eom;
         #endif
 
-        expressions=learn.get_expressions();
+        solution=learn.get_solution();
 
-        for(auto &e : expressions)
-          e.second=simplify_expr(e.second, ns);
+        for(auto &f : solution.functions)
+          f.second=simplify_expr(f.second, ns);
 
-        if(old_expressions==expressions)
+        if(old_functions==solution.functions)
         {
           error() << "NO PROGRESS MADE" << eom;
           return decision_proceduret::resultt::D_ERROR;
@@ -90,7 +90,7 @@ decision_proceduret::resultt cegist::loop(
 
     status() << "** Verification phase" << eom;
 
-    switch(verify(expressions))
+    switch(verify(solution))
     {
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
       status() << "** Verification failed" << eom;

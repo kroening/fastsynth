@@ -481,15 +481,15 @@ exprt synth_encodingt::operator()(const exprt &expr)
   }
 }
 
-std::map<symbol_exprt, exprt> synth_encodingt::get_expressions(
+solutiont synth_encodingt::get_solution(
   const decision_proceduret &solver,
   bool constant_variables) const
 {
-  std::map<symbol_exprt, exprt> result;
+  solutiont result;
 
   for(const auto &it : e_data_map)
   {
-    result[it.first]=
+    result.functions[it.first]=
       it.second.get_expression(solver, constant_variables);
   }
 

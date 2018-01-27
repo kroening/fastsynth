@@ -69,7 +69,7 @@ int sygus_frontend(const cmdlinet &cmdline)
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
 
-  cegist::problemt problem;
+  problemt problem;
   problem.constraints=parser.constraints;
 
   for(const auto &v : parser.variable_map)
@@ -84,15 +84,15 @@ int sygus_frontend(const cmdlinet &cmdline)
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
 
-    for(const auto &e : cegis.expressions)
+    for(const auto &f : cegis.solution.functions)
     {
       std::string stripped_id=
-        std::string(id2string(e.first.get_identifier()), 11, std::string::npos);
+        std::string(id2string(f.first.get_identifier()), 11, std::string::npos);
 
       message.result() << "Result: "
                        << stripped_id
                        << " -> "
-                       << from_expr(ns, "", e.second)
+                       << from_expr(ns, "", f.second)
                        << '\n';
     }
 
