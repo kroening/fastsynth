@@ -326,7 +326,7 @@ exprt e_datat::result(const argumentst &arguments)
   return promotion(results.back(), return_type);
 }
 
-exprt e_datat::get_expression(
+exprt e_datat::get_function(
   const decision_proceduret &solver,
   bool constant_variables) const
 {
@@ -490,7 +490,7 @@ solutiont synth_encodingt::get_solution(
   for(const auto &it : e_data_map)
   {
     result.functions[it.first]=
-      it.second.get_expression(solver, constant_variables);
+      it.second.get_function(solver, constant_variables);
   }
 
   return result;

@@ -81,7 +81,7 @@ public:
   typet return_type;
   typet word_type;
 
-  exprt get_expression(
+  exprt get_function(
     const decision_proceduret &,
     bool constant_variables) const;
 
