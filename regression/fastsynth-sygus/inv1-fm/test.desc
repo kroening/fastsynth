@@ -1,6 +1,6 @@
 CORE
 inv1.sl
---fm
+--fm --no-bitwise
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
