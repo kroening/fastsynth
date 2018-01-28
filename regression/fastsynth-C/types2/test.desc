@@ -1,9 +1,9 @@
-KNOWNBUG
+CORE
 main.c
 
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSION -> \(unsigned short int\)parameter0$
+^Result: EXPRESSION -> \(signed int\)parameter0 \+ \(signed int\)parameter0$
 --
 ^warning: ignoring
