@@ -133,6 +133,23 @@ bool fourier_motzkint::rowt::is_inconsistent() const
     else // 0 <= b
       return bound<0;
   }
+  else if(addends.size()==1)
+  {
+    if(addends.front().expr.type().id()==ID_unsignedbv)
+    {
+      // these cannot be negative
+      mp_integer b=bound;
+      if(addends.front().negative)
+        b.negate();
+
+      if(is_strict) // 0 <= x < b
+        return b<=0;
+      else // 0 <= x <= b
+        return b<0;
+    }
+    else
+      return false;
+  }
 
   return false;
 }
