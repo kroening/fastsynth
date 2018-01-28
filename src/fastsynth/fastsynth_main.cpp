@@ -11,6 +11,7 @@
    "(incremental)" \
    "(simplifying-solver)" \
    "(fm)" \
+   "(no-bitwise)" \
    "(verbosity):" \
 
 int main(int argc, const char *argv[])

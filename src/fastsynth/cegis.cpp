@@ -29,6 +29,8 @@ decision_proceduret::resultt cegist::operator()(
       ns, problem, get_message_handler()));
   }
 
+  learner->enable_bitwise=enable_bitwise;
+
   if(use_fm)
   {
     verifier=std::unique_ptr<verifyt>(new fm_verifyt(

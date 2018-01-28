@@ -14,7 +14,8 @@ public:
   virtual ~learnt() { }
 
   explicit learnt(message_handlert &_message_handler):
-    messaget(_message_handler)
+    messaget(_message_handler),
+    enable_bitwise(false)
   {
   }
 
@@ -32,6 +33,8 @@ public:
   /// Adds an additional counterexample to the search constraint.
   /// \param counterexample New counterexample.
   virtual void add_ce(const counterexamplet &) = 0;
+
+  bool enable_bitwise;
 };
 
 #endif /* CPROVER_FASTSYNTH_LEARN_H_ */

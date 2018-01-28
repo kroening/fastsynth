@@ -20,6 +20,7 @@ public:
     incremental_solving(false),
     use_simp_solver(false),
     use_fm(false),
+    enable_bitwise(false),
     ns(_ns)
   {
   }
@@ -32,6 +33,7 @@ public:
   bool incremental_solving;
   bool use_simp_solver;
   bool use_fm;
+  bool enable_bitwise;
 
 protected:
   const namespacet &ns;

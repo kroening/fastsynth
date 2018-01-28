@@ -9,13 +9,14 @@
 struct e_datat
 {
 public:
-  e_datat():setup_done(false) { }
+  e_datat():enable_bitwise(false), setup_done(false) { }
 
   exprt operator()(
     const function_application_exprt &expr,
-    const std::size_t program_size)
+    const std::size_t program_size,
+    bool enable_bitwise)
   {
-    setup(expr, program_size);
+    setup(expr, program_size, enable_bitwise);
     return result(expr.arguments());
   }
 
@@ -98,6 +99,8 @@ public:
 
   std::size_t instance_number(const argumentst &);
 
+  bool enable_bitwise;
+
 protected:
   bool setup_done;
 
@@ -105,13 +108,14 @@ protected:
 
   void setup(
     const function_application_exprt &,
-    const std::size_t program_size);
+    const std::size_t program_size,
+    const bool enable_bitwise);
 };
 
 class synth_encodingt
 {
 public:
-  synth_encodingt():program_size(1)
+  synth_encodingt():program_size(1), enable_bitwise(false)
   {
   }
 
@@ -121,6 +125,7 @@ public:
 
   std::string suffix;
   std::size_t program_size;
+  bool enable_bitwise;
 
   using constraintst=std::list<exprt>;
   constraintst constraints;

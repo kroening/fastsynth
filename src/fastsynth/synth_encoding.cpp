@@ -56,10 +56,13 @@ typet e_datat::compute_word_type()
 
 void e_datat::setup(
   const function_application_exprt &e,
-  const std::size_t program_size)
+  const std::size_t program_size,
+  const bool _enable_bitwise)
 {
   if(setup_done) return;
   setup_done=true;
+
+  enable_bitwise=_enable_bitwise;
 
   function_symbol=e.function();
   const irep_idt &identifier=function_symbol.get_identifier();
@@ -102,6 +105,14 @@ void e_datat::setup(
     std::size_t binary_op_index=0;
 
     for(const auto operation : ops)
+    {
+      if(!enable_bitwise)
+        if(operation==ID_shl ||
+           operation==ID_bitand ||
+           operation==ID_bitor ||
+           operation==ID_bitxor)
+          continue;
+
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
         {
@@ -163,6 +174,7 @@ void e_datat::setup(
 
           binary_op_index++;
         }
+    }
 
     //trinary operator, if-then-else
     for(std::size_t operand0=0; operand0<pc; operand0++)
@@ -448,7 +460,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
       op=(*this)(op);
 
     e_datat &e_data=e_data_map[tmp.function()];
-    exprt final_result=e_data(tmp, program_size);
+    exprt final_result=e_data(tmp, program_size, enable_bitwise);
 
     for(const auto &c : e_data.constraints)
       constraints.push_back(c);
