@@ -1,0 +1,89 @@
+co: !(inv_1_cval >= 0 && (inv_1_cval >= x && !(x + 1 == 10) ==> !(x + 1 == 15)) && 
+     (inv_1_cval >= x && !(x + 1 == 10) ==> inv_1_cval >= x + 1))
+
+******** DPLL(FM) iteration 3
+FM TRUE:    inv_1_cval >= 0
+FM TRUE:    inv_1_cval >= x
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 15
+FM TRUE:    x + 1 >= 15
+FM FALSE:   inv_1_cval >= x + 1
+FM x='x'
+FM BOUND: -inv_1_cval <= 0
+FM BOUND: -inv_1_cval+x <= 0
+FM UPPER: x <= inv_1_cval+0
+FM BOUND: -x <= -10
+FM LOWER: 10 <= x
+FM BOUND: -x <= -9
+FM LOWER: 9 <= x
+FM BOUND: x <= 14
+FM UPPER: x <= 14
+FM BOUND: -x <= -14
+FM LOWER: 14 <= x
+FM BOUND: inv_1_cval-x <= 0
+FM LOWER: inv_1_cval+0 <= x
+FM NEW:   -inv_1_cval <= -10
+FM NEW:   0 <= 4
+FM NEW:   -inv_1_cval <= -9
+FM NEW:   0 <= 5
+FM NEW:   -inv_1_cval <= -14
+FM NEW:   0 <= 0
+FM NEW:   0 <= 0
+FM NEW:   inv_1_cval <= 14
+FM UNREL: -inv_1_cval <= 0
+FM CONSISTENT
+FM FINAL: -inv_1_cval <= -14
+FM FINAL: inv_1_cval <= 14
+FM x='inv_1_cval'
+FM BOUND: -inv_1_cval <= -14
+FM LOWER: 14 <= inv_1_cval
+FM BOUND: inv_1_cval <= 14
+FM UPPER: inv_1_cval <= 14
+FM NEW:   0 <= 0
+FM CONSISTENT
+FM DONE!
+
+******** DPLL(FM) iteration 7
+FM TRUE:    inv_1_cval >= 0
+FM TRUE:    inv_1_cval >= x
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 15
+FM FALSE:   x + 1 >= 15
+FM FALSE:   inv_1_cval >= x + 1
+FM x='x'
+FM BOUND: -inv_1_cval <= 0
+FM BOUND: -inv_1_cval+x <= 0
+FM UPPER: x <= inv_1_cval+0
+FM BOUND: -x <= -10
+FM LOWER: 10 <= x
+FM BOUND: -x <= -9
+FM LOWER: 9 <= x
+FM BOUND: x <= 14
+FM UPPER: x <= 14
+FM BOUND: x <= 13
+FM UPPER: x <= 13
+FM BOUND: inv_1_cval-x <= 0
+FM LOWER: inv_1_cval+0 <= x
+FM NEW:   -inv_1_cval <= -10
+FM NEW:   0 <= 4
+FM NEW:   0 <= 3
+FM NEW:   -inv_1_cval <= -9
+FM NEW:   0 <= 5
+FM NEW:   0 <= 4
+FM NEW:   0 <= 0
+FM NEW:   inv_1_cval <= 14
+FM NEW:   inv_1_cval <= 13
+FM UNREL: -inv_1_cval <= 0
+FM CONSISTENT
+FM FINAL: -inv_1_cval <= -10
+FM FINAL: inv_1_cval <= 13
+FM x='inv_1_cval'
+FM BOUND: -inv_1_cval <= -10
+FM LOWER: 10 <= inv_1_cval
+FM BOUND: inv_1_cval <= 13
+FM UPPER: inv_1_cval <= 13
+FM NEW:   0 <= 3
+FM CONSISTENT
+FM DONE!
