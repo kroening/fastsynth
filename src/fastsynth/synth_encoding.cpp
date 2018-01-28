@@ -100,7 +100,7 @@ void e_datat::setup(
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_le, ID_lt, ID_equal, ID_notequal };
+        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min" };
 
     std::size_t binary_op_index=0;
 
@@ -129,7 +129,9 @@ void e_datat::setup(
              operation==ID_bitor ||
              operation==ID_bitxor ||
              operation==ID_equal ||
-             operation==ID_notequal)
+             operation==ID_notequal ||
+             operation=="max" ||
+             operation=="min")
           {
             if(operand0>operand1)
               continue;
@@ -144,7 +146,9 @@ void e_datat::setup(
                operation==ID_shl ||
                operation==ID_lt ||
                operation==ID_le ||
-               operation==ID_notequal) // we got bitxor
+               operation==ID_notequal ||
+               operation=="max" ||
+               operation=="min") // we got bitxor
              continue;
 
             if(operation==ID_bitand)
@@ -176,7 +180,7 @@ void e_datat::setup(
         }
     }
 
-    //trinary operator, if-then-else
+    // trinary operator, if-then-else
     for(std::size_t operand0=0; operand0<pc; operand0++)
       for(std::size_t operand1=0; operand1<pc; operand1++)
         for(std::size_t operand2=0; operand2<pc; operand2++)
@@ -246,11 +250,22 @@ exprt e_datat::instructiont::constraint(
         const auto &op0=results[option.operand0];
         const auto &op1=results[option.operand1];
 
-        binary_exprt binary_expr(option.operation, word_type);
-        binary_expr.op0()=op0;
-        binary_expr.op1()=op1;
+        if(option.operation=="max" ||
+           option.operation=="min")
+        {
+          irep_idt op=option.operation=="max"?ID_le:ID_ge;
+          binary_predicate_exprt rel(op0, op, op1);
+          if_exprt if_expr(rel, op0, op1);
+          result_expr=chain(option.sel, if_expr, result_expr);
+        }
+        else
+        {
+          binary_exprt binary_expr(option.operation, word_type);
+          binary_expr.op0()=op0;
+          binary_expr.op1()=op1;
 
-        result_expr=chain(option.sel, binary_expr, result_expr);
+          result_expr=chain(option.sel, binary_expr, result_expr);
+        }
       }
       break;
 
