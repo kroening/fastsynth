@@ -33,18 +33,33 @@ literalt fourier_motzkint::convert_rest(const exprt &expr)
   }
   else if(expr.id()==ID_equal || expr.id()==ID_notequal)
   {
-    // need to split into <=, >=, i.e., x=y <-> x<=y && x>=y
-    literalt l_le, l_ge;
+    // numeric?
+    assert(expr.operands().size()==2);
 
-    l_le=convert(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
-    l_ge=convert(binary_predicate_exprt(expr.op0(), ID_ge, expr.op1()));
+    const typet &t=expr.op0().type();
+    if(t.id()==ID_signedbv ||
+       t.id()==ID_unsignedbv ||
+       t.id()==ID_integer ||
+       t.id()==ID_real)
+    {
+      // need to split into <=, >=, i.e., x=y <-> x<=y && x>=y
+      literalt l_le, l_ge;
 
-    literalt l_equal=prop.land(l_le, l_ge);
+      l_le=convert(binary_predicate_exprt(expr.op0(), ID_le, expr.op1())),
+      l_ge=convert(binary_predicate_exprt(expr.op0(), ID_ge, expr.op1()));
 
-    // one of them is always true
-    prop.lcnf(l_le, l_ge);
+      literalt l_equal=prop.land(l_le, l_ge);
 
-    return expr.id()==ID_equal?l_equal:!l_equal;
+      // one of them is always true
+      prop.lcnf(l_le, l_ge);
+
+      return expr.id()==ID_equal?l_equal:!l_equal;
+    }
+    else
+    {
+      // ignore
+      return prop.new_variable();
+    }
   }
   else
   {
