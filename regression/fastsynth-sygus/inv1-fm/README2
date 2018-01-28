@@ -1,0 +1,55 @@
+co: !(inv_0_cval >= 0 &&
+      (inv_0_cval >= x && !(x + 1 == 10) ==> !(x + 1 == 15)) &&
+      (inv_0_cval >= x && !(x + 1 == 10) ==> inv_0_cval >= x + 1))
+
+******** DPLL(FM) iteration 7
+FM TRUE:    inv_0_cval >= 0
+FM TRUE:    inv_0_cval >= x
+FM FALSE:   x + 1 <= 10
+FM TRUE:    x + 1 >= 10
+FM TRUE:    x + 1 <= 15
+FM FALSE:   x + 1 >= 15
+FM FALSE:   inv_0_cval >= x + 1
+FM x='x'
+FM BOUND: -inv_0_cval <= 0
+FM BOUND: -inv_0_cval+x <= 0
+FM UPPER: x <= inv_0_cval+0
+FM BOUND: -x <= -10
+FM LOWER: 10 <= x
+FM BOUND: -x <= -9
+FM LOWER: 9 <= x
+FM BOUND: x <= 14
+FM UPPER: x <= 14
+FM BOUND: x <= 13
+FM UPPER: x <= 13
+FM BOUND: inv_0_cval-x <= 0
+FM LOWER: inv_0_cval+0 <= x
+FM NEW:   -inv_0_cval <= -10
+FM NEW:   0 <= 4
+FM NEW:   0 <= 3
+FM NEW:   -inv_0_cval <= -9
+FM NEW:   0 <= 5
+FM NEW:   0 <= 4
+FM NEW:   0 <= 0
+FM NEW:   inv_0_cval <= 14
+FM NEW:   inv_0_cval <= 13
+FM UNREL: -inv_0_cval <= 0
+FM CONSISTENT
+FM FINAL: -inv_0_cval <= -10
+FM FINAL: inv_0_cval <= 13
+FM x='inv_0_cval'
+FM BOUND: -inv_0_cval <= -10
+FM LOWER: 10 <= inv_0_cval
+FM BOUND: inv_0_cval <= 13
+FM UPPER: inv_0_cval <= 13
+FM NEW:   0 <= 3
+FM CONSISTENT
+FM DONE!
+
+FM RESULT:
+   inv_0_cval >= 14 && inv_0_cval <= 14
+|| inv_0_cval >= 15
+|| inv_0_cval >= 10 && inv_0_cval <= 13
+|| inv_0_cval <= 8 && inv_0_cval >= 0
+|| inv_0_cval <= 429496729
+
