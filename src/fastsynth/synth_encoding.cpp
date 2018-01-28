@@ -253,7 +253,7 @@ exprt e_datat::instructiont::constraint(
         if(option.operation=="max" ||
            option.operation=="min")
         {
-          irep_idt op=option.operation=="max"?ID_le:ID_ge;
+          irep_idt op=option.operation=="max"?ID_ge:ID_le;
           binary_predicate_exprt rel(op0, op, op1);
           if_exprt if_expr(rel, op0, op1);
           result_expr=chain(option.sel, if_expr, result_expr);
@@ -401,11 +401,27 @@ exprt e_datat::get_function(
             assert(binary_op.operand0<results.size());
             assert(binary_op.operand1<results.size());
 
-            result=binary_exprt(
-              results[binary_op.operand0],
-              binary_op.operation,
-              results[binary_op.operand1],
-              word_type);
+            exprt op0=results[binary_op.operand0];
+            exprt op1=results[binary_op.operand1];
+
+            if(binary_op.operation=="max")
+            {
+              binary_predicate_exprt rel(op0, ID_ge, op1);
+              result=if_exprt(rel, op0, op1);
+            }
+            else if(binary_op.operation=="min")
+            {
+              binary_predicate_exprt rel(op0, ID_le, op1);
+              result=if_exprt(rel, op0, op1);
+            }
+            else
+            {
+              result=binary_exprt(
+                op0,
+                binary_op.operation,
+                op1,
+                word_type);
+            }
           }
           break;
 
