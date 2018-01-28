@@ -110,6 +110,9 @@ decision_proceduret::resultt fm_verifyt::operator()(
 
     auto result=verify_solver2();
 
+    if(result==decision_proceduret::resultt::D_UNSATISFIABLE)
+      status() << "FM found solution!" << eom;
+
     return result;
   }
   else
