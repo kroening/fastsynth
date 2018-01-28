@@ -1,5 +1,6 @@
-co: !(inv_1_cval >= 0 && (inv_1_cval >= x && !(x + 1 == 10) ==> !(x + 1 == 15)) && 
-     (inv_1_cval >= x && !(x + 1 == 10) ==> inv_1_cval >= x + 1))
+co: !(inv_1_cval >= 0 &&
+      (inv_1_cval >= x && !(x + 1 == 10) ==> !(x + 1 == 15)) &&
+      (inv_1_cval >= x && !(x + 1 == 10) ==> inv_1_cval >= x + 1))
 
 ******** DPLL(FM) iteration 3
 FM TRUE:    inv_1_cval >= 0
@@ -43,6 +44,10 @@ FM UPPER: inv_1_cval <= 14
 FM NEW:   0 <= 0
 FM CONSISTENT
 FM DONE!
+
+co: !(inv_1_cval >= 0 &&
+      (inv_1_cval >= x && !(x + 1 == 10) ==> !(x + 1 == 15)) &&
+      (inv_1_cval >= x && !(x + 1 == 10) ==> inv_1_cval >= x + 1))
 
 ******** DPLL(FM) iteration 7
 FM TRUE:    inv_1_cval >= 0
