@@ -63,6 +63,8 @@ void add_problem(
 {
   messaget message(message_handler);
 
+  encoding.literals = problem.literals;
+
   for(const exprt &e : problem.side_conditions)
   {
     const exprt encoded = encoding(e);

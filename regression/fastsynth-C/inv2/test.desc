@@ -1,0 +1,9 @@
+CORE
+main.c
+--literals
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+^Result: EXPRESSION_inv -> (!\(parameter0 >= 100005\))|(!\(parameter0 >= 100002\))$
+--
+^warning: ignoring
