@@ -51,6 +51,16 @@ decision_proceduret::resultt fm_verifyt::operator()(
     counterexample=
       verify_encoding.get_counterexample(verify_solver);
 
+    #if 0
+    for(const auto &it : counterexample.assignment)
+    {
+      status() << "COUNTEREXAMPLE: "
+               << from_expr(ns, "", it.first)
+               << " |-> "
+               << from_expr(ns, "", it.second) << eom;
+    }
+    #endif
+
     // we might be able to generalize
     for(auto &f_it : solution.s_functions)
       f_it.second=simplify_expr(f_it.second, ns);
@@ -88,12 +98,14 @@ decision_proceduret::resultt fm_verifyt::operator()(
     for(const auto &s : symbols)
       replace_symbol.insert(s, r_solver.get(s));
 
+    auto new_solution=solution.functions;
+
     for(const auto &f_it : solution.s_functions)
     {
       exprt tmp=f_it.second;
       replace_symbol(tmp);
       tmp=simplify_expr(tmp, ns);
-      solution.functions[f_it.first]=tmp;
+      new_solution[f_it.first]=tmp;
     }
 
     satcheckt verify_satcheck2;
@@ -103,7 +115,7 @@ decision_proceduret::resultt fm_verifyt::operator()(
     verify_solver2.set_message_handler(get_message_handler());
 
     verify_encodingt verify_encoding2;
-    verify_encoding2.functions=solution.functions;
+    verify_encoding2.functions=new_solution;
     verify_encoding2.free_variables=problem.free_variables;
 
     add_problem(verify_encoding2, verify_solver2);
@@ -111,7 +123,10 @@ decision_proceduret::resultt fm_verifyt::operator()(
     auto result=verify_solver2();
 
     if(result==decision_proceduret::resultt::D_UNSATISFIABLE)
+    {
       status() << "FM found solution!" << eom;
+      solution.functions=new_solution;
+    }
 
     return result;
   }
