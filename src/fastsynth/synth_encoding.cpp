@@ -76,6 +76,12 @@ void e_datat::setup(
 
   word_type=compute_word_type();
 
+  for(auto it(begin(literals)); it != end(literals);)
+    if(word_type!=it->type())
+      it=literals.erase(it);
+    else
+      ++it;
+
   instructions.reserve(program_size);
   for(std::size_t pc=0; pc<program_size; pc++)
   {
@@ -86,8 +92,8 @@ void e_datat::setup(
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
     instruction.constant_val=symbol_exprt(const_val_id, word_type);
 
-    // one of the arguments
-    for(std::size_t i=0; i<arguments.size(); i++)
+    // one of the arguments or constants
+    for(std::size_t i=0; i<arguments.size()+literals.size(); i++)
     {
       irep_idt param_sel_id=id2string(identifier)+"_"+
                std::to_string(pc)+"_p"+std::to_string(i)+"sel";
@@ -336,7 +342,9 @@ exprt e_datat::result(const argumentst &arguments)
 
   for(std::size_t pc=0; pc<instructions.size(); pc++)
   {
-    exprt c=instructions[pc].constraint(word_type, arguments, results);
+    argumentst args_with_consts(arguments);
+    copy(begin(literals), end(literals), back_inserter(args_with_consts));
+    exprt c=instructions[pc].constraint(word_type, args_with_consts, results);
 
     // results vary by instance
     irep_idt result_identifier=
@@ -382,11 +390,20 @@ exprt e_datat::get_function(
         {
         case instructiont::optiont::PARAMETER: // a parameter
           {
-            irep_idt p_identifier="synth::parameter"+
-                     std::to_string(o_it->parameter_number);
-            result=promotion(
-              symbol_exprt(p_identifier, parameter_types[o_it->parameter_number]),
-              word_type);
+            const size_t num_params=parameter_types.size();
+            if(o_it->parameter_number < num_params)
+            {
+              irep_idt p_identifier="synth::parameter"+
+                       std::to_string(o_it->parameter_number);
+              result=promotion(
+                symbol_exprt(p_identifier, parameter_types[o_it->parameter_number]),
+                word_type);
+            }
+            else // Constant
+            {
+              const size_t const_index=o_it->parameter_number - num_params;
+              result=*next(begin(literals), const_index);
+            }
           }
           break;
 
@@ -491,6 +508,8 @@ exprt synth_encodingt::operator()(const exprt &expr)
       op=(*this)(op);
 
     e_datat &e_data=e_data_map[tmp.function()];
+    if(e_data.word_type.id().empty())
+      e_data.literals=literals;
     exprt final_result=e_data(tmp, program_size, enable_bitwise);
 
     for(const auto &c : e_data.constraints)
