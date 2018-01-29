@@ -48,6 +48,7 @@ protected:
   friend bool operator<(const addendt &a, const addendt &b)
   {
     if(a.expr<b.expr) return true;
+    if(b.expr<a.expr) return false;
     return a.negative < b.negative;
   }
 
