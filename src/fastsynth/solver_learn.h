@@ -51,7 +51,6 @@ class solver_learnt:public solver_learn_baset
   solutiont last_solution;
 
   void generalize(prop_convt &);
-  decision_proceduret::resultt smt_operator();
 
 public:
   /// Creates a non-incremental learner.
@@ -63,11 +62,17 @@ public:
     const problemt &,
     message_handlert &);
 
+  bool use_smt;
+  std::string logic;
+
   /// \see learnt::set_program_size(size_t)
   void set_program_size(size_t program_size) override;
 
   /// \see learnt::operator()()
   decision_proceduret::resultt operator()() override;
+
+  /// \see learnt::operator()()
+  decision_proceduret::resultt operator()(decision_proceduret &);
 
   /// \see learnt::get_expressions()
   solutiont get_solution() const override;

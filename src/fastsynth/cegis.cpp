@@ -40,11 +40,13 @@ decision_proceduret::resultt cegist::operator()(
   else
   {
     status() << "** non-incremental CEGIS" << eom;
-    learner=std::unique_ptr<learnt>(new solver_learnt(
-      ns, problem, get_message_handler()));
+    solver_learnt *l=new solver_learnt(
+      ns, problem, get_message_handler());
 
-    learner->use_smt=use_smt;
-    learner->logic=logic;
+    l->use_smt=use_smt;
+    l->logic=logic;
+
+    learner=std::unique_ptr<learnt>(l);
   }
 
   learner->enable_bitwise=enable_bitwise;
@@ -58,9 +60,9 @@ decision_proceduret::resultt cegist::operator()(
   {
     verifier=std::unique_ptr<verifyt>(new verifyt(
       ns, problem, get_message_handler()));
-    verifier->smt = use_smt;
-    if(use_smt)
-      verifier->logic=logic;
+
+    verifier->use_smt=use_smt;
+    verifier->logic=logic;
   }
 
   return loop(problem, *learner, *verifier);

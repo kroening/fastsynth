@@ -4,7 +4,7 @@
 #include "cegis_types.h"
 #include "verify_encoding.h"
 
-class prop_convt;
+class decision_proceduret;
 
 /// verify a candidate solution
 class verifyt:public messaget
@@ -15,8 +15,7 @@ public:
     const problemt &_problem,
     message_handlert &_message_handler):
     messaget(_message_handler),
-    smt(false),
-    logic("BV"),
+    use_smt(false),
     ns(_ns), problem(_problem)
   {
   }
@@ -29,7 +28,8 @@ public:
   {
     return counterexample;
   }
-  bool smt;
+
+  bool use_smt;
   std::string logic;
 
 protected:
@@ -37,7 +37,11 @@ protected:
   const problemt &problem;
   counterexamplet counterexample;
 
-  void add_problem(verify_encodingt &, prop_convt &);
+  void add_problem(verify_encodingt &, decision_proceduret &);
+
+  decision_proceduret::resultt operator()(
+    decision_proceduret &,
+    solutiont &);
 
   void output(
     const solutiont::functionst &,

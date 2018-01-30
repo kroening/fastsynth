@@ -25,59 +25,62 @@ decision_proceduret::resultt verifyt::operator()(
   output(solution.functions, debug());
   debug() << eom;
 
-  decision_proceduret::resultt result;
-  verify_encodingt verify_encoding;
-  verify_encoding.functions=solution.functions;
-  verify_encoding.free_variables=problem.free_variables;
-
-  if(smt)
+  if(use_smt)
   {
-    smt2_dect verify_solver(ns, "fastsynth", "created by CBMC", logic, smt2_dect::solvert::Z3);
-    verify_solver.set_message_handler(get_message_handler());
+    smt2_dect solver(ns, "fastsynth", "created by fastsynth",
+                     logic, smt2_dect::solvert::Z3);
 
-    add_problem(verify_encoding, verify_solver);
-    result=verify_solver();
+    solver.set_message_handler(get_message_handler());
 
-    if(result==decision_proceduret::resultt::D_SATISFIABLE)
-      counterexample=
-        verify_encoding.get_counterexample(verify_solver);
-    else
-      counterexample.clear();
+    return this->operator()(solver, solution);
   }
   else
   {
     satcheckt verify_satcheck;
     verify_satcheck.set_message_handler(get_message_handler());
 
-    bv_pointerst verify_solver(ns, verify_satcheck);
-    verify_solver.set_message_handler(get_message_handler());
+    bv_pointerst solver(ns, verify_satcheck);
+    solver.set_message_handler(get_message_handler());
 
-    add_problem(verify_encoding, verify_solver);
-    result=verify_solver();
-
-    if(result==decision_proceduret::resultt::D_SATISFIABLE)
-      counterexample=
-        verify_encoding.get_counterexample(verify_solver);
-    else
-      counterexample.clear();
-
+    return this->operator()(solver, solution);
   }
+}
+
+decision_proceduret::resultt verifyt::operator()(
+  decision_proceduret &solver,
+  solutiont &solution)
+{
+  decision_proceduret::resultt result;
+
+  verify_encodingt verify_encoding;
+  verify_encoding.functions=solution.functions;
+  verify_encoding.free_variables=problem.free_variables;
+
+  add_problem(verify_encoding, solver);
+  result=solver();
+
+  if(result==decision_proceduret::resultt::D_SATISFIABLE)
+    counterexample=
+      verify_encoding.get_counterexample(solver);
+  else
+    counterexample.clear();
+
   return result;
 }
 
 void verifyt::add_problem(
   verify_encodingt &verify_encoding,
-  prop_convt &prop_conv)
+  decision_proceduret &solver)
 {
   for(const auto &e : problem.side_conditions)
   {
     const exprt encoded=verify_encoding(e);
     debug() << "sc: " << from_expr(ns, "", encoded) << eom;
-    prop_conv.set_to_true(encoded);
+    solver.set_to_true(encoded);
   }
 
   const exprt encoded=verify_encoding(conjunction(problem.constraints));
   debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
-  prop_conv.set_to_false(encoded);
+  solver.set_to_false(encoded);
 }
 
