@@ -69,6 +69,8 @@ int sygus_frontend(const cmdlinet &cmdline)
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
   cegis.enable_bitwise=!cmdline.isset("no-bitwise");
+  cegis.use_smt=cmdline.isset("smt");
+  cegis.logic=parser.logic;
 
   problemt problem;
   problem.constraints=parser.constraints;

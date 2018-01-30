@@ -13,6 +13,7 @@
    "(fm)" \
    "(no-bitwise)" \
    "(verbosity):" \
+   "(smt)" \
 
 int main(int argc, const char *argv[])
 {

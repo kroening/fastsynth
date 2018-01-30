@@ -21,6 +21,8 @@ public:
     use_simp_solver(false),
     use_fm(false),
     enable_bitwise(false),
+    use_smt(false),
+    logic("BV"),
     ns(_ns)
   {
   }
@@ -34,6 +36,8 @@ public:
   bool use_simp_solver;
   bool use_fm;
   bool enable_bitwise;
+  bool use_smt;
+  std::string logic; // used by smt
 
 protected:
   const namespacet &ns;

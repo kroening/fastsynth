@@ -15,6 +15,8 @@ public:
     const problemt &_problem,
     message_handlert &_message_handler):
     messaget(_message_handler),
+    smt(false),
+    logic("BV"),
     ns(_ns), problem(_problem)
   {
   }
@@ -27,6 +29,8 @@ public:
   {
     return counterexample;
   }
+  bool smt;
+  std::string logic;
 
 protected:
   const namespacet &ns;
