@@ -204,7 +204,9 @@ int c_frontend(const cmdlinet &cmdline)
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
-  cegis.enable_bitwise=!cmdline.isset("no-bitwise");
+  cegis.enable_bitwise=!cmdline.isset("no-bitwise");\
+  cegis.use_smt=cmdline.isset("smt");
+  cegis.logic="BV"; //default logic
 
   auto start_time=current_time();
 
