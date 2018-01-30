@@ -4,6 +4,8 @@
 #include <util/std_expr.h>
 #include <util/decision_procedure.h>
 
+#include <set>
+
 struct e_datat
 {
 public:
@@ -95,6 +97,9 @@ public:
 
   std::size_t instance_number(const argumentst &);
 
+  /// Pre-configured constants to include in the expression set.
+  std::set<constant_exprt> literals;
+
 protected:
   bool setup_done;
 
@@ -123,6 +128,9 @@ public:
 
   using constraintst=std::list<exprt>;
   constraintst constraints;
+
+  /// Pre-configured constants to include in the expression set.
+  std::set<constant_exprt> literals;
 
 protected:
   std::map<symbol_exprt, e_datat> e_data_map;

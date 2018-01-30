@@ -26,6 +26,7 @@ public:
   public:
     std::set<exprt> free_variables;
     exprt::operandst side_conditions, constraints;
+    std::set<constant_exprt> literals; /// Constant hints for solver.
   };
 
   decision_proceduret::resultt operator()(const problemt &);
