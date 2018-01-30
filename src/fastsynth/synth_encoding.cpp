@@ -146,9 +146,9 @@ void e_datat::setup(
                operation==ID_shl ||
                operation==ID_lt ||
                operation==ID_le ||
-               operation==ID_notequal ||
+               operation==ID_notequal || // we got bitxor
                operation=="max" ||
-               operation=="min") // we got bitxor
+               operation=="min")
              continue;
 
             if(operation==ID_bitand)
