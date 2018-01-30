@@ -15,7 +15,9 @@ public:
 
   explicit learnt(message_handlert &_message_handler):
     messaget(_message_handler),
-    enable_bitwise(false)
+    enable_bitwise(false),
+    use_smt(false),
+    logic("BV")
   {
   }
 
@@ -35,6 +37,8 @@ public:
   virtual void add_ce(const counterexamplet &) = 0;
 
   bool enable_bitwise;
+  bool use_smt;
+  std::string logic;
 };
 
 #endif /* CPROVER_FASTSYNTH_LEARN_H_ */

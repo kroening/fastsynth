@@ -2,6 +2,7 @@
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
+#include <solvers/smt2/smt2_dec.h>
 
 #include <langapi/language_util.h>
 
@@ -24,26 +25,43 @@ decision_proceduret::resultt verifyt::operator()(
   output(solution.functions, debug());
   debug() << eom;
 
-  satcheckt verify_satcheck;
-  verify_satcheck.set_message_handler(get_message_handler());
-
-  bv_pointerst verify_solver(ns, verify_satcheck);
-  verify_solver.set_message_handler(get_message_handler());
-
+  decision_proceduret::resultt result;
   verify_encodingt verify_encoding;
   verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
 
-  add_problem(verify_encoding, verify_solver);
+  if(smt)
+  {
+    smt2_dect verify_solver(ns, "fastsynth", "created by CBMC", logic, smt2_dect::solvert::Z3);
+    verify_solver.set_message_handler(get_message_handler());
 
-  auto result=verify_solver();
+    add_problem(verify_encoding, verify_solver);
+    result=verify_solver();
 
-  if(result==decision_proceduret::resultt::D_SATISFIABLE)
-    counterexample=
-      verify_encoding.get_counterexample(verify_solver);
+    if(result==decision_proceduret::resultt::D_SATISFIABLE)
+      counterexample=
+        verify_encoding.get_counterexample(verify_solver);
+    else
+      counterexample.clear();
+  }
   else
-    counterexample.clear();
+  {
+    satcheckt verify_satcheck;
+    verify_satcheck.set_message_handler(get_message_handler());
 
+    bv_pointerst verify_solver(ns, verify_satcheck);
+    verify_solver.set_message_handler(get_message_handler());
+
+    add_problem(verify_encoding, verify_solver);
+    result=verify_solver();
+
+    if(result==decision_proceduret::resultt::D_SATISFIABLE)
+      counterexample=
+        verify_encoding.get_counterexample(verify_solver);
+    else
+      counterexample.clear();
+
+  }
   return result;
 }
 

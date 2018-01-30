@@ -106,7 +106,7 @@ void e_datat::setup(
 
     for(const auto operation : ops)
     {
-      if(!enable_bitwise)
+      if(!enable_bitwise || word_type.id()==ID_integer)
         if(operation==ID_shl ||
            operation==ID_bitand ||
            operation==ID_bitor ||

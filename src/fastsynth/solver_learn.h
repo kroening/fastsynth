@@ -51,6 +51,7 @@ class solver_learnt:public solver_learn_baset
   solutiont last_solution;
 
   void generalize(prop_convt &);
+  decision_proceduret::resultt smt_operator();
 
 public:
   /// Creates a non-incremental learner.
