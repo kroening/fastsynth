@@ -44,6 +44,7 @@ void incremental_solver_learnt::set_program_size(const size_t program_size)
   synth_satcheck.reset(new satcheck_minisat_no_simplifiert());
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
   synth_encoding = synth_encodingt();
+  synth_encoding.literals = problem.literals;
 
   init();
 

@@ -1,6 +1,7 @@
 #include "sygus_frontend.h"
 #include "sygus_parser.h"
 #include "cegis.h"
+#include "literals.h"
 
 #include <util/cout_message.h>
 #include <util/namespace.h>
@@ -80,6 +81,9 @@ int sygus_frontend(const cmdlinet &cmdline)
 
   for(auto &c : problem.constraints)
     parser.expand_function_applications(c);
+
+  if(cmdline.isset("literals"))
+    problem.literals=find_literals(problem);
 
   auto start_time=current_time();
 
