@@ -1,4 +1,4 @@
-SRC = fastsynth_main.cpp cegis.cpp \
+SRC = fastsynth_main.cpp cegis.cpp solver.cpp \
       verify.cpp fm_verify.cpp verify_encoding.cpp \
       solver_learn.cpp incremental_solver_learn.cpp synth_encoding.cpp \
       c_frontend.cpp sygus_frontend.cpp smt2_parser.cpp \
