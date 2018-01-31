@@ -27,29 +27,21 @@ std::set<symbol_exprt> get_symbols(const exprt &src)
 }
 
 decision_proceduret::resultt fm_verifyt::operator()(
+  decision_proceduret &solver,
   solutiont &solution)
 {
-  output(solution.functions, debug());
-  debug() << eom;
-
-  satcheckt verify_satcheck;
-  verify_satcheck.set_message_handler(get_message_handler());
-
-  bv_pointerst verify_solver(ns, verify_satcheck);
-  verify_solver.set_message_handler(get_message_handler());
-
   verify_encodingt verify_encoding;
   verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
 
-  add_problem(verify_encoding, verify_solver);
+  add_problem(verify_encoding, solver);
 
-  auto result=verify_solver();
+  auto result=solver();
 
   if(result==decision_proceduret::resultt::D_SATISFIABLE)
   {
     counterexample=
-      verify_encoding.get_counterexample(verify_solver);
+      verify_encoding.get_counterexample(solver);
 
     // we might be able to generalize
     for(auto &f_it : solution.s_functions)
@@ -99,16 +91,16 @@ decision_proceduret::resultt fm_verifyt::operator()(
     satcheckt verify_satcheck2;
     verify_satcheck2.set_message_handler(get_message_handler());
 
-    bv_pointerst verify_solver2(ns, verify_satcheck2);
-    verify_solver2.set_message_handler(get_message_handler());
+    bv_pointerst solver2(ns, verify_satcheck2);
+    solver2.set_message_handler(get_message_handler());
 
     verify_encodingt verify_encoding2;
     verify_encoding2.functions=solution.functions;
     verify_encoding2.free_variables=problem.free_variables;
 
-    add_problem(verify_encoding2, verify_solver2);
+    add_problem(verify_encoding2, solver2);
 
-    auto result=verify_solver2();
+    auto result=solver2();
 
     if(result==decision_proceduret::resultt::D_UNSATISFIABLE)
       status() << "FM found solution!" << eom;

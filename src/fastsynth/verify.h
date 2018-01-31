@@ -39,7 +39,7 @@ protected:
 
   void add_problem(verify_encodingt &, decision_proceduret &);
 
-  decision_proceduret::resultt operator()(
+  virtual decision_proceduret::resultt operator()(
     decision_proceduret &,
     solutiont &);
 
