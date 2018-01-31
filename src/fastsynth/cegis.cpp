@@ -60,10 +60,10 @@ decision_proceduret::resultt cegist::operator()(
   {
     verifier=std::unique_ptr<verifyt>(new verifyt(
       ns, problem, get_message_handler()));
-
-    verifier->use_smt=use_smt;
-    verifier->logic=logic;
   }
+
+  verifier->use_smt=use_smt;
+  verifier->logic=logic;
 
   return loop(problem, *learner, *verifier);
 }
