@@ -1,8 +1,5 @@
 #include "verify.h"
-
-#include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
-#include <solvers/smt2/smt2_dec.h>
+#include "solver.h"
 
 #include <langapi/language_util.h>
 
@@ -25,31 +22,9 @@ decision_proceduret::resultt verifyt::operator()(
   output(solution.functions, debug());
   debug() << eom;
 
-  if(use_smt)
-  {
-    smt2_dect solver(ns, "fastsynth", "created by fastsynth",
-                     logic, smt2_dect::solvert::Z3);
+  solvert solver_container(use_smt, logic, ns, get_message_handler());
+  auto &solver=solver_container.get();
 
-    solver.set_message_handler(get_message_handler());
-
-    return this->operator()(solver, solution);
-  }
-  else
-  {
-    satcheckt verify_satcheck;
-    verify_satcheck.set_message_handler(get_message_handler());
-
-    bv_pointerst solver(ns, verify_satcheck);
-    solver.set_message_handler(get_message_handler());
-
-    return this->operator()(solver, solution);
-  }
-}
-
-decision_proceduret::resultt verifyt::operator()(
-  decision_proceduret &solver,
-  solutiont &solution)
-{
   decision_proceduret::resultt result;
 
   verify_encodingt verify_encoding;

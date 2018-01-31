@@ -2,8 +2,9 @@
 
 #include "fourier_motzkin.h"
 
+#include "solver.h"
+
 #include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
 
 #include <langapi/language_util.h>
 
@@ -26,10 +27,11 @@ std::set<symbol_exprt> get_symbols(const exprt &src)
   return result;
 }
 
-decision_proceduret::resultt fm_verifyt::operator()(
-  decision_proceduret &solver,
-  solutiont &solution)
+decision_proceduret::resultt fm_verifyt::operator()(solutiont &solution)
 {
+  solvert solver_container(use_smt, logic, ns, get_message_handler());
+  auto &solver=solver_container.get();
+
   verify_encodingt verify_encoding;
   verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
@@ -64,9 +66,8 @@ decision_proceduret::resultt fm_verifyt::operator()(
     status() << "FM RESULT: " << from_expr(ns, "", r) << eom;
     
     // solve this a bit further
-    satcheckt r_satcheck;
-    bv_pointerst r_solver(ns, r_satcheck);
-    r_solver.set_message_handler(get_message_handler());
+    solvert r_solver_container(use_smt, logic, ns, get_message_handler());
+    auto &r_solver=r_solver_container.get();
     r_solver.set_to_false(r);
 
     if(r_solver()==decision_proceduret::resultt::D_UNSATISFIABLE)
@@ -88,11 +89,8 @@ decision_proceduret::resultt fm_verifyt::operator()(
       solution.functions[f_it.first]=tmp;
     }
 
-    satcheckt verify_satcheck2;
-    verify_satcheck2.set_message_handler(get_message_handler());
-
-    bv_pointerst solver2(ns, verify_satcheck2);
-    solver2.set_message_handler(get_message_handler());
+    solvert solver2_container(use_smt, logic, ns, get_message_handler());
+    auto &solver2=solver2_container.get();
 
     verify_encodingt verify_encoding2;
     verify_encoding2.functions=solution.functions;

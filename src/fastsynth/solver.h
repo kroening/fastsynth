@@ -1,6 +1,5 @@
 #include <util/decision_procedure.h>
-
-class propt;
+#include <solvers/prop/prop.h>
 
 class solvert
 {

@@ -17,8 +17,7 @@ public:
 
   /// Check a new candidate.
   /// \return \see decision_proceduret::resultt
-  decision_proceduret::resultt operator()(
-    decision_proceduret &, solutiont &) override;
+  decision_proceduret::resultt operator()(solutiont &);
 };
 
 #endif /* CPROVER_FASTSYNTH_VERIFY_H_ */

@@ -39,10 +39,6 @@ protected:
 
   void add_problem(verify_encodingt &, decision_proceduret &);
 
-  virtual decision_proceduret::resultt operator()(
-    decision_proceduret &,
-    solutiont &);
-
   void output(
     const solutiont::functionst &,
     std::ostream &);
