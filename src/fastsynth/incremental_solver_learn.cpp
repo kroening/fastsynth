@@ -26,6 +26,8 @@ void incremental_solver_learnt::init()
   }
 
   synth_encoding.program_size = program_size;
+  synth_encoding.enable_bitwise = enable_bitwise;
+
   synth_satcheck->set_message_handler(get_message_handler());
   synth_solver->set_message_handler(get_message_handler());
   add_problem(synth_encoding, *synth_solver);
@@ -42,7 +44,10 @@ void incremental_solver_learnt::set_program_size(const size_t program_size)
   synth_satcheck.reset(new satcheck_minisat_no_simplifiert());
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
   synth_encoding = synth_encodingt();
+  synth_encoding.literals = problem.literals;
+
   init();
+
   // re-add counterexamples
   if(counterexample_counter!=0u)
   {

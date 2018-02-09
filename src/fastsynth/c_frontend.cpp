@@ -1,4 +1,5 @@
 #include <fastsynth/c_frontend.h>
+#include <fastsynth/literals.h>
 
 #include <iostream>
 #include <fstream>
@@ -102,7 +103,7 @@ void get_free_variables(
 }
 
 problemt generate_cegis_problem(
-  const symex_target_equationt &src)
+  const symex_target_equationt &src, const bool use_literals)
 {
   problemt result;
 
@@ -132,6 +133,9 @@ problemt generate_cegis_problem(
 
   for(const auto &c : result.side_conditions)
     get_free_variables(c, result.free_variables);
+
+  if(use_literals)
+    result.literals=find_literals(result);
 
   return result;
 }
@@ -190,7 +194,8 @@ int c_frontend(const cmdlinet &cmdline)
   show_formula(equation, ns);
   #endif
 
-  const auto problem=generate_cegis_problem(equation);
+  const bool use_literals=cmdline.isset("literals");
+  const auto problem=generate_cegis_problem(equation, use_literals);
 
   cegist cegis(ns);
   cegis.set_message_handler(mh);
@@ -204,7 +209,9 @@ int c_frontend(const cmdlinet &cmdline)
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
-  cegis.enable_bitwise=!cmdline.isset("no-bitwise");
+  cegis.enable_bitwise=!cmdline.isset("no-bitwise");\
+  cegis.use_smt=cmdline.isset("smt");
+  cegis.logic="BV"; //default logic
 
   auto start_time=current_time();
 

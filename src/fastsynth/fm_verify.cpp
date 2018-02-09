@@ -2,8 +2,9 @@
 
 #include "fourier_motzkin.h"
 
+#include "solver.h"
+
 #include <solvers/sat/satcheck.h>
-#include <solvers/flattening/bv_pointers.h>
 
 #include <langapi/language_util.h>
 
@@ -26,30 +27,23 @@ std::set<symbol_exprt> get_symbols(const exprt &src)
   return result;
 }
 
-decision_proceduret::resultt fm_verifyt::operator()(
-  solutiont &solution)
+decision_proceduret::resultt fm_verifyt::operator()(solutiont &solution)
 {
-  output(solution.functions, debug());
-  debug() << eom;
-
-  satcheckt verify_satcheck;
-  verify_satcheck.set_message_handler(get_message_handler());
-
-  bv_pointerst verify_solver(ns, verify_satcheck);
-  verify_solver.set_message_handler(get_message_handler());
+  solvert solver_container(use_smt, logic, ns, get_message_handler());
+  auto &solver=solver_container.get();
 
   verify_encodingt verify_encoding;
   verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
 
-  add_problem(verify_encoding, verify_solver);
+  add_problem(verify_encoding, solver);
 
-  auto result=verify_solver();
+  auto result=solver();
 
   if(result==decision_proceduret::resultt::D_SATISFIABLE)
   {
     counterexample=
-      verify_encoding.get_counterexample(verify_solver);
+      verify_encoding.get_counterexample(solver);
 
     #if 0
     for(const auto &it : counterexample.assignment)
@@ -82,9 +76,8 @@ decision_proceduret::resultt fm_verifyt::operator()(
     status() << "FM RESULT: " << from_expr(ns, "", r) << eom;
     
     // solve this a bit further
-    satcheckt r_satcheck;
-    bv_pointerst r_solver(ns, r_satcheck);
-    r_solver.set_message_handler(get_message_handler());
+    solvert r_solver_container(use_smt, logic, ns, get_message_handler());
+    auto &r_solver=r_solver_container.get();
     r_solver.set_to_false(r);
 
     if(r_solver()==decision_proceduret::resultt::D_UNSATISFIABLE)
@@ -108,19 +101,16 @@ decision_proceduret::resultt fm_verifyt::operator()(
       new_solution[f_it.first]=tmp;
     }
 
-    satcheckt verify_satcheck2;
-    verify_satcheck2.set_message_handler(get_message_handler());
-
-    bv_pointerst verify_solver2(ns, verify_satcheck2);
-    verify_solver2.set_message_handler(get_message_handler());
+    solvert solver2_container(use_smt, logic, ns, get_message_handler());
+    auto &solver2=solver2_container.get();
 
     verify_encodingt verify_encoding2;
     verify_encoding2.functions=new_solution;
     verify_encoding2.free_variables=problem.free_variables;
 
-    add_problem(verify_encoding2, verify_solver2);
+    add_problem(verify_encoding2, solver2);
 
-    auto result=verify_solver2();
+    auto result=solver2();
 
     if(result==decision_proceduret::resultt::D_UNSATISFIABLE)
     {

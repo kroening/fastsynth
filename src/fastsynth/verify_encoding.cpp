@@ -61,6 +61,7 @@ exprt verify_encodingt::instantiate(
   }
 }
 
+#include <iostream>
 counterexamplet verify_encodingt::get_counterexample(
   const decision_proceduret &solver) const
 {
@@ -71,6 +72,19 @@ counterexamplet verify_encodingt::get_counterexample(
   {
     exprt value=solver.get(var);
     result.assignment[var]=value;
+    if(value==nil_exprt() && var.id()==ID_nondet_symbol)
+    {
+      nondet_symbol_exprt tmp_var=to_nondet_symbol_expr(var);
+      tmp_var.set_identifier("nondet_"+id2string(to_nondet_symbol_expr(var).get_identifier()));
+      value=solver.get(tmp_var);
+      result.assignment[var]=value;
+    }
+    if(value==nil_exprt())
+    {
+      std::cout << "Warning: unable to find value for "<< var.pretty()<<std::endl;
+      result.assignment[var] = constant_exprt("0", var.type());
+      std::cout<<"Assume has been simplified out by solver.\n" <<std::endl;
+    }
   }
 
   return result;
