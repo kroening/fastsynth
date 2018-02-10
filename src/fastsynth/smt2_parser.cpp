@@ -278,6 +278,18 @@ exprt new_smt2_parsert::binary_predicate(irep_idt id, exprt::operandst &op)
   }
 }
 
+exprt new_smt2_parsert::unary(irep_idt id, exprt::operandst &op)
+{
+  if(op.size()!=1)
+  {
+    error() << "expression must have one operand" << eom;
+    ok=false;
+    return nil_exprt();
+  }
+  else
+    return unary_exprt(id, op[0], op[0].type());
+}
+
 exprt new_smt2_parsert::binary(irep_idt id, exprt::operandst &op)
 {
   if(op.size()!=2)
@@ -414,9 +426,7 @@ exprt new_smt2_parsert::expression()
         }
         else if(id==ID_not)
         {
-          not_exprt result;
-          result.operands()=op;
-          return result;
+          return unary(id, op);
         }
         else if(id==ID_equal ||
                 id==ID_le ||
@@ -494,17 +504,11 @@ exprt new_smt2_parsert::expression()
         }
         else if(id=="bvnot")
         {
-          bitnot_exprt result;
-          result.operands()=op;
-          result.type()=result.op0().type();
-          return result;
+          return unary(ID_bitnot, op);
         }
         else if(id=="bvneg")
         {
-          unary_minus_exprt result;
-          result.operands()=op;
-          result.type()=result.op0().type();
-          return result;
+          return unary(ID_unary_minus, op);
         }
         else if(id=="bvadd")
         {

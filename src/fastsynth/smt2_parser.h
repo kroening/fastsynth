@@ -52,6 +52,7 @@ protected:
   exprt multi_ary(irep_idt, exprt::operandst &);
   exprt binary_predicate(irep_idt, exprt::operandst &);
   exprt binary(irep_idt, exprt::operandst &);
+  exprt unary(irep_idt, exprt::operandst &);
 
   let_exprt let_expression(bool first_in_chain);
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
