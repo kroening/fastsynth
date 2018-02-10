@@ -16,7 +16,6 @@ void sygus_parsert::command_sequence()
   {
     if(next_token()!=SYMBOL)
     {
-      ok=false;
       error() << "expected symbol as command" << eom;
       return;
     }
@@ -26,7 +25,6 @@ void sygus_parsert::command_sequence()
     switch(next_token())
     {
     case END_OF_FILE:
-      ok=false;
       error() << "expected closing parenthesis at end of command, but got EOF" << eom;
       return;
 
@@ -35,7 +33,6 @@ void sygus_parsert::command_sequence()
       break;
 
     default:
-      ok=false;
       error() << "expected end of command" << eom;
       return;
     }
@@ -43,7 +40,6 @@ void sygus_parsert::command_sequence()
 
   if(token!=END_OF_FILE)
   {
-    ok=false;
     error() << "unexpected token in command sequence" << eom;
   }
 }
@@ -69,7 +65,6 @@ void sygus_parsert::ignore_command()
       break;
 
     case END_OF_FILE:
-      ok=false;
       error() << "unexpected EOF in command" << eom;
       return;
 
@@ -117,7 +112,6 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
     }
     else
     {
-      ok=false;
       error() << "expected symbol in let expression" << eom;
       return result;
     }
@@ -139,7 +133,6 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
 
       if(peek()!=OPEN)
       {
-        ok=false;
         error() << "let expects where here" << eom;
         return result;
       }
@@ -166,7 +159,6 @@ exprt sygus_parsert::function_application(
   // check the arguments
   if(op.size()!=f.type.variables().size())
   {
-    ok=false;
     error() << "wrong number of arguments for function" << eom;
     return nil_exprt();
   }
@@ -175,7 +167,6 @@ exprt sygus_parsert::function_application(
   {
     if(op[i].type() != f.type.variables()[i].type())
     {
-      ok=false;
       error() << "wrong type for arguments for function" << eom;
       return result;
     }
@@ -214,7 +205,6 @@ void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op1().type()!=expr.op2().type())
     {
-      ok=false;
       error() << "mismatching types for ite operand" << eom;
     }
   }
@@ -254,7 +244,6 @@ void sygus_parsert::fix_binary_operation_operand_types(exprt &expr)
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op0().type()!=expr.op1().type())
     {
-      ok=false;
       error() << "mismatching types for binary operand" << expr.id() << eom;
     }
   }
@@ -330,7 +319,6 @@ exprt sygus_parsert::expression()
       }
       else
       {
-        ok=false;
         error() << "unknown symbol " << buffer << eom;
         return symbol_exprt(identifier, bool_typet());
       }
@@ -469,7 +457,6 @@ exprt sygus_parsert::expression()
       {
         if(op.size()!=2)
         {
-          ok=false;
           error() << "bit shift must have 2 operands" << eom;
           return nil_exprt();
         }
@@ -484,7 +471,6 @@ exprt sygus_parsert::expression()
       {
         if(op.size()!=2)
         {
-          ok=false;
           error() << "bit shift must have two operands" << eom;
           return nil_exprt();
         }
@@ -500,7 +486,6 @@ exprt sygus_parsert::expression()
       {
         if(op.size()!=2)
         {
-          ok=false;
           error() << "bit shift must have two operands" << eom;
           return nil_exprt();
         }
@@ -759,7 +744,6 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      ok=false;
       error() << "expected a symbol after set-logic" << eom;
       ignore_command();
       return;
@@ -772,7 +756,6 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      ok=false;
       error() << "expected a symbol after define-fun" << eom;
       ignore_command();
       return;
@@ -782,7 +765,6 @@ void sygus_parsert::command(const std::string &c)
 
     if(function_map.find(id)!=function_map.end())
     {
-      ok=false;
       error() << "function `" << id << "' declared twice" << eom;
       ignore_command();
       return;
@@ -831,7 +813,6 @@ void sygus_parsert::command(const std::string &c)
   {
     if(next_token()!=SYMBOL)
     {
-      ok=false;
       error() << "expected a symbol after declare-var" << eom;
       ignore_command();
       return;
@@ -841,7 +822,6 @@ void sygus_parsert::command(const std::string &c)
 
     if(variable_map.find(id)!=variable_map.end())
     {
-      ok=false;
       error() << "variable `" << id << "' declared twice" << eom;
       ignore_command();
       return;
@@ -1055,7 +1035,6 @@ void sygus_parsert::NTDef()
   // (Symbol Sort GTerm+)
   if(next_token()!=OPEN)
   {
-    ok=false;
     error() << "NTDef must begin with '('" << eom;
     return;
   }
@@ -1065,7 +1044,6 @@ void sygus_parsert::NTDef()
 
   if(next_token()!=SYMBOL)
   {
-    ok=false;
     error() << "NTDef must have a symbol" << eom;
     return;
   }
@@ -1076,7 +1054,6 @@ void sygus_parsert::NTDef()
 
   if(next_token()!=CLOSE)
   {
-    ok=false;
     error() << "NTDef must end with ')'" << eom;
     return;
   }

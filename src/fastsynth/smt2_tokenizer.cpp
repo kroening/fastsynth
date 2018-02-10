@@ -151,11 +151,14 @@ smt2_tokenizert::tokent smt2_tokenizert::get_quoted_symbol()
   {
     if(ch=='|')
       return SYMBOL; // done
+
     buffer+=ch;
+
+    if(ch=='\n')
+      line_no++;
   }
 
   // Hmpf. Eof before end of quoted symbol. This is an error.
-  ok=false;
   error() << "EOF within quoted symbol" << eom;
   return ERROR;
 }
@@ -188,7 +191,6 @@ smt2_tokenizert::tokent smt2_tokenizert::get_string_literal()
   }
 
   // Hmpf. Eof before end of string literal. This is an error.
-  ok=false;
   error() << "EOF within string literal" << eom;
   return ERROR;
 }
@@ -204,8 +206,11 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
   {
     switch(ch)
     {
-    case ' ':
     case '\n':
+      line_no++;
+      break;
+
+    case ' ':
     case '\r':
     case '\t':
     case static_cast<char>(160): // non-breaking space
@@ -246,14 +251,12 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
           return token=get_hex_numeral();
         else
         {
-          ok=false;
           error() << "unknown numeral token" << eom;
           return token=ERROR;
         }
       }
       else
       {
-        ok=false;
         error() << "unexpected EOF in numeral token" << eom;
         return token=ERROR;
       }
@@ -293,7 +296,6 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
       else
       {
         // illegal character, error
-        ok=false;
         error() << "unexpected character `" << ch << '\'' << eom;
         return token=ERROR;
       }

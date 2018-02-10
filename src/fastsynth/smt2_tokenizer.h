@@ -20,6 +20,7 @@ public:
     ok(true), peeked(false), token(NONE)
   {
     in=&_in;
+    line_no=1;
   }
 
   operator bool()
@@ -46,6 +47,13 @@ protected:
       peeked=true;
       return token;
     }
+  }
+
+  mstreamt &error()
+  {
+    ok=false;
+    messaget::error().source_location.set_line(line_no);
+    return messaget::error();
   }
 
 private:

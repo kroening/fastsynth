@@ -18,7 +18,6 @@ void new_smt2_parsert::command_sequence()
   {
     if(next_token()!=SYMBOL)
     {
-      ok=false;
       error() << "expected symbol as command" << eom;
       return;
     }
@@ -28,7 +27,6 @@ void new_smt2_parsert::command_sequence()
     switch(next_token())
     {
     case END_OF_FILE:
-      ok=false;
       error() << "expected closing parenthesis at end of command, but got EOF" << eom;
       return;
 
@@ -37,7 +35,6 @@ void new_smt2_parsert::command_sequence()
       break;
 
     default:
-      ok=false;
       error() << "expected end of command" << eom;
       return;
     }
@@ -45,7 +42,6 @@ void new_smt2_parsert::command_sequence()
 
   if(token!=END_OF_FILE)
   {
-    ok=false;
     error() << "unexpected token in command sequence" << eom;
   }
 }
@@ -71,7 +67,6 @@ void new_smt2_parsert::ignore_command()
       break;
 
     case END_OF_FILE:
-      ok=false;
       error() << "unexpected EOF in command" << eom;
       return;
 
@@ -119,7 +114,6 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
     }
     else
     {
-      ok=false;
       error() << "expected symbol in let expression" << eom;
       return result;
     }
@@ -141,7 +135,6 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
 
       if(peek()!=OPEN)
       {
-        ok=false;
         error() << "let expects where here" << eom;
         return result;
       }
@@ -169,7 +162,6 @@ exprt new_smt2_parsert::function_application(
   // check the arguments
   if(op.size()!=f.type.variables().size())
   {
-    ok=false;
     error() << "wrong number of arguments for function" << eom;
     return nil_exprt();
   }
@@ -178,7 +170,6 @@ exprt new_smt2_parsert::function_application(
   {
     if(op[i].type() != f.type.variables()[i].type())
     {
-      ok=false;
       error() << "wrong type for arguments for function" << eom;
       return result;
     }
@@ -237,7 +228,6 @@ exprt new_smt2_parsert::multi_ary(irep_idt id, exprt::operandst &op)
   if(op.empty())
   {
     error() << "expression must have at least one operand" << eom;
-    ok=false;
     return nil_exprt();
   }
   else
@@ -247,7 +237,6 @@ exprt new_smt2_parsert::multi_ary(irep_idt id, exprt::operandst &op)
       if(op[i].type()!=op[0].type())
       {
         error() << "expression must have operands with matching types" << eom;
-        ok=false;
         return nil_exprt();
       }
     }
@@ -263,7 +252,6 @@ exprt new_smt2_parsert::binary_predicate(irep_idt id, exprt::operandst &op)
   if(op.size()!=2)
   {
     error() << "expression must have two operands" << eom;
-    ok=false;
     return nil_exprt();
   }
   else
@@ -271,7 +259,7 @@ exprt new_smt2_parsert::binary_predicate(irep_idt id, exprt::operandst &op)
     if(op[0].type()!=op[1].type())
     {
       error() << "expression must have operands with matching types" << eom;
-      ok=false;
+      return nil_exprt();
     }
 
     return binary_predicate_exprt(op[0], id, op[1]);
@@ -283,7 +271,6 @@ exprt new_smt2_parsert::unary(irep_idt id, exprt::operandst &op)
   if(op.size()!=1)
   {
     error() << "expression must have one operand" << eom;
-    ok=false;
     return nil_exprt();
   }
   else
@@ -295,7 +282,6 @@ exprt new_smt2_parsert::binary(irep_idt id, exprt::operandst &op)
   if(op.size()!=2)
   {
     error() << "expression must have two operands" << eom;
-    ok=false;
     return nil_exprt();
   }
   else
@@ -303,7 +289,6 @@ exprt new_smt2_parsert::binary(irep_idt id, exprt::operandst &op)
     if(op[0].type()!=op[1].type())
     {
       error() << "expression must have operands with matching types" << eom;
-      ok=false;
       return nil_exprt();
     }
 
@@ -336,7 +321,6 @@ exprt new_smt2_parsert::expression()
             return symbol_exprt(identifier, id_it->second.type);
         }
 
-        ok=false;
         error() << "unknown symbol " << identifier << eom;
         return nil_exprt();
       }
@@ -441,7 +425,6 @@ exprt new_smt2_parsert::expression()
         }
         else
         {
-          ok=false;
           error() << "unknown indexed identifier " << buffer << eom;
           return nil_exprt();
         }
@@ -587,7 +570,6 @@ exprt new_smt2_parsert::expression()
           if(op.size()!=2)
           {
             error() << "concat takes three operands" << eom;
-            ok=false;
             return nil_exprt();
           }
 
@@ -603,21 +585,18 @@ exprt new_smt2_parsert::expression()
           if(op.size()!=3)
           {
             error() << "ite takes three operands" << eom;
-            ok=false;
             return nil_exprt();
           }
 
           if(op[0].type().id()!=ID_bool)
           {
             error() << "ite takes a boolean as first operand" << eom;
-            ok=false;
             return nil_exprt();
           }
 
           if(op[1].type()!=op[2].type())
           {
             error() << "ite needs matching types" << eom;
-            ok=false;
             return nil_exprt();
           }
 
@@ -641,7 +620,6 @@ exprt new_smt2_parsert::expression()
             }
           }
 
-          ok=false;
           error() << "unknown symbol " << id << eom;
           return nil_exprt();
         }
