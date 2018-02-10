@@ -9,19 +9,18 @@ Author: Daniel Kroening, kroening@kroening.com
 #ifndef CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 #define CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
 
+#include <stack>
+
 #include <util/std_expr.h>
 
 #include "smt2_tokenizer.h"
-
-#include "function.h"
-
-class function_typet;
 
 class new_smt2_parsert:public smt2_tokenizert
 {
 public:
   explicit new_smt2_parsert(std::istream &_in):smt2_tokenizert(_in)
   {
+    id_stack.push_back(id_mapt());
   }
 
   virtual bool parse() override
@@ -30,18 +29,14 @@ public:
     return !ok;
   }
 
-  struct functiont
+  struct idt
   {
-    function_typet type;
-    exprt body;
+    typet type;
+    exprt definition;
   };
 
-  using function_mapt=std::map<irep_idt, functiont>;
-  function_mapt function_map;
-
-  using variable_mapt=std::map<irep_idt, typet>;
-  variable_mapt variable_map;
-  variable_mapt local_variable_map;
+  using id_mapt=std::map<irep_idt, idt>;
+  std::vector<id_mapt> id_stack;
 
 protected:
   void command_sequence();
@@ -49,14 +44,16 @@ protected:
   virtual void command(const std::string &);
 
   void ignore_command();
-  void declare_var();
-  void define_fun();
-
   exprt expression();
-  let_exprt let_expression(bool first_in_chain);
-  virtual typet sort();
+  typet sort();
   exprt::operandst operands();
-  function_typet function_signature();
+  typet function_signature_declaration();
+  typet function_signature_definition();
+  void tc_multi_ary(exprt &);
+  void tc_binary_predicate(exprt &);
+  void tc_binary(exprt &);
+
+  let_exprt let_expression(bool first_in_chain);
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);

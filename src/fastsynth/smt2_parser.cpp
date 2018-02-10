@@ -158,7 +158,8 @@ exprt new_smt2_parsert::function_application(
   const irep_idt &identifier,
   const exprt::operandst &op)
 {
-  const auto &f = function_map[identifier];
+  #if 0
+  const auto &f = id_map[identifier];
 
   function_application_exprt result;
 
@@ -185,8 +186,9 @@ exprt new_smt2_parsert::function_application(
 
   result.type()=f.type.range();
   return result;
+  #endif
+  return nil_exprt();
 }
-
 
 void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
@@ -300,6 +302,68 @@ exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
   return result;
 }
 
+void new_smt2_parsert::tc_multi_ary(exprt &expr)
+{
+  if(expr.operands().empty())
+  {
+    error() << "expression must have at least one operand" << eom;
+    ok=false;
+  }
+  else
+  {
+    const typet &t=expr.operands()[0].type();
+    expr.type()=t;
+
+    for(std::size_t i=1; i<expr.operands().size(); i++)
+    {
+      if(expr.operands()[i].type()!=t)
+      {
+        error() << "expression must have operands with matching types" << eom;
+        ok=false;
+      }
+    }
+
+  }
+}
+
+void new_smt2_parsert::tc_binary_predicate(exprt &expr)
+{
+  expr.type()=bool_typet();
+
+  if(expr.operands().size()!=2)
+  {
+    error() << "expression must have two operands" << eom;
+    ok=false;
+  }
+  else
+  {
+    if(expr.operands()[0].type()!=expr.operands()[1].type())
+    {
+      error() << "expression must have operands with matching types" << eom;
+      ok=false;
+    }
+  }
+}
+
+void new_smt2_parsert::tc_binary(exprt &expr)
+{
+  if(expr.operands().size()!=2)
+  {
+    error() << "expression must have two operands" << eom;
+    ok=false;
+  }
+  else
+  {
+    if(expr.operands()[0].type()!=expr.operands()[1].type())
+    {
+      error() << "expression must have operands with matching types" << eom;
+      ok=false;
+    }
+
+    expr.type()=expr.operands()[0].type();
+  }
+}
+
 exprt new_smt2_parsert::expression()
 {
   switch(next_token())
@@ -313,28 +377,21 @@ exprt new_smt2_parsert::expression()
         return true_exprt();
       else if(identifier==ID_false)
         return false_exprt();
-      else if(local_variable_map.find(identifier)!=
-              local_variable_map.end())
-      {
-        // search local variable map first, we clear the local variable map
-        // as soon as we are done parsing the function body
-        return symbol_exprt(identifier, local_variable_map[identifier]);
-      }
-      else if(variable_map.find(identifier)!=
-              variable_map.end())
-      {
-        return symbol_exprt(identifier, variable_map[identifier]);
-      }
-      else if(function_map.find(identifier)!=
-              function_map.end())
-      {
-        return function_application(identifier, exprt::operandst());
-      }
       else
       {
+        // rummage through stack of IDs
+        for(auto r_it=id_stack.rbegin();
+            r_it!=id_stack.rend();
+            r_it++)
+        {
+          auto id_it=r_it->find(identifier);
+          if(id_it!=r_it->end())
+            return symbol_exprt(identifier, id_it->second.type);
+        }
+
         ok=false;
-        error() << "unknown symbol " << buffer << eom;
-        return symbol_exprt(identifier, bool_typet());
+        error() << "unknown symbol " << identifier << eom;
+        return nil_exprt();
       }
     }
 
@@ -374,275 +431,347 @@ exprt new_smt2_parsert::expression()
         return let_expression(true);
       }
 
-      auto op=operands();
-
-      if(id==ID_and)
+      if(id=="_")
       {
-        and_exprt result;
-        result.operands()=op;
-        return result;
-      }
-      else if(id==ID_or)
-      {
-        or_exprt result;
-        result.operands()=op;
-        return result;
-      }
-      else if(id==ID_xor)
-      {
-        notequal_exprt result;
-        result.operands()=op;
-        return result;
-      }
-      else if(id==ID_not)
-      {
-        not_exprt result;
-        result.operands()=op;
-        return result;
-      }
-      else if(id=="=")
-      {
-        equal_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=bool_typet();
-        return result;
-      }
-      else if(id=="<=" || id=="bvule" || id=="bvsle")
-      {
-        predicate_exprt result(ID_le);
-        result.operands()=op;
-
-        fix_binary_operation_operand_types(result);
-        result.type()=bool_typet();
-
-        if(id=="bvsle")
+        // indexed identifier
+        if(next_token()!=SYMBOL)
         {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-        }
-        return result;
-      }
-      else if(id==">=" || id=="bvuge" || id=="bvsge")
-      {
-        predicate_exprt result(ID_ge);
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=bool_typet();
-
-        if(id=="bvsge")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-        }
-
-        return result;
-      }
-      else if(id=="<" || id=="bvult" || id=="bvslt")
-      {
-        predicate_exprt result(ID_lt);
-        result.operands()=op;
-
-        fix_binary_operation_operand_types(result);
-        result.type()=bool_typet();
-
-        if(id=="bvslt")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-        }
-        return result;
-      }
-      else if(id==">" || id=="bvugt" || id=="bvsgt")
-      {
-        predicate_exprt result(ID_gt);
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=bool_typet();
-
-        if(id=="bvsgt")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-        }
-        return result;
-      }
-      else if(id=="bvashr")
-      {
-        if(op.size()!=2)
-        {
-          ok=false;
-          error() << "bit shift must have 2 operands" << eom;
+          error() << "expected symbol after '_'" << eom;
           return nil_exprt();
         }
 
-        ashr_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
-        return result;
-      }
-      else if(id=="bvlshr" || id=="bvshr")
-      {
-        if(op.size()!=2)
+        if(has_prefix(buffer, "bv"))
+        {
+          mp_integer i=string2integer(std::string(buffer, 2, std::string::npos));
+
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected numeral as bitvector literal width" << eom;
+            return nil_exprt();
+          }
+
+          auto width=std::stoll(buffer);
+
+          if(next_token()!=CLOSE)
+          {
+            error() << "expected ')' after bitvector literal" << eom;
+            return nil_exprt();
+          }
+
+          return from_integer(i, unsignedbv_typet(width));
+        }
+        else
         {
           ok=false;
-          error() << "bit shift must have two operands" << eom;
+          error() << "unknown indexed identifier " << buffer << eom;
           return nil_exprt();
         }
-
-        lshr_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
-
-        return result;
-      }
-      else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
-      {
-        if(op.size()!=2)
-        {
-          ok=false;
-          error() << "bit shift must have two operands" << eom;
-          return nil_exprt();
-        }
-
-        shl_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
-
-        return result;
-      }
-      else if(id=="bvand")
-      {
-        bitand_exprt result;
-        result.operands()=op;
-
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-
-        return result;
-      }
-      else if(id=="bvor")
-      {
-        bitor_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvxor")
-      {
-        bitxor_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvnot" || id=="bvneg")
-      {
-        bitnot_exprt result;
-        result.operands()=op;
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvadd" || id=="+")
-      {
-        plus_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvsub" || id=="-")
-      {
-        minus_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvmul" || id=="*")
-      {
-        mult_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvsdiv" || id=="bvudiv")
-      {
-        div_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-
-        if(id=="bvsdiv")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-          return cast_bv_to_unsigned(result);
-        }
-
-        return result;
-      }
-      else if(id=="/" || id=="div")
-      {
-        div_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-        return result;
-      }
-      else if(id=="bvsrem" || id=="bvurem" || id=="%")
-      {
-        mod_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
-
-        if(id=="bvsrem")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-          return cast_bv_to_unsigned(result);
-        }
-
-        return result;
-      }
-      else if(id=="ite")
-      {
-        if_exprt result;
-        result.operands()=op;
-        fix_ite_operation_result_type(result);
-        return result;
-      }
-      else if(id=="=>" || id=="implies")
-      {
-        implies_exprt result;
-        result.operands()=op;
-        return result;
       }
       else
       {
-        if(function_map.count(id)!=0)
+        auto op=operands();
+
+        if(id==ID_and)
         {
-          return function_application(id, op);
-        }
-        else if(local_variable_map.find(id)!=local_variable_map.end())
-        {
-          symbol_exprt result(id, local_variable_map[id]);
+          and_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
           return result;
         }
-        else if(variable_map.find(id)!=variable_map.end())
+        else if(id==ID_or)
         {
-          symbol_exprt result(id, variable_map[id]);
+          or_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id==ID_xor)
+        {
+          notequal_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id==ID_not)
+        {
+          not_exprt result;
+          result.operands()=op;
+          return result;
+        }
+        else if(id==ID_equal)
+        {
+          equal_exprt result;
+          result.operands()=op;
+          tc_binary_predicate(result);
+          return result;
+        }
+        else if(id==ID_le)
+        {
+          predicate_exprt result(ID_le);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          return result;
+        }
+        else if(id=="bvule")
+        {
+          predicate_exprt result(ID_le);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          return result;
+        }
+        else if(id=="bvsle")
+        {
+          predicate_exprt result(ID_le);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+          return result;
+        }
+        else if(id==ID_ge)
+        {
+          predicate_exprt result(ID_ge);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          return result;
+        }
+        else if(id=="bvuge")
+        {
+          predicate_exprt result(ID_ge);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          return result;
+        }
+        else if(id=="bvsge")
+        {
+          predicate_exprt result(ID_ge);
+          result.operands()=op;
+          tc_binary_predicate(result);
+          result.op0()=cast_bv_to_signed(result.op0());
+          result.op1()=cast_bv_to_signed(result.op1());
+          return result;
+        }
+        else if(id==ID_lt || id=="bvult" || id=="bvslt")
+        {
+          predicate_exprt result(ID_lt);
+          result.operands()=op;
+
+          fix_binary_operation_operand_types(result);
+          result.type()=bool_typet();
+
+          if(id=="bvslt")
+          {
+            result.op0()=cast_bv_to_signed(result.op0());
+            result.op1()=cast_bv_to_signed(result.op1());
+          }
+          return result;
+        }
+        else if(id==ID_gt || id=="bvugt" || id=="bvsgt")
+        {
+          predicate_exprt result(ID_gt);
+          result.operands()=op;
+          fix_binary_operation_operand_types(result);
+          result.type()=bool_typet();
+
+          if(id=="bvsgt")
+          {
+            result.op0()=cast_bv_to_signed(result.op0());
+            result.op1()=cast_bv_to_signed(result.op1());
+          }
+          return result;
+        }
+        else if(id=="bvashr")
+        {
+          if(op.size()!=2)
+          {
+            ok=false;
+            error() << "bit shift must have 2 operands" << eom;
+            return nil_exprt();
+          }
+
+          ashr_exprt result(op[0], op[1]);
+          bv_typet type(0u);
+          type.remove(ID_width);
+          result.type()=type;
+          return result;
+        }
+        else if(id=="bvlshr" || id=="bvshr")
+        {
+          if(op.size()!=2)
+          {
+            ok=false;
+            error() << "bit shift must have two operands" << eom;
+            return nil_exprt();
+          }
+
+          lshr_exprt result(op[0], op[1]);
+          bv_typet type(0u);
+          type.remove(ID_width);
+          result.type()=type;
+
+          return result;
+        }
+        else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
+        {
+          if(op.size()!=2)
+          {
+            ok=false;
+            error() << "bit shift must have two operands" << eom;
+            return nil_exprt();
+          }
+
+          shl_exprt result(op[0], op[1]);
+          bv_typet type(0u);
+          type.remove(ID_width);
+          result.type()=type;
+
+          return result;
+        }
+        else if(id=="bvand")
+        {
+          bitand_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id=="bvor")
+        {
+          bitor_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id=="bvxor")
+        {
+          bitxor_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id=="bvnot" || id=="bvneg")
+        {
+          bitnot_exprt result;
+          result.operands()=op;
+          result.type()=result.op0().type();
+          return result;
+        }
+        else if(id=="bvadd")
+        {
+          plus_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id==ID_plus)
+        {
+          plus_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id=="bvsub" || id=="-")
+        {
+          minus_exprt result;
+          result.operands()=op;
+          fix_binary_operation_operand_types(result);
+          result.type()=result.op0().type();
+          return result;
+        }
+        else if(id=="bvmul" || id=="*")
+        {
+          mult_exprt result;
+          result.operands()=op;
+          tc_multi_ary(result);
+          return result;
+        }
+        else if(id=="bvsdiv" || id=="bvudiv")
+        {
+          div_exprt result;
+          result.operands()=op;
+          fix_binary_operation_operand_types(result);
+          result.type()=result.op0().type();
+
+          if(id=="bvsdiv")
+          {
+            result.op0()=cast_bv_to_signed(result.op0());
+            result.op1()=cast_bv_to_signed(result.op1());
+            return cast_bv_to_unsigned(result);
+          }
+
+          return result;
+        }
+        else if(id=="/" || id=="div")
+        {
+          div_exprt result;
+          result.operands()=op;
+          fix_binary_operation_operand_types(result);
+          result.type()=result.op0().type();
+          return result;
+        }
+        else if(id=="bvsrem" || id=="bvurem" || id=="%")
+        {
+          mod_exprt result;
+          result.operands()=op;
+          fix_binary_operation_operand_types(result);
+          result.type()=result.op0().type();
+
+          if(id=="bvsrem")
+          {
+            result.op0()=cast_bv_to_signed(result.op0());
+            result.op1()=cast_bv_to_signed(result.op1());
+            return cast_bv_to_unsigned(result);
+          }
+
+          return result;
+        }
+        else if(id=="ite")
+        {
+          if(op.size()!=3)
+          {
+            error() << "ite takes three operands" << eom;
+            ok=false;
+            return nil_exprt();
+          }
+
+          if(op[0].type().id()!=ID_bool)
+          {
+            error() << "ite takes a boolean as first operand" << eom;
+            ok=false;
+            return nil_exprt();
+          }
+
+          if(op[1].type()!=op[2].type())
+          {
+            error() << "ite needs matching types" << eom;
+            ok=false;
+            return nil_exprt();
+          }
+
+          return if_exprt(op[0], op[1], op[2]);
+        }
+        else if(id=="=>" || id=="implies")
+        {
+          implies_exprt result;
+          result.operands()=op;
+          tc_binary(result);
           return result;
         }
         else
         {
-          error() << "use of undeclared symbol or function " << id << eom;
+          // rummage through stack of IDs
+          for(auto r_it=id_stack.rbegin();
+              r_it!=id_stack.rend();
+              r_it++)
+          {
+            auto id_it=r_it->find(id);
+            if(id_it!=r_it->end())
+            {
+              return symbol_exprt(id, id_it->second.type);
+            }
+          }
+
+          ok=false;
+          error() << "unknown symbol " << id << eom;
           return nil_exprt();
         }
       }
@@ -683,10 +812,45 @@ typet new_smt2_parsert::sort()
   case OPEN:
     if(next_token()!=SYMBOL)
     {
-      error() << "expected symbol after '(' in a sort" << eom;
+      error() << "expected symbol after '(' in a sort " << eom;
       return nil_typet();
     }
 
+    if(buffer=="_")
+    {
+      // indexed identifier
+      if(next_token()!=SYMBOL)
+      {
+        error() << "expected symbol after '_' in a sort" << eom;
+        return nil_typet();
+      }
+
+      if(buffer=="BitVec")
+      {
+        if(next_token()!=NUMERAL)
+        {
+          error() << "expected numeral as bit-width" << eom;
+          return nil_typet();
+        }
+
+        auto width=std::stoll(buffer);
+
+        // eat the ')'
+        if(next_token()!=CLOSE)
+        {
+          error() << "expected ')' at end of sort" << eom;
+          return nil_typet();
+        }
+
+        return unsignedbv_typet(width);
+      }
+      else
+      {
+        error() << "unexpected sort: `" << buffer << '\'' << eom;
+        return nil_typet();
+      }
+    }
+    else
     {
       error() << "unexpected sort: `" << buffer << '\'' << eom;
       return nil_typet();
@@ -698,15 +862,21 @@ typet new_smt2_parsert::sort()
   }
 }
 
-function_typet new_smt2_parsert::function_signature()
+typet new_smt2_parsert::function_signature_definition()
 {
-  function_typet result;
-
   if(next_token()!=OPEN)
   {
     error() << "expected '(' at beginning of signature" << eom;
-    return result;
+    return nil_typet();
   }
+
+  if(peek()==CLOSE)
+  {
+    next_token(); // eat the ')'
+    return sort();
+  }
+
+  function_typet result;
 
   while(peek()!=CLOSE)
   {
@@ -726,7 +896,57 @@ function_typet new_smt2_parsert::function_signature()
     std::string id=buffer;
     var.set_identifier(id);
     var.type()=sort();
-    local_variable_map[id]=var.type();
+
+    auto &entry=id_stack.back()[id];
+    entry.type=var.type();
+    entry.definition=nil_exprt();
+
+    if(next_token()!=CLOSE)
+    {
+      error() << "expected ')' at end of parameter" << eom;
+      return result;
+    }
+  }
+
+  next_token(); // eat the ')'
+
+  result.range()=sort();
+
+  return result;
+}
+
+typet new_smt2_parsert::function_signature_declaration()
+{
+  if(next_token()!=OPEN)
+  {
+    error() << "expected '(' at beginning of signature" << eom;
+    return nil_typet();
+  }
+
+  if(peek()==CLOSE)
+  {
+    next_token(); // eat the ')'
+    return sort();
+  }
+
+  function_typet result;
+
+  while(peek()!=CLOSE)
+  {
+    if(next_token()!=OPEN)
+    {
+      error() << "expected '(' at beginning of parameter" << eom;
+      return result;
+    }
+
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected symbol in parameter" << eom;
+      return result;
+    }
+
+    auto &var=result.add_variable();
+    var.type()=sort();
 
     if(next_token()!=CLOSE)
     {
@@ -744,25 +964,27 @@ function_typet new_smt2_parsert::function_signature()
 
 void new_smt2_parsert::command(const std::string &c)
 {
-  if(c=="declare-var")
+  if(c=="declare-fun")
   {
     if(next_token()!=SYMBOL)
     {
-      error() << "expected a symbol after declare-var" << eom;
+      error() << "expected a symbol after declare-fun" << eom;
       ignore_command();
       return;
     }
 
     irep_idt id=buffer;
 
-    if(variable_map.find(id)!=variable_map.end())
+    if(id_stack.back().find(id)!=id_stack.back().end())
     {
-      error() << "variable declared twice" << eom;
+      error() << "identifier `" << id << "' defined twice" << eom;
       ignore_command();
       return;
     }
 
-    variable_map[id]=sort();
+    auto &entry=id_stack.back()[id];
+    entry.type=function_signature_declaration();
+    entry.definition=nil_exprt();
   }
   else if(c=="define-fun")
   {
@@ -775,22 +997,24 @@ void new_smt2_parsert::command(const std::string &c)
 
     const irep_idt id=buffer;
 
-    if(function_map.find(id)!=function_map.end())
+    if(id_stack.back().find(id)!=id_stack.back().end())
     {
-      error() << "function declared twice" << eom;
+      error() << "identifier `" << id << "' defined twice" << eom;
       ignore_command();
       return;
     }
 
-    local_variable_map.clear();
+    // create the entry
+    id_stack.back()[id];
 
-    auto signature=function_signature();
+    id_stack.push_back(id_mapt());
+    auto signature=function_signature_definition();
     exprt body=expression();
+    id_stack.pop_back();
 
-    auto &f=function_map[id];
-    f.type=signature;
-    f.body=body;
-    local_variable_map.clear();
+    auto &entry=id_stack.back()[id];
+    entry.type=signature;
+    entry.definition=body;
   }
   else
     ignore_command();

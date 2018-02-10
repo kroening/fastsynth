@@ -19,20 +19,21 @@
 #endif
 
 #include <fstream>
+#include <iostream>
 
 class smt2_frontendt:public new_smt2_parsert
 {
 public:
   smt2_frontendt(
     std::ifstream &_in,
-    decision_proceduret &_dest):
+    decision_proceduret &_solver):
     new_smt2_parsert(_in),
-    dest(_dest)
+    solver(_solver)
   {
   }
 
 protected:
-  decision_proceduret &dest;
+  decision_proceduret &solver;
 
   void command(const std::string &) override;
 };
@@ -42,7 +43,23 @@ void smt2_frontendt::command(const std::string &c)
   if(c=="assert")
   {
     exprt e=expression();
-    dest.set_to_true(e);
+    solver.set_to_true(e);
+  }
+  else if(c=="check-sat")
+  {
+    switch(solver())
+    {
+    case decision_proceduret::resultt::D_SATISFIABLE:
+      std::cout << "(sat)\n";
+      break;
+
+    case decision_proceduret::resultt::D_UNSATISFIABLE:
+      std::cout << "(unsat)\n";
+      break;
+
+    case decision_proceduret::resultt::D_ERROR:
+      std::cout << "(error)\n";
+    }
   }
   else
     new_smt2_parsert::command(c);
