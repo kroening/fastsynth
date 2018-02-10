@@ -92,7 +92,6 @@ exprt::operandst new_smt2_parsert::operands()
   return result;
 }
 
-
 let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
 {
   let_exprt result;
