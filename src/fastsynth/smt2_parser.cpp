@@ -407,6 +407,38 @@ exprt new_smt2_parsert::expression()
 
           return from_integer(i, unsignedbv_typet(width));
         }
+        else if(id=="extract")
+        {
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected numeral after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto upper=std::stoll(buffer);
+
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected two numerals after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto lower=std::stoll(buffer);
+
+          if(next_token()!=CLOSE)
+          {
+            error() << "expected ')' after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto upper_e=from_integer(upper, integer_typet());
+          auto lower_e=from_integer(lower, integer_typet());
+
+          auto op=expression();
+          unsignedbv_typet t(upper-lower+1);
+
+          return extractbits_exprt(op, upper_e, lower_e, t);
+        }
         else
         {
           ok=false;
@@ -549,6 +581,22 @@ exprt new_smt2_parsert::expression()
         else if(id=="bvurem" || id=="%")
         {
           return binary(ID_mod, op);
+        }
+        else if(id=="concat")
+        {
+          if(op.size()!=2)
+          {
+            error() << "concat takes three operands" << eom;
+            ok=false;
+            return nil_exprt();
+          }
+
+          auto width0=to_unsignedbv_type(op[0].type()).get_width();
+          auto width1=to_unsignedbv_type(op[1].type()).get_width();
+
+          unsignedbv_typet t(width0+width1);
+
+          return binary_exprt(op[0], ID_concatenation, op[1], t);
         }
         else if(id=="ite")
         {
