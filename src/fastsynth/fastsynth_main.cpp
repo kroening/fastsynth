@@ -5,6 +5,7 @@
 
 #include "c_frontend.h"
 #include "sygus_frontend.h"
+#include "smt2_frontend.h"
 
 #define FASTSYNTH_OPTIONS \
    "(max-program-size):" \
@@ -35,6 +36,8 @@ int main(int argc, const char *argv[])
   {
     if(has_suffix(cmdline.args.back(), ".sl"))
       return sygus_frontend(cmdline);
+    else if(has_suffix(cmdline.args.back(), ".smt2"))
+      return smt2_frontend(cmdline);
     else
       return c_frontend(cmdline);
   }
