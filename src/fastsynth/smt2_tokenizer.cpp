@@ -265,7 +265,7 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
         in->unget();
         return token=get_decimal_numeral();
       }
-      else if(ch == '-')
+      else if(ch=='-')
       {
         if(in->get(ch))
         {
@@ -274,14 +274,14 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
             in->unget();
             get_decimal_numeral();
             std::string id = buffer;
-            buffer = '-' + id;
+            buffer='-'+id;
             return token=NUMERAL;
           }
           else
           {
             in->unget();
             in->unget();
-            return token = get_simple_symbol();
+            return token=get_simple_symbol();
           }
         }
       }
