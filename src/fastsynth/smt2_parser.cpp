@@ -190,82 +190,7 @@ exprt new_smt2_parsert::function_application(
   return nil_exprt();
 }
 
-void new_smt2_parsert::fix_ite_operation_result_type(if_exprt &expr)
-{
-  if(expr.op0().id()!=ID_bool)
-    expr.op0().type()=bool_typet();
-
-  if(expr.op1().type()!=expr.op2().type())
-  {
-   // default type is unsigned bitvector
-    if(expr.op1().type().id()==ID_unsignedbv)
-      expr.op2().type()=expr.op1().type();
-    else if(expr.op1().type().id()==ID_unsignedbv)
-      expr.op1().type()=expr.op2().type();
-    else if(expr.op1().type().id()==ID_signedbv)
-    {
-      unsignedbv_typet type(to_signedbv_type(expr.op1().type()).get_width());
-      expr.op1().type()=type;
-      expr.op2().type()=type;
-    }
-    else if(expr.op2().type().id()==ID_signedbv)
-    {
-      unsignedbv_typet type(to_signedbv_type(expr.op2().type()).get_width());
-      expr.op1().type()=type;
-      expr.op2().type()=type;
-    }
-
-    // throw error if still mismatching. Could be because bitvector widths are different
-    if(expr.op1().type()!=expr.op2().type())
-    {
-      ok=false;
-      error() << "mismatching types for ite operand" << eom;
-    }
-  }
-
-  expr.type()=expr.op1().type();
-}
-
-void new_smt2_parsert::fix_binary_operation_operand_types(exprt &expr)
-{
-  // TODO: deal with different widths of bitvector
-  if(expr.operands().size()!=2)
-  {
-    error() << "two operands expected for binary operation " << expr.id() << eom;
-    return;
-  }
-
-  if(expr.op0().type()!=expr.op1().type())
-  {
-    // default type is unsigned bitvector
-    if(expr.op0().type().id()==ID_unsignedbv)
-      expr.op1().type()=expr.op0().type();
-    else if(expr.op1().type().id()==ID_unsignedbv)
-      expr.op0().type()=expr.op1().type();
-    else if(expr.op0().type().id()==ID_signedbv)
-    {
-      unsignedbv_typet type(to_signedbv_type(expr.op0().type()).get_width());
-      expr.op0().type()=type;
-      expr.op1().type()=type;
-    }
-    else if(expr.op1().type().id()==ID_signedbv)
-    {
-      unsignedbv_typet type(to_signedbv_type(expr.op1().type()).get_width());
-      expr.op0().type()=type;
-      expr.op1().type()=type;
-    }
-
-    // throw error if still mismatching. Could be because bitvector widths are different
-    if(expr.op0().type()!=expr.op1().type())
-    {
-      ok=false;
-      error() << "mismatching types for binary operand" << expr.id() << eom;
-    }
-  }
-}
-
-
-exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
+exprt new_smt2_parsert::cast_bv_to_signed(const exprt &expr)
 {
   if(expr.type().id()==ID_signedbv) // no need to cast
     return expr;
@@ -276,15 +201,17 @@ exprt new_smt2_parsert::cast_bv_to_signed(exprt &expr)
     return expr;
   }
 
- signedbv_typet signed_type(to_unsignedbv_type(expr.type()).get_width());
- typecast_exprt result(expr, signed_type);
- result.op0()=expr;
- result.type()=signed_type;
+  auto width=to_unsignedbv_type(expr.type()).get_width();
+  signedbv_typet signed_type(width);
 
- return result;
+  typecast_exprt result(expr, signed_type);
+  result.op0()=expr;
+  result.type()=signed_type;
+
+  return result;
 }
 
-exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
+exprt new_smt2_parsert::cast_bv_to_unsigned(const exprt &expr)
 {
   if(expr.type().id()==ID_unsignedbv) // no need to cast
     return expr;
@@ -295,72 +222,80 @@ exprt new_smt2_parsert::cast_bv_to_unsigned(exprt &expr)
     return expr;
   }
 
-  unsignedbv_typet unsigned_type(to_signedbv_type(expr.type()).get_width());
+  auto width=to_signedbv_type(expr.type()).get_width();
+  unsignedbv_typet unsigned_type(width);
+
   typecast_exprt result(expr, unsigned_type);
   result.op0()=expr;
   result.type()=unsigned_type;
+
   return result;
 }
 
-void new_smt2_parsert::tc_multi_ary(exprt &expr)
+exprt new_smt2_parsert::multi_ary(irep_idt id, exprt::operandst &op)
 {
-  if(expr.operands().empty())
+  if(op.empty())
   {
     error() << "expression must have at least one operand" << eom;
     ok=false;
+    return nil_exprt();
   }
   else
   {
-    const typet &t=expr.operands()[0].type();
-    expr.type()=t;
-
-    for(std::size_t i=1; i<expr.operands().size(); i++)
+    for(std::size_t i=1; i<op.size(); i++)
     {
-      if(expr.operands()[i].type()!=t)
+      if(op[i].type()!=op[0].type())
       {
         error() << "expression must have operands with matching types" << eom;
         ok=false;
+        return nil_exprt();
       }
     }
 
+    exprt result(id, op[0].type());
+    result.operands().swap(op);
+    return result;
   }
 }
 
-void new_smt2_parsert::tc_binary_predicate(exprt &expr)
+exprt new_smt2_parsert::binary_predicate(irep_idt id, exprt::operandst &op)
 {
-  expr.type()=bool_typet();
-
-  if(expr.operands().size()!=2)
+  if(op.size()!=2)
   {
     error() << "expression must have two operands" << eom;
     ok=false;
+    return nil_exprt();
   }
   else
   {
-    if(expr.operands()[0].type()!=expr.operands()[1].type())
-    {
-      error() << "expression must have operands with matching types" << eom;
-      ok=false;
-    }
-  }
-}
-
-void new_smt2_parsert::tc_binary(exprt &expr)
-{
-  if(expr.operands().size()!=2)
-  {
-    error() << "expression must have two operands" << eom;
-    ok=false;
-  }
-  else
-  {
-    if(expr.operands()[0].type()!=expr.operands()[1].type())
+    if(op[0].type()!=op[1].type())
     {
       error() << "expression must have operands with matching types" << eom;
       ok=false;
     }
 
-    expr.type()=expr.operands()[0].type();
+    return binary_predicate_exprt(op[0], id, op[1]);
+  }
+}
+
+exprt new_smt2_parsert::binary(irep_idt id, exprt::operandst &op)
+{
+  if(op.size()!=2)
+  {
+    error() << "expression must have two operands" << eom;
+    ok=false;
+    return nil_exprt();
+  }
+  else
+  {
+    if(op[0].type()!=op[1].type())
+    {
+      error() << "expression must have operands with matching types" << eom;
+      ok=false;
+      return nil_exprt();
+    }
+
+    return binary_exprt(op[0], id, op[1], op[0].type());
   }
 }
 
@@ -471,26 +406,11 @@ exprt new_smt2_parsert::expression()
       {
         auto op=operands();
 
-        if(id==ID_and)
+        if(id==ID_and ||
+           id==ID_or ||
+           id==ID_xor)
         {
-          and_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
-        }
-        else if(id==ID_or)
-        {
-          or_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
-        }
-        else if(id==ID_xor)
-        {
-          notequal_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(id, op);
         }
         else if(id==ID_not)
         {
@@ -498,231 +418,133 @@ exprt new_smt2_parsert::expression()
           result.operands()=op;
           return result;
         }
-        else if(id==ID_equal)
+        else if(id==ID_equal ||
+                id==ID_le ||
+                id==ID_ge ||
+                id==ID_lt ||
+                id==ID_gt)
         {
-          equal_exprt result;
-          result.operands()=op;
-          tc_binary_predicate(result);
-          return result;
-        }
-        else if(id==ID_le)
-        {
-          predicate_exprt result(ID_le);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          return result;
+          return binary_predicate(id, op);
         }
         else if(id=="bvule")
         {
-          predicate_exprt result(ID_le);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          return result;
+          return binary_predicate(ID_le, op);
         }
         else if(id=="bvsle")
         {
-          predicate_exprt result(ID_le);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-          return result;
-        }
-        else if(id==ID_ge)
-        {
-          predicate_exprt result(ID_ge);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return binary_predicate(ID_le, op);
         }
         else if(id=="bvuge")
         {
-          predicate_exprt result(ID_ge);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          return result;
+          return binary_predicate(ID_ge, op);
         }
         else if(id=="bvsge")
         {
-          predicate_exprt result(ID_ge);
-          result.operands()=op;
-          tc_binary_predicate(result);
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return binary_predicate(ID_ge, op);
         }
-        else if(id==ID_lt || id=="bvult" || id=="bvslt")
+        else if(id=="bvult")
         {
-          predicate_exprt result(ID_lt);
-          result.operands()=op;
-
-          fix_binary_operation_operand_types(result);
-          result.type()=bool_typet();
-
-          if(id=="bvslt")
-          {
-            result.op0()=cast_bv_to_signed(result.op0());
-            result.op1()=cast_bv_to_signed(result.op1());
-          }
-          return result;
+          return binary_predicate(ID_lt, op);
         }
-        else if(id==ID_gt || id=="bvugt" || id=="bvsgt")
+        else if(id=="bvslt")
         {
-          predicate_exprt result(ID_gt);
-          result.operands()=op;
-          fix_binary_operation_operand_types(result);
-          result.type()=bool_typet();
-
-          if(id=="bvsgt")
-          {
-            result.op0()=cast_bv_to_signed(result.op0());
-            result.op1()=cast_bv_to_signed(result.op1());
-          }
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return binary_predicate(ID_lt, op);
+        }
+        else if(id=="bvugt")
+        {
+          return binary_predicate(ID_gt, op);
+        }
+        else if(id=="bvsgt")
+        {
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return binary_predicate(ID_gt, op);
         }
         else if(id=="bvashr")
         {
-          if(op.size()!=2)
-          {
-            ok=false;
-            error() << "bit shift must have 2 operands" << eom;
-            return nil_exprt();
-          }
-
-          ashr_exprt result(op[0], op[1]);
-          bv_typet type(0u);
-          type.remove(ID_width);
-          result.type()=type;
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return cast_bv_to_unsigned(binary(ID_shr, op));
         }
         else if(id=="bvlshr" || id=="bvshr")
         {
-          if(op.size()!=2)
-          {
-            ok=false;
-            error() << "bit shift must have two operands" << eom;
-            return nil_exprt();
-          }
-
-          lshr_exprt result(op[0], op[1]);
-          bv_typet type(0u);
-          type.remove(ID_width);
-          result.type()=type;
-
-          return result;
+          return binary(ID_shr, op);
         }
         else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
         {
-          if(op.size()!=2)
-          {
-            ok=false;
-            error() << "bit shift must have two operands" << eom;
-            return nil_exprt();
-          }
-
-          shl_exprt result(op[0], op[1]);
-          bv_typet type(0u);
-          type.remove(ID_width);
-          result.type()=type;
-
-          return result;
+          return binary(ID_shl, op);
         }
         else if(id=="bvand")
         {
-          bitand_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(ID_bitand, op);
         }
         else if(id=="bvor")
         {
-          bitor_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(ID_bitor, op);
         }
         else if(id=="bvxor")
         {
-          bitxor_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(ID_bitxor, op);
         }
-        else if(id=="bvnot" || id=="bvneg")
+        else if(id=="bvnot")
         {
           bitnot_exprt result;
           result.operands()=op;
           result.type()=result.op0().type();
           return result;
         }
+        else if(id=="bvneg")
+        {
+          unary_minus_exprt result;
+          result.operands()=op;
+          result.type()=result.op0().type();
+          return result;
+        }
         else if(id=="bvadd")
         {
-          plus_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(ID_plus, op);
         }
         else if(id==ID_plus)
         {
-          plus_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return multi_ary(id, op);
         }
         else if(id=="bvsub" || id=="-")
         {
-          minus_exprt result;
-          result.operands()=op;
-          fix_binary_operation_operand_types(result);
-          result.type()=result.op0().type();
-          return result;
+          return binary(ID_minus, op);
         }
         else if(id=="bvmul" || id=="*")
         {
-          mult_exprt result;
-          result.operands()=op;
-          tc_multi_ary(result);
-          return result;
+          return binary(ID_mult, op);
         }
-        else if(id=="bvsdiv" || id=="bvudiv")
+        else if(id=="bvsdiv")
         {
-          div_exprt result;
-          result.operands()=op;
-          fix_binary_operation_operand_types(result);
-          result.type()=result.op0().type();
-
-          if(id=="bvsdiv")
-          {
-            result.op0()=cast_bv_to_signed(result.op0());
-            result.op1()=cast_bv_to_signed(result.op1());
-            return cast_bv_to_unsigned(result);
-          }
-
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return cast_bv_to_unsigned(binary(ID_div, op));
+        }
+        else if(id=="bvudiv")
+        {
+          return binary(ID_div, op);
         }
         else if(id=="/" || id=="div")
         {
-          div_exprt result;
-          result.operands()=op;
-          fix_binary_operation_operand_types(result);
-          result.type()=result.op0().type();
-          return result;
+          return binary(ID_div, op);
         }
-        else if(id=="bvsrem" || id=="bvurem" || id=="%")
+        else if(id=="bvsrem")
         {
-          mod_exprt result;
-          result.operands()=op;
-          fix_binary_operation_operand_types(result);
-          result.type()=result.op0().type();
-
-          if(id=="bvsrem")
-          {
-            result.op0()=cast_bv_to_signed(result.op0());
-            result.op1()=cast_bv_to_signed(result.op1());
-            return cast_bv_to_unsigned(result);
-          }
-
-          return result;
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return cast_bv_to_unsigned(binary(ID_mod, op));
+        }
+        else if(id=="bvurem" || id=="%")
+        {
+          return binary(ID_mod, op);
         }
         else if(id=="ite")
         {
@@ -751,10 +573,7 @@ exprt new_smt2_parsert::expression()
         }
         else if(id=="=>" || id=="implies")
         {
-          implies_exprt result;
-          result.operands()=op;
-          tc_binary(result);
-          return result;
+          return binary(ID_implies, op);
         }
         else
         {

@@ -49,17 +49,14 @@ protected:
   exprt::operandst operands();
   typet function_signature_declaration();
   typet function_signature_definition();
-  void tc_multi_ary(exprt &);
-  void tc_binary_predicate(exprt &);
-  void tc_binary(exprt &);
+  exprt multi_ary(irep_idt, exprt::operandst &);
+  exprt binary_predicate(irep_idt, exprt::operandst &);
+  exprt binary(irep_idt, exprt::operandst &);
 
   let_exprt let_expression(bool first_in_chain);
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
-  void fix_binary_operation_operand_types(exprt &expr);
-  void fix_ite_operation_result_type(if_exprt &expr);
-  exprt cast_bv_to_signed(exprt &expr);
-  exprt cast_bv_to_unsigned(exprt &expr);
-  void check_bitvector_operands(exprt &expr);
+  exprt cast_bv_to_signed(const exprt &);
+  exprt cast_bv_to_unsigned(const exprt &);
 };
 
 #endif // CPROVER_SOLVERS_SMT2_SMT2_PARSER_H
