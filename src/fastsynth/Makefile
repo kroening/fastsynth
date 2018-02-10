@@ -2,7 +2,8 @@ SRC = fastsynth_main.cpp \
       smt2_parser.cpp smt2_frontend.cpp c_frontend.cpp sygus_frontend.cpp \
       cegis.cpp solver.cpp verify.cpp fm_verify.cpp verify_encoding.cpp \
       literals.cpp solver_learn.cpp incremental_solver_learn.cpp \
-      synth_encoding.cpp sygus_parser.cpp fourier_motzkin.cpp
+      synth_encoding.cpp sygus_parser.cpp fourier_motzkin.cpp \
+      smt2_tokenizer.cpp
 
 OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
       $(CBMC)/src/assembler/assembler$(LIBEXT) \
