@@ -8,8 +8,6 @@
 #include <cassert>
 #include <fstream>
 
-#include "function.h"
-
 void sygus_parsert::command_sequence()
 {
   while(next_token()==OPEN)
@@ -157,7 +155,7 @@ exprt sygus_parsert::function_application(
   result.arguments()=op;
 
   // check the arguments
-  if(op.size()!=f.type.variables().size())
+  if(op.size()!=f.type.domain().size())
   {
     error() << "wrong number of arguments for function" << eom;
     return nil_exprt();
@@ -165,14 +163,14 @@ exprt sygus_parsert::function_application(
 
   for(std::size_t i=0; i<op.size(); i++)
   {
-    if(op[i].type() != f.type.variables()[i].type())
+    if(op[i].type() != f.type.domain()[i].type())
     {
       error() << "wrong type for arguments for function" << eom;
       return result;
     }
   }
 
-  result.type()=f.type.range();
+  result.type()=f.type.codomain();
   return result;
 }
 
@@ -646,9 +644,9 @@ exprt sygus_parsert::expression()
   }
 }
 
-function_typet sygus_parsert::function_signature()
+mathematical_function_typet sygus_parsert::function_signature()
 {
-  function_typet result;
+  mathematical_function_typet result;
 
   if(next_token()!=OPEN)
   {
@@ -685,7 +683,7 @@ function_typet sygus_parsert::function_signature()
 
   next_token(); // eat the ')'
 
-  result.range()=sort();
+  result.codomain()=sort();
 
   return result;
 }
@@ -882,9 +880,9 @@ void sygus_parsert::command(const std::string &c)
     ignore_command();
 }
 
-function_typet sygus_parsert::inv_function_signature()
+mathematical_function_typet sygus_parsert::inv_function_signature()
 {
-  function_typet result;
+  mathematical_function_typet result;
 
   if(next_token()!=OPEN)
   {
@@ -921,7 +919,7 @@ function_typet sygus_parsert::inv_function_signature()
 
   next_token(); // eat the ')'
 
-  result.range()=bool_typet();
+  result.codomain()=bool_typet();
 
   return result;
 }
@@ -960,17 +958,17 @@ void sygus_parsert::apply_function_to_variables(
     return;
   }
   const auto &f = function_map[id];
-  expr.type() = f.type.range();
-  expr.arguments().resize(f.type.variables().size());
+  expr.type() = f.type.codomain();
+  expr.arguments().resize(f.type.domain().size());
   // get arguments
-  for(std::size_t i = 0; i < f.type.variables().size(); i++)
+  for(std::size_t i = 0; i < f.type.domain().size(); i++)
   {
-    std::string var_id = id2string(f.type.variables()[i].get_identifier())
+    std::string var_id = id2string(f.type.domain()[i].get_identifier())
         + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
       error() << "use of undeclared variable " << var_id << eom;
-    symbol_exprt operand(var_id, f.type.variables()[i].type());
+    symbol_exprt operand(var_id, f.type.domain()[i].type());
     expr.arguments()[i] = operand;
   }
 }
@@ -1108,16 +1106,16 @@ void sygus_parsert::expand_function_applications(exprt &expr)
         return; // do not expand
       }
 
-      assert(f.type.variables().size()==
+      assert(f.type.domain().size()==
              app.arguments().size());
 
       replace_symbolt replace_symbol;
 
       std::map<irep_idt, exprt> parameter_map;
-      for(std::size_t i=0; i<f.type.variables().size(); i++)
+      for(std::size_t i=0; i<f.type.domain().size(); i++)
       {
         const irep_idt p_identifier=
-          f.type.variables()[i].get_identifier();
+          f.type.domain()[i].get_identifier();
 
         replace_symbol.insert(p_identifier, app.arguments()[i]);
       }

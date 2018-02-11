@@ -10,8 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/arith_tools.h>
 
-#include "function.h"
-
 void new_smt2_parsert::command_sequence()
 {
   while(next_token()==OPEN)
@@ -725,7 +723,7 @@ typet new_smt2_parsert::function_signature_definition()
     return sort();
   }
 
-  function_typet result;
+  mathematical_function_typet result;
 
   while(peek()!=CLOSE)
   {
@@ -759,7 +757,7 @@ typet new_smt2_parsert::function_signature_definition()
 
   next_token(); // eat the ')'
 
-  result.range()=sort();
+  result.codomain()=sort();
 
   return result;
 }
@@ -778,7 +776,7 @@ typet new_smt2_parsert::function_signature_declaration()
     return sort();
   }
 
-  function_typet result;
+  mathematical_function_typet result;
 
   while(peek()!=CLOSE)
   {
@@ -806,7 +804,7 @@ typet new_smt2_parsert::function_signature_declaration()
 
   next_token(); // eat the ')'
 
-  result.range()=sort();
+  result.codomain()=sort();
 
   return result;
 }

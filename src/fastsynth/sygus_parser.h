@@ -3,8 +3,7 @@
 #include "smt2_tokenizer.h"
 
 #include <util/std_expr.h>
-
-#include "function.h"
+#include <util/std_types.h>
 
 class sygus_parsert:public smt2_tokenizert
 {
@@ -28,7 +27,7 @@ public:
 
   std::set<irep_idt> synth_fun_set;
 
-  function_typet inv_function_signature();
+  mathematical_function_typet inv_function_signature();
   void expand_function_applications(exprt &);
   void generate_invariant_constraints();
 
@@ -39,7 +38,7 @@ public:
 
   struct functiont
   {
-    function_typet type;
+    mathematical_function_typet type;
     exprt body;
   };
 
@@ -61,7 +60,7 @@ protected:
   let_exprt let_expression(bool first_in_chain);
   typet sort();
   exprt::operandst operands();
-  function_typet function_signature();
+  mathematical_function_typet function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
