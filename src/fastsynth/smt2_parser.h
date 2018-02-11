@@ -55,6 +55,7 @@ protected:
   exprt unary(irep_idt, exprt::operandst &);
 
   let_exprt let_expression(bool first_in_chain);
+  exprt quantifier_expression(irep_idt);
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   exprt cast_bv_to_signed(const exprt &);
   exprt cast_bv_to_unsigned(const exprt &);

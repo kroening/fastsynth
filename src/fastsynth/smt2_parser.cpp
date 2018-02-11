@@ -145,6 +145,77 @@ let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
   return result;
 }
 
+exprt new_smt2_parsert::quantifier_expression(irep_idt id)
+{
+  if(next_token()!=OPEN)
+  {
+    error() << "expected bindings after " << id << eom;
+    return nil_exprt();
+  }
+
+  std::vector<symbol_exprt> bindings;
+
+  while(peek()==OPEN)
+  {
+    next_token();
+
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected symbol in binding" << eom;
+      return nil_exprt();
+    }
+
+    irep_idt identifier=buffer;
+
+    typet type=sort();
+
+    if(next_token()!=CLOSE)
+    {
+      error() << "expected ')' after sort in binding" << eom;
+      return nil_exprt();
+    }
+
+    bindings.push_back(symbol_exprt(identifier, type));
+  }
+
+  if(next_token()!=CLOSE)
+  {
+    error() << "expected ')' at end of bindings" << eom;
+    return nil_exprt();
+  }
+
+  // go forwards, add to scope
+  for(const auto &b : bindings)
+  {
+    id_stack.push_back(id_mapt());
+    auto &entry=id_stack.back()[b.get_identifier()];
+    entry.type=b.type();
+    entry.definition=nil_exprt();
+  }
+
+  exprt expr=expression();
+
+  if(next_token()!=CLOSE)
+  {
+    error() << "expected ')' after " << id << eom;
+    return nil_exprt();
+  }
+
+  exprt result=expr;
+
+  // go backwards
+  for(auto r_it=bindings.rbegin(); r_it!=bindings.rend(); r_it++)
+  {
+    binary_predicate_exprt quantifier(id);
+    quantifier.op0()=*r_it;
+    quantifier.op1().swap(result);
+    result=quantifier;
+    id_stack.pop_back();
+  }
+
+  return result;
+}
+
 exprt new_smt2_parsert::function_application(
   const irep_idt &identifier,
   const exprt::operandst &op)
@@ -358,6 +429,10 @@ exprt new_smt2_parsert::expression()
       {
         // bool indicates first in chain
         return let_expression(true);
+      }
+      else if(id==ID_forall || id==ID_exists)
+      {
+        return quantifier_expression(id);
       }
 
       if(id=="_")
