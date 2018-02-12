@@ -268,26 +268,6 @@ smt2_tokenizert::tokent smt2_tokenizert::next_token()
         in->unget();
         return token=get_decimal_numeral();
       }
-      else if(ch=='-')
-      {
-        if(in->get(ch))
-        {
-          if(isdigit(ch)) // a negative number
-          {
-            in->unget();
-            get_decimal_numeral();
-            std::string id = buffer;
-            buffer='-'+id;
-            return token=NUMERAL;
-          }
-          else
-          {
-            in->unget();
-            in->unget();
-            return token=get_simple_symbol();
-          }
-        }
-      }
       else if(is_simple_symbol_character(ch))
       {
         in->unget();

@@ -5,6 +5,7 @@
 #include <util/replace_symbol.h>
 #include <util/arith_tools.h>
 
+#include <cctype>
 #include <cassert>
 #include <fstream>
 
@@ -285,11 +286,32 @@ exprt sygus_parsert::cast_bv_to_unsigned(exprt &expr)
   return result;
 }
 
+static bool is_negative_numeral(const std::string &s)
+{
+  if(s.size()>=2 && s[0]=='-')
+  {
+    for(std::size_t i=1; i<s.size(); i++)
+      if(!isdigit(s[i]))
+        return false;
+
+    return true;
+  }
+  else
+    return false;
+}
+
 exprt sygus_parsert::expression()
 {
   switch(next_token())
   {
   case SYMBOL:
+    // sugys allows negative numerals "-1",
+    // which are a SYMBOL in SMT-LIB2
+    if(is_negative_numeral(buffer))
+    {
+      return constant_exprt(buffer, integer_typet());
+    }
+    else
     {
       // hash it
       const irep_idt identifier=buffer;
