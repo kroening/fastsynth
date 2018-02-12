@@ -85,63 +85,77 @@ exprt::operandst new_smt2_parsert::operands()
   return result;
 }
 
-let_exprt new_smt2_parsert::let_expression(bool first_in_chain)
+exprt new_smt2_parsert::let_expression()
 {
-  let_exprt result;
-
-  if(peek()!=OPEN && !first_in_chain)
+  if(next_token()!=OPEN)
   {
-    // no need for chaining, single let exprt.
-    result.operands()=operands();
-    return result;
+    error() << "expected bindings after let" << eom;
+    return nil_exprt();
   }
-  else
+
+  std::vector<std::pair<irep_idt, exprt>> bindings;
+
+  while(peek()==OPEN)
   {
-    if(peek()==OPEN && first_in_chain)
+    next_token();
+
+    if(next_token()!=SYMBOL)
     {
-      next_token(); // eat the '('that starts the bindings list
+      error() << "expected symbol in binding" << eom;
+      return nil_exprt();
     }
 
-    next_token(); // eat the '(' that starts the next binding
+    irep_idt identifier=buffer;
 
-    // get op0
-    if(next_token()==SYMBOL)
+    // note that the previous bindings are _not_ visible yet
+    exprt value=expression();
+
+    if(next_token()!=CLOSE)
     {
-      symbol_exprt operand0(buffer, sort());
-      result.op0() = operand0;
-    }
-    else
-    {
-      error() << "expected symbol in let expression" << eom;
-      return result;
+      error() << "expected ')' after value in binding" << eom;
+      return nil_exprt();
     }
 
-    // get op1
-    result.op1() = expression();
-    next_token(); // eat the ')' that closes this binding
-
-    if(peek()!=CLOSE) // we are still in a chain of bindings
-    {
-      // get op2
-      result.op2() = let_expression(false);
-      result.type() = result.op2().type();
-    }
-    else
-    {
-      // we are at the end of the chain
-      next_token(); // eat the ')' that closes the bindings list
-
-      if(peek()!=OPEN)
-      {
-        error() << "let expects where here" << eom;
-        return result;
-      }
-
-      result.op2() = expression();
-      result.type()=result.op2().type();
-      next_token(); // eat the final ')' that closes the let exprt
-    }
+    bindings.push_back(
+      std::pair<irep_idt, exprt>(identifier, value));
   }
+
+  if(next_token()!=CLOSE)
+  {
+    error() << "expected ')' at end of bindings" << eom;
+    return nil_exprt();
+  }
+
+  // go forwards, add to scope
+  for(const auto &b : bindings)
+  {
+    id_stack.push_back(id_mapt());
+    auto &entry=id_stack.back()[b.first];
+    entry.type=b.second.type();
+    entry.definition=b.second;
+  }
+
+  exprt expr=expression();
+
+  if(next_token()!=CLOSE)
+  {
+    error() << "expected ')' after let" << eom;
+    return nil_exprt();
+  }
+
+  exprt result=expr;
+
+  // go backwards
+  for(auto r_it=bindings.rbegin(); r_it!=bindings.rend(); r_it++)
+  {
+    let_exprt let;
+    let.symbol()=symbol_exprt(r_it->first, r_it->second.type());
+    let.value()=r_it->second;
+    let.where().swap(result);
+    result=let;
+    id_stack.pop_back();
+  }
+
   return result;
 }
 
@@ -427,8 +441,7 @@ exprt new_smt2_parsert::expression()
 
       if(id==ID_let)
       {
-        // bool indicates first in chain
-        return let_expression(true);
+        return let_expression();
       }
       else if(id==ID_forall || id==ID_exists)
       {
