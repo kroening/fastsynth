@@ -1,0 +1,25 @@
+The following expressions are not supported:
+sign_extend
+extract
+distinct
+bvsmod
+bitvector constants of the form (_bvX n) where X is the value of the bitvector, in decimal i think, and n is the size of the bitvector, e.g., "(_ bv0 24)???
+
+----
+There is also a problem with divide by zero:
+
+(set-logic QF_BV)
+
+;;;; division by zero evaluates to all ones.
+(assert (= #b0 (bvudiv #b1 #b0)))
+
+(check-sat)
+(exit)
+
+invariant violation: File smt2_parser.cpp function expression line 427
+
+---------------
+
+And there is a problem with let parsing. But it only occurs in massive files, e.g.,
+/2017-BuchwaldFried/counterexample.dump.ia32_Mul_base_disp--Add32.load32.Mul32.Mulh_u32.0005.smt2
+
