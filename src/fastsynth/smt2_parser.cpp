@@ -414,7 +414,7 @@ exprt new_smt2_parsert::expression()
     {
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 16);
-      const std::size_t width = 4*(buffer.length() - 2);
+      const std::size_t width = 4*(buffer.size() - 2);
       CHECK_RETURN(width!=0 && width%4==0);
       unsignedbv_typet type(width);
       return from_integer(value, type);
@@ -424,7 +424,7 @@ exprt new_smt2_parsert::expression()
       mp_integer value=
         string2integer(std::string(buffer, 2, std::string::npos), 2);
       const std::size_t width = buffer.size() - 2;
-      CHECK_RETURN(width!=0 && width%2==0);
+      CHECK_RETURN(width!=0);
       unsignedbv_typet type(width);
       return from_integer(value, type);
     }
@@ -508,6 +508,30 @@ exprt new_smt2_parsert::expression()
           unsignedbv_typet t(upper-lower+1);
 
           return extractbits_exprt(op, upper_e, lower_e, t);
+        }
+        else if(id=="sign_extend")
+        {
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected numeral after sign_extend" << eom;
+            return nil_exprt();
+          }
+
+          auto extra_bits=std::stoll(buffer);
+
+          if(next_token()!=CLOSE)
+          {
+            error() << "expected ')' after sign_extend" << eom;
+            return nil_exprt();
+          }
+
+          auto op=expression();
+
+          auto width=to_unsignedbv_type(op.type()).get_width();
+          signedbv_typet signed_type(width+extra_bits);
+          unsignedbv_typet unsigned_type(width+extra_bits);
+
+          return typecast_exprt(typecast_exprt(op, signed_type), unsigned_type);
         }
         else
         {
@@ -647,6 +671,12 @@ exprt new_smt2_parsert::expression()
           op[1]=cast_bv_to_signed(op[1]);
           return cast_bv_to_unsigned(binary(ID_mod, op));
         }
+        else if(id=="bvsmod")
+        {
+          op[0]=cast_bv_to_signed(op[0]);
+          op[1]=cast_bv_to_signed(op[1]);
+          return cast_bv_to_unsigned(binary(ID_mod, op));
+        }
         else if(id=="bvurem" || id=="%")
         {
           return binary(ID_mod, op);
@@ -665,6 +695,11 @@ exprt new_smt2_parsert::expression()
           unsignedbv_typet t(width0+width1);
 
           return binary_exprt(op[0], ID_concatenation, op[1], t);
+        }
+        else if(id=="distinct")
+        {
+          // pair-wise different constraint, multi-ary
+          return multi_ary("distinct", op);
         }
         else if(id=="ite")
         {
