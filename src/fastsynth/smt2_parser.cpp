@@ -434,7 +434,7 @@ exprt new_smt2_parsert::expression()
     }
 
   case OPEN:
-    if(next_token()==SYMBOL)
+    if(next_token()==SYMBOL) // function application
     {
       // hash it
       const irep_idt id=buffer;
@@ -748,8 +748,12 @@ exprt new_smt2_parsert::expression()
     }
     else
     {
-      error() << "expected symbol after '(' in an expression" << eom;
-      return nil_exprt();
+      // just parentheses
+      exprt tmp=expression();
+      if(next_token()!=CLOSE)
+        error() << "mismatched parentheses in an expression" << eom;
+
+      return tmp;
     }
 
   case END_OF_FILE:
