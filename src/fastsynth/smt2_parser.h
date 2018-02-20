@@ -45,6 +45,7 @@ protected:
 
   void ignore_command();
   exprt expression();
+  exprt function_application();
   typet sort();
   exprt::operandst operands();
   typet function_signature_declaration();

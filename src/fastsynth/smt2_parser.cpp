@@ -379,6 +379,391 @@ exprt new_smt2_parsert::binary(irep_idt id, exprt::operandst &op)
   }
 }
 
+exprt new_smt2_parsert::function_application()
+{
+  switch(next_token())
+  {
+  case SYMBOL:
+    if(buffer=="_") // indexed identifier
+    {
+      // indexed identifier
+      if(next_token()!=SYMBOL)
+      {
+        error() << "expected symbol after '_'" << eom;
+        return nil_exprt();
+      }
+
+      if(has_prefix(buffer, "bv"))
+      {
+        mp_integer i=string2integer(std::string(buffer, 2, std::string::npos));
+
+        if(next_token()!=NUMERAL)
+        {
+          error() << "expected numeral as bitvector literal width" << eom;
+          return nil_exprt();
+        }
+
+        auto width=std::stoll(buffer);
+
+        if(next_token()!=CLOSE)
+        {
+          error() << "expected ')' after bitvector literal" << eom;
+          return nil_exprt();
+        }
+
+        return from_integer(i, unsignedbv_typet(width));
+      }
+      else
+      {
+        error() << "unknown indexed identifier " << buffer << eom;
+        return nil_exprt();
+      }
+    }
+    else
+    {
+      // hash it
+      const irep_idt id=buffer;
+
+      if(id==ID_let)
+        return let_expression();
+      else if(id==ID_forall || id==ID_exists)
+        return quantifier_expression(id);
+
+      auto op=operands();
+
+      if(id==ID_and ||
+         id==ID_or ||
+         id==ID_xor)
+      {
+        return multi_ary(id, op);
+      }
+      else if(id==ID_not)
+      {
+        return unary(id, op);
+      }
+      else if(id==ID_equal ||
+              id==ID_le ||
+              id==ID_ge ||
+              id==ID_lt ||
+              id==ID_gt)
+      {
+        return binary_predicate(id, op);
+      }
+      else if(id=="bvule")
+      {
+        return binary_predicate(ID_le, op);
+      }
+      else if(id=="bvsle")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return binary_predicate(ID_le, op);
+      }
+      else if(id=="bvuge")
+      {
+        return binary_predicate(ID_ge, op);
+      }
+      else if(id=="bvsge")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return binary_predicate(ID_ge, op);
+      }
+      else if(id=="bvult")
+      {
+        return binary_predicate(ID_lt, op);
+      }
+      else if(id=="bvslt")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return binary_predicate(ID_lt, op);
+      }
+      else if(id=="bvugt")
+      {
+        return binary_predicate(ID_gt, op);
+      }
+      else if(id=="bvsgt")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return binary_predicate(ID_gt, op);
+      }
+      else if(id=="bvashr")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return cast_bv_to_unsigned(binary(ID_shr, op));
+      }
+      else if(id=="bvlshr" || id=="bvshr")
+      {
+        return binary(ID_shr, op);
+      }
+      else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
+      {
+        return binary(ID_shl, op);
+      }
+      else if(id=="bvand")
+      {
+        return multi_ary(ID_bitand, op);
+      }
+      else if(id=="bvor")
+      {
+        return multi_ary(ID_bitor, op);
+      }
+      else if(id=="bvxor")
+      {
+        return multi_ary(ID_bitxor, op);
+      }
+      else if(id=="bvnot")
+      {
+        return unary(ID_bitnot, op);
+      }
+      else if(id=="bvneg")
+      {
+        return unary(ID_unary_minus, op);
+      }
+      else if(id=="bvadd")
+      {
+        return multi_ary(ID_plus, op);
+      }
+      else if(id==ID_plus)
+      {
+        return multi_ary(id, op);
+      }
+      else if(id=="bvsub" || id=="-")
+      {
+        return binary(ID_minus, op);
+      }
+      else if(id=="bvmul" || id=="*")
+      {
+        return binary(ID_mult, op);
+      }
+      else if(id=="bvsdiv")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return cast_bv_to_unsigned(binary(ID_div, op));
+      }
+      else if(id=="bvudiv")
+      {
+        return binary(ID_div, op);
+      }
+      else if(id=="/" || id=="div")
+      {
+        return binary(ID_div, op);
+      }
+      else if(id=="bvsrem")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return cast_bv_to_unsigned(binary(ID_mod, op));
+      }
+      else if(id=="bvsmod")
+      {
+        op[0]=cast_bv_to_signed(op[0]);
+        op[1]=cast_bv_to_signed(op[1]);
+        return cast_bv_to_unsigned(binary(ID_mod, op));
+      }
+      else if(id=="bvurem" || id=="%")
+      {
+        return binary(ID_mod, op);
+      }
+      else if(id=="concat")
+      {
+        if(op.size()!=2)
+        {
+          error() << "concat takes two operands " << op.size() << eom;
+          return nil_exprt();
+        }
+
+        auto width0=to_unsignedbv_type(op[0].type()).get_width();
+        auto width1=to_unsignedbv_type(op[1].type()).get_width();
+
+        unsignedbv_typet t(width0+width1);
+
+        return binary_exprt(op[0], ID_concatenation, op[1], t);
+      }
+      else if(id=="distinct")
+      {
+        // pair-wise different constraint, multi-ary
+        return multi_ary("distinct", op);
+      }
+      else if(id=="ite")
+      {
+        if(op.size()!=3)
+        {
+          error() << "ite takes three operands" << eom;
+          return nil_exprt();
+        }
+
+        if(op[0].type().id()!=ID_bool)
+        {
+          error() << "ite takes a boolean as first operand" << eom;
+          return nil_exprt();
+        }
+
+        if(op[1].type()!=op[2].type())
+        {
+          error() << "ite needs matching types" << eom;
+          return nil_exprt();
+        }
+
+        return if_exprt(op[0], op[1], op[2]);
+      }
+      else if(id=="=>" || id=="implies")
+      {
+        return binary(ID_implies, op);
+      }
+      else
+      {
+        // rummage through stack of IDs
+        for(auto r_it=id_stack.rbegin();
+            r_it!=id_stack.rend();
+            r_it++)
+        {
+          auto id_it=r_it->find(id);
+          if(id_it!=r_it->end())
+          {
+            return symbol_exprt(id, id_it->second.type);
+          }
+        }
+
+        error() << "2 unknown symbol " << id << eom;
+        return nil_exprt();
+      }
+    }
+    break;
+
+  case OPEN: // likely indexed identifier
+    if(peek()==SYMBOL)
+    {
+      next_token(); // eat symbol
+      if(buffer=="_")
+      {
+        // indexed identifier
+        if(next_token()!=SYMBOL)
+        {
+          error() << "expected symbol after '_'" << eom;
+          return nil_exprt();
+        }
+
+        irep_idt id=buffer; // hash it
+
+        if(id=="extract")
+        {
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected numeral after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto upper=std::stoll(buffer);
+
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected two numerals after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto lower=std::stoll(buffer);
+
+          if(next_token()!=CLOSE)
+          {
+            error() << "expected ')' after extract" << eom;
+            return nil_exprt();
+          }
+
+          auto op=operands();
+
+          if(op.size()!=1)
+          {
+            error() << "extract takes one operand" << eom;
+            return nil_exprt();
+          }
+
+          auto upper_e=from_integer(upper, integer_typet());
+          auto lower_e=from_integer(lower, integer_typet());
+
+          unsignedbv_typet t(upper-lower+1);
+
+          return extractbits_exprt(op[0], upper_e, lower_e, t);
+        }
+        else if(id=="sign_extend")
+        {
+          if(next_token()!=NUMERAL)
+          {
+            error() << "expected numeral after sign_extend" << eom;
+            return nil_exprt();
+          }
+
+          auto extra_bits=std::stoll(buffer);
+
+          if(next_token()!=CLOSE)
+          {
+            error() << "expected ')' after sign_extend" << eom;
+            return nil_exprt();
+          }
+
+          auto op=operands();
+
+          if(op.size()!=1)
+          {
+            error() << "sign_extend takes one operand" << eom;
+            return nil_exprt();
+          }
+
+          auto width=to_unsignedbv_type(op[0].type()).get_width();
+          signedbv_typet signed_type(width+extra_bits);
+          unsignedbv_typet unsigned_type(width+extra_bits);
+
+          return typecast_exprt(typecast_exprt(op[0], signed_type), unsigned_type);
+        }
+        else
+        {
+          error() << "unknown indexed identifier " << buffer << eom;
+          return nil_exprt();
+        }
+      }
+      else
+      {
+        // just double parentheses
+        error() << "expected symbol or indexed identifier after '(' in an expression" << eom;
+
+        exprt tmp=expression();
+
+        if(next_token()!=CLOSE && next_token()!=CLOSE)
+          error() << "mismatched parentheses in an expression" << eom;
+
+        return tmp;
+      }
+    }
+    else
+    {
+      // just double parentheses
+      error() << "expected symbol or indexed identifier after '(' in an expression" << eom;
+
+      exprt tmp=expression();
+
+      if(next_token()!=CLOSE && next_token()!=CLOSE)
+        error() << "mismatched parentheses in an expression" << eom;
+
+      return tmp;
+    }
+    break;
+
+  default:;
+    // just parentheses
+    error() << "expected symbol or indexed identifier after '(' in an expression" << eom;
+
+    exprt tmp=expression();
+    if(next_token()!=CLOSE)
+      error() << "mismatched parentheses in an expression" << eom;
+
+    return tmp;
+  }
+}
+
 exprt new_smt2_parsert::expression()
 {
   switch(next_token())
@@ -404,7 +789,7 @@ exprt new_smt2_parsert::expression()
             return symbol_exprt(identifier, id_it->second.type);
         }
 
-        error() << "unknown symbol " << identifier << eom;
+        error() << "1 unknown symbol " << identifier << eom;
         return nil_exprt();
       }
     }
@@ -433,328 +818,8 @@ exprt new_smt2_parsert::expression()
       return constant_exprt(buffer, integer_typet());
     }
 
-  case OPEN:
-    if(next_token()==SYMBOL) // function application
-    {
-      // hash it
-      const irep_idt id=buffer;
-
-      if(id==ID_let)
-      {
-        return let_expression();
-      }
-      else if(id==ID_forall || id==ID_exists)
-      {
-        return quantifier_expression(id);
-      }
-
-      if(id=="_")
-      {
-        // indexed identifier
-        if(next_token()!=SYMBOL)
-        {
-          error() << "expected symbol after '_'" << eom;
-          return nil_exprt();
-        }
-
-        if(has_prefix(buffer, "bv"))
-        {
-          mp_integer i=string2integer(std::string(buffer, 2, std::string::npos));
-
-          if(next_token()!=NUMERAL)
-          {
-            error() << "expected numeral as bitvector literal width" << eom;
-            return nil_exprt();
-          }
-
-          auto width=std::stoll(buffer);
-
-          if(next_token()!=CLOSE)
-          {
-            error() << "expected ')' after bitvector literal" << eom;
-            return nil_exprt();
-          }
-
-          return from_integer(i, unsignedbv_typet(width));
-        }
-        else if(id=="extract")
-        {
-          if(next_token()!=NUMERAL)
-          {
-            error() << "expected numeral after extract" << eom;
-            return nil_exprt();
-          }
-
-          auto upper=std::stoll(buffer);
-
-          if(next_token()!=NUMERAL)
-          {
-            error() << "expected two numerals after extract" << eom;
-            return nil_exprt();
-          }
-
-          auto lower=std::stoll(buffer);
-
-          if(next_token()!=CLOSE)
-          {
-            error() << "expected ')' after extract" << eom;
-            return nil_exprt();
-          }
-
-          auto upper_e=from_integer(upper, integer_typet());
-          auto lower_e=from_integer(lower, integer_typet());
-
-          auto op=expression();
-          unsignedbv_typet t(upper-lower+1);
-
-          return extractbits_exprt(op, upper_e, lower_e, t);
-        }
-        else if(id=="sign_extend")
-        {
-          if(next_token()!=NUMERAL)
-          {
-            error() << "expected numeral after sign_extend" << eom;
-            return nil_exprt();
-          }
-
-          auto extra_bits=std::stoll(buffer);
-
-          if(next_token()!=CLOSE)
-          {
-            error() << "expected ')' after sign_extend" << eom;
-            return nil_exprt();
-          }
-
-          auto op=expression();
-
-          auto width=to_unsignedbv_type(op.type()).get_width();
-          signedbv_typet signed_type(width+extra_bits);
-          unsignedbv_typet unsigned_type(width+extra_bits);
-
-          return typecast_exprt(typecast_exprt(op, signed_type), unsigned_type);
-        }
-        else
-        {
-          error() << "unknown indexed identifier " << buffer << eom;
-          return nil_exprt();
-        }
-      }
-      else
-      {
-        auto op=operands();
-
-        if(id==ID_and ||
-           id==ID_or ||
-           id==ID_xor)
-        {
-          return multi_ary(id, op);
-        }
-        else if(id==ID_not)
-        {
-          return unary(id, op);
-        }
-        else if(id==ID_equal ||
-                id==ID_le ||
-                id==ID_ge ||
-                id==ID_lt ||
-                id==ID_gt)
-        {
-          return binary_predicate(id, op);
-        }
-        else if(id=="bvule")
-        {
-          return binary_predicate(ID_le, op);
-        }
-        else if(id=="bvsle")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return binary_predicate(ID_le, op);
-        }
-        else if(id=="bvuge")
-        {
-          return binary_predicate(ID_ge, op);
-        }
-        else if(id=="bvsge")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return binary_predicate(ID_ge, op);
-        }
-        else if(id=="bvult")
-        {
-          return binary_predicate(ID_lt, op);
-        }
-        else if(id=="bvslt")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return binary_predicate(ID_lt, op);
-        }
-        else if(id=="bvugt")
-        {
-          return binary_predicate(ID_gt, op);
-        }
-        else if(id=="bvsgt")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return binary_predicate(ID_gt, op);
-        }
-        else if(id=="bvashr")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return cast_bv_to_unsigned(binary(ID_shr, op));
-        }
-        else if(id=="bvlshr" || id=="bvshr")
-        {
-          return binary(ID_shr, op);
-        }
-        else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
-        {
-          return binary(ID_shl, op);
-        }
-        else if(id=="bvand")
-        {
-          return multi_ary(ID_bitand, op);
-        }
-        else if(id=="bvor")
-        {
-          return multi_ary(ID_bitor, op);
-        }
-        else if(id=="bvxor")
-        {
-          return multi_ary(ID_bitxor, op);
-        }
-        else if(id=="bvnot")
-        {
-          return unary(ID_bitnot, op);
-        }
-        else if(id=="bvneg")
-        {
-          return unary(ID_unary_minus, op);
-        }
-        else if(id=="bvadd")
-        {
-          return multi_ary(ID_plus, op);
-        }
-        else if(id==ID_plus)
-        {
-          return multi_ary(id, op);
-        }
-        else if(id=="bvsub" || id=="-")
-        {
-          return binary(ID_minus, op);
-        }
-        else if(id=="bvmul" || id=="*")
-        {
-          return binary(ID_mult, op);
-        }
-        else if(id=="bvsdiv")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return cast_bv_to_unsigned(binary(ID_div, op));
-        }
-        else if(id=="bvudiv")
-        {
-          return binary(ID_div, op);
-        }
-        else if(id=="/" || id=="div")
-        {
-          return binary(ID_div, op);
-        }
-        else if(id=="bvsrem")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return cast_bv_to_unsigned(binary(ID_mod, op));
-        }
-        else if(id=="bvsmod")
-        {
-          op[0]=cast_bv_to_signed(op[0]);
-          op[1]=cast_bv_to_signed(op[1]);
-          return cast_bv_to_unsigned(binary(ID_mod, op));
-        }
-        else if(id=="bvurem" || id=="%")
-        {
-          return binary(ID_mod, op);
-        }
-        else if(id=="concat")
-        {
-          if(op.size()!=2)
-          {
-            error() << "concat takes three operands" << eom;
-            return nil_exprt();
-          }
-
-          auto width0=to_unsignedbv_type(op[0].type()).get_width();
-          auto width1=to_unsignedbv_type(op[1].type()).get_width();
-
-          unsignedbv_typet t(width0+width1);
-
-          return binary_exprt(op[0], ID_concatenation, op[1], t);
-        }
-        else if(id=="distinct")
-        {
-          // pair-wise different constraint, multi-ary
-          return multi_ary("distinct", op);
-        }
-        else if(id=="ite")
-        {
-          if(op.size()!=3)
-          {
-            error() << "ite takes three operands" << eom;
-            return nil_exprt();
-          }
-
-          if(op[0].type().id()!=ID_bool)
-          {
-            error() << "ite takes a boolean as first operand" << eom;
-            return nil_exprt();
-          }
-
-          if(op[1].type()!=op[2].type())
-          {
-            error() << "ite needs matching types" << eom;
-            return nil_exprt();
-          }
-
-          return if_exprt(op[0], op[1], op[2]);
-        }
-        else if(id=="=>" || id=="implies")
-        {
-          return binary(ID_implies, op);
-        }
-        else
-        {
-          // rummage through stack of IDs
-          for(auto r_it=id_stack.rbegin();
-              r_it!=id_stack.rend();
-              r_it++)
-          {
-            auto id_it=r_it->find(id);
-            if(id_it!=r_it->end())
-            {
-              return symbol_exprt(id, id_it->second.type);
-            }
-          }
-
-          error() << "unknown symbol " << id << eom;
-          return nil_exprt();
-        }
-      }
-    }
-    else
-    {
-      // just parentheses
-      exprt tmp=expression();
-      if(next_token()!=CLOSE)
-        error() << "mismatched parentheses in an expression" << eom;
-
-      return tmp;
-    }
+  case OPEN: // function application
+    return function_application();
 
   case END_OF_FILE:
     error() << "EOF in an expression" << eom;
