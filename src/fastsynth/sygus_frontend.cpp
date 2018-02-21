@@ -6,7 +6,6 @@
 #include <util/cout_message.h>
 #include <util/namespace.h>
 #include <util/symbol_table.h>
-#include <util/time_stopping.h>
 #include <util/config.h>
 
 #include <ansi-c/ansi_c_language.h>
@@ -15,6 +14,7 @@
 #include <langapi/mode.h>
 
 #include <fstream>
+#include <chrono>
 
 int sygus_frontend(const cmdlinet &cmdline)
 {
@@ -85,7 +85,7 @@ int sygus_frontend(const cmdlinet &cmdline)
   if(cmdline.isset("literals"))
     problem.literals=find_literals(problem);
 
-  auto start_time=current_time();
+  auto start_time=std::chrono::steady_clock::now();
 
   switch(cegis(problem))
   {
@@ -106,7 +106,8 @@ int sygus_frontend(const cmdlinet &cmdline)
     message.result() << messaget::eom;
 
     message.statistics() << "Synthesis time: "
-                         << current_time()-start_time
+                         << std::chrono::duration<double>(
+                               std::chrono::steady_clock::now()-start_time).count()
                          << 's'
                          << messaget::eom;
     break;

@@ -4,13 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <chrono>
 
 #include <util/cmdline.h>
 #include <util/cout_message.h>
 #include <util/config.h>
 #include <util/arith_tools.h>
 #include <util/std_types.h>
-#include <util/time_stopping.h>
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
@@ -185,8 +185,8 @@ int c_frontend(const cmdlinet &cmdline)
 
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
-  symex_target_equationt equation(ns);
-  goto_symext goto_symex(mh, ns, new_symbol_table, equation);
+  symex_target_equationt equation;
+  goto_symext goto_symex(mh, goto_model.symbol_table, equation);
 
   goto_symex(goto_model.goto_functions);
 
@@ -213,7 +213,7 @@ int c_frontend(const cmdlinet &cmdline)
   cegis.use_smt=cmdline.isset("smt");
   cegis.logic="BV"; //default logic
 
-  auto start_time=current_time();
+  auto start_time=std::chrono::steady_clock::now();
 
   switch(cegis(problem))
   {
@@ -231,7 +231,8 @@ int c_frontend(const cmdlinet &cmdline)
     message.result() << messaget::eom;
 
     message.statistics() << "Synthesis time: "
-                         << current_time()-start_time
+                         << std::chrono::duration<double>(
+                              std::chrono::steady_clock::now()-start_time).count()
                          << 's'
                          << messaget::eom;
     break;
