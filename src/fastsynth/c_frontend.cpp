@@ -186,9 +186,12 @@ int c_frontend(const cmdlinet &cmdline)
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
   symex_target_equationt equation;
-  goto_symext goto_symex(mh, goto_model.symbol_table, equation);
+  goto_symext::branch_worklistt branch_worklist;
+  goto_symext goto_symex(mh, goto_model.symbol_table, equation, branch_worklist);
 
-  goto_symex(goto_model.goto_functions);
+  goto_symex.symex_from_entry_point_of(
+    goto_model.goto_functions,
+    new_symbol_table);
 
   #if 0
   show_formula(equation, ns);
