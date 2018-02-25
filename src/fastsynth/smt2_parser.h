@@ -13,7 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <util/std_expr.h>
 
-#include "smt2_tokenizer.h"
+#include <solvers/smt2/smt2_tokenizer.h>
 
 class new_smt2_parsert:public smt2_tokenizert
 {

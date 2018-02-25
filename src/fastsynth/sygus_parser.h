@@ -1,6 +1,6 @@
 #include <set>
 
-#include "smt2_tokenizer.h"
+#include <solvers/smt2/smt2_tokenizer.h>
 
 #include <util/std_expr.h>
 #include <util/std_types.h>
