@@ -555,12 +555,16 @@ exprt new_smt2_parsert::function_application()
       }
       else if(id=="bvsrem")
       {
+        // 2's complement signed remainder (sign follows dividend)
+        // This matches our ID_mod, and what C does since C99.
         op[0]=cast_bv_to_signed(op[0]);
         op[1]=cast_bv_to_signed(op[1]);
         return cast_bv_to_unsigned(binary(ID_mod, op));
       }
       else if(id=="bvsmod")
       {
+        // 2's complement signed remainder (sign follows divisor)
+        // We don't have that.
         op[0]=cast_bv_to_signed(op[0]);
         op[1]=cast_bv_to_signed(op[1]);
         return cast_bv_to_unsigned(binary(ID_mod, op));
