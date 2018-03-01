@@ -482,9 +482,7 @@ exprt sygus_parsert::expression()
         }
 
         ashr_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
+        result.type()=op[0].type();
         return result;
       }
       else if(id=="bvlshr" || id=="bvshr")
@@ -496,10 +494,7 @@ exprt sygus_parsert::expression()
         }
 
         lshr_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
-
+        result.type()=op[0].type();
         return result;
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
@@ -511,10 +506,7 @@ exprt sygus_parsert::expression()
         }
 
         shl_exprt result(op[0], op[1]);
-        bv_typet type(0u);
-        type.remove(ID_width);
-        result.type()=type;
-
+        result.type()=op[0].type();
         return result;
       }
       else if(id=="bvand")
