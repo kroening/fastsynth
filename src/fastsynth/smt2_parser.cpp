@@ -12,6 +12,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 void new_smt2_parsert::command_sequence()
 {
+  exit=false;
+
   while(next_token()==OPEN)
   {
     if(next_token()!=SYMBOL)
@@ -21,6 +23,9 @@ void new_smt2_parsert::command_sequence()
     }
 
     command(buffer);
+
+    if(exit)
+      return;
 
     switch(next_token())
     {
@@ -85,6 +90,36 @@ exprt::operandst new_smt2_parsert::operands()
   return result;
 }
 
+irep_idt new_smt2_parsert::get_fresh_id(const irep_idt &id)
+{
+  if(id_map[id].type.is_nil())
+    return id; // id not yet used
+
+  auto &count=renaming_counters[id];
+  irep_idt new_id;
+  do
+  {
+    new_id=id2string(id)+'#'+std::to_string(count);
+    count++;
+  }
+  while(id_map.find(new_id)!=id_map.end());
+
+  // record renaming
+  renaming_map[id]=new_id;
+
+  return new_id;
+}
+
+irep_idt new_smt2_parsert::rename_id(const irep_idt &id) const
+{
+  auto it=renaming_map.find(id);
+
+  if(it==renaming_map.end())
+    return id;
+  else
+    return it->second;
+}
+
 exprt new_smt2_parsert::let_expression()
 {
   if(next_token()!=OPEN)
@@ -126,11 +161,15 @@ exprt new_smt2_parsert::let_expression()
     return nil_exprt();
   }
 
-  // go forwards, add to scope
-  for(const auto &b : bindings)
+  // save the renaming map
+  renaming_mapt old_renaming_map=renaming_map;
+
+  // go forwards, add to id_map, renaming if need be
+  for(auto &b : bindings)
   {
-    id_stack.push_back(id_mapt());
-    auto &entry=id_stack.back()[b.first];
+    // get a fresh id for it
+    b.first=get_fresh_id(b.first);
+    auto &entry=id_map[b.first];
     entry.type=b.second.type();
     entry.definition=b.second;
   }
@@ -145,16 +184,23 @@ exprt new_smt2_parsert::let_expression()
 
   exprt result=expr;
 
-  // go backwards
+  // go backwards, build let_expr
   for(auto r_it=bindings.rbegin(); r_it!=bindings.rend(); r_it++)
   {
     let_exprt let;
     let.symbol()=symbol_exprt(r_it->first, r_it->second.type());
     let.value()=r_it->second;
+    let.type()=result.type();
     let.where().swap(result);
     result=let;
-    id_stack.pop_back();
   }
+
+  // remove bindings from id_map
+  for(const auto &b : bindings)
+    id_map.erase(b.first);
+
+  // restore renamings
+  renaming_map=old_renaming_map;
 
   return result;
 }
@@ -198,11 +244,10 @@ exprt new_smt2_parsert::quantifier_expression(irep_idt id)
     return nil_exprt();
   }
 
-  // go forwards, add to scope
+  // go forwards, add to id_map
   for(const auto &b : bindings)
   {
-    id_stack.push_back(id_mapt());
-    auto &entry=id_stack.back()[b.get_identifier()];
+    auto &entry=id_map[b.get_identifier()];
     entry.type=b.type();
     entry.definition=nil_exprt();
   }
@@ -217,14 +262,17 @@ exprt new_smt2_parsert::quantifier_expression(irep_idt id)
 
   exprt result=expr;
 
-  // go backwards
+  // remove bindings from id_map
+  for(const auto &b : bindings)
+    id_map.erase(b.get_identifier());
+
+  // go backwards, build quantified expression
   for(auto r_it=bindings.rbegin(); r_it!=bindings.rend(); r_it++)
   {
     binary_predicate_exprt quantifier(id);
     quantifier.op0()=*r_it;
     quantifier.op1().swap(result);
     result=quantifier;
-    id_stack.pop_back();
   }
 
   return result;
@@ -319,7 +367,10 @@ exprt new_smt2_parsert::multi_ary(irep_idt id, exprt::operandst &op)
     {
       if(op[i].type()!=op[0].type())
       {
-        error() << "expression must have operands with matching types" << eom;
+        error() << "expression must have operands with matching types,"
+                   " but got `"
+                << op[0].type().pretty()
+                << "' and `" << op[i].type().pretty() << '\'' << eom;
         return nil_exprt();
       }
     }
@@ -341,7 +392,10 @@ exprt new_smt2_parsert::binary_predicate(irep_idt id, exprt::operandst &op)
   {
     if(op[0].type()!=op[1].type())
     {
-      error() << "expression must have operands with matching types" << eom;
+      error() << "expression must have operands with matching types,"
+                 " but got `"
+              << op[0].type().pretty()
+              << "' and `" << op[1].type().pretty() << '\'' << eom;
       return nil_exprt();
     }
 
@@ -421,7 +475,7 @@ exprt new_smt2_parsert::function_application()
     }
     else
     {
-      // hash it
+      // non-indexed symbol; hash it
       const irep_idt id=buffer;
 
       if(id==ID_let)
@@ -493,11 +547,11 @@ exprt new_smt2_parsert::function_application()
       {
         op[0]=cast_bv_to_signed(op[0]);
         op[1]=cast_bv_to_signed(op[1]);
-        return cast_bv_to_unsigned(binary(ID_shr, op));
+        return cast_bv_to_unsigned(binary(ID_ashr, op));
       }
       else if(id=="bvlshr" || id=="bvshr")
       {
-        return binary(ID_shr, op);
+        return binary(ID_lshr, op);
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
@@ -507,13 +561,25 @@ exprt new_smt2_parsert::function_application()
       {
         return multi_ary(ID_bitand, op);
       }
+      else if(id=="bvnand")
+      {
+        return multi_ary(ID_bitnand, op);
+      }
       else if(id=="bvor")
       {
         return multi_ary(ID_bitor, op);
       }
+      else if(id=="bvnor")
+      {
+        return multi_ary(ID_bitnor, op);
+      }
       else if(id=="bvxor")
       {
         return multi_ary(ID_bitxor, op);
+      }
+      else if(id=="bvxnor")
+      {
+        return multi_ary(ID_bitxnor, op);
       }
       else if(id=="bvnot")
       {
@@ -621,16 +687,22 @@ exprt new_smt2_parsert::function_application()
       }
       else
       {
-        // rummage through stack of IDs
-        for(auto r_it=id_stack.rbegin();
-            r_it!=id_stack.rend();
-            r_it++)
+        // rummage through id_map
+        const irep_idt final_id=rename_id(id);
+        auto id_it=id_map.find(final_id);
+        if(id_it!=id_map.end())
         {
-          auto id_it=r_it->find(id);
-          if(id_it!=r_it->end())
+          if(id_it->second.type.id()==ID_mathematical_function)
           {
-            return symbol_exprt(id, id_it->second.type);
+            function_application_exprt app;
+            app.function()=symbol_exprt(final_id, id_it->second.type);
+            app.arguments()=op;
+            app.type()=to_mathematical_function_type(
+              id_it->second.type).codomain();
+            return app;
           }
+          else
+            return symbol_exprt(final_id, id_it->second.type);
         }
 
         error() << "2 unknown symbol " << id << eom;
@@ -783,15 +855,11 @@ exprt new_smt2_parsert::expression()
         return false_exprt();
       else
       {
-        // rummage through stack of IDs
-        for(auto r_it=id_stack.rbegin();
-            r_it!=id_stack.rend();
-            r_it++)
-        {
-          auto id_it=r_it->find(identifier);
-          if(id_it!=r_it->end())
-            return symbol_exprt(identifier, id_it->second.type);
-        }
+        // rummage through id_map
+        const irep_idt final_id=rename_id(identifier);
+        auto id_it=id_map.find(final_id);
+        if(id_it!=id_map.end())
+          return symbol_exprt(final_id, id_it->second.type);
 
         error() << "1 unknown symbol " << identifier << eom;
         return nil_exprt();
@@ -940,7 +1008,7 @@ typet new_smt2_parsert::function_signature_definition()
     var.set_identifier(id);
     var.type()=sort();
 
-    auto &entry=id_stack.back()[id];
+    auto &entry=id_map[id];
     entry.type=var.type();
     entry.definition=nil_exprt();
 
@@ -1007,7 +1075,29 @@ typet new_smt2_parsert::function_signature_declaration()
 
 void new_smt2_parsert::command(const std::string &c)
 {
-  if(c=="declare-fun")
+  if(c=="declare-const")
+  {
+    if(next_token()!=SYMBOL)
+    {
+      error() << "expected a symbol after declare-const" << eom;
+      ignore_command();
+      return;
+    }
+
+    irep_idt id=buffer;
+
+    if(id_map.find(id)!=id_map.end())
+    {
+      error() << "identifier `" << id << "' defined twice" << eom;
+      ignore_command();
+      return;
+    }
+
+    auto &entry=id_map[id];
+    entry.type=sort();
+    entry.definition=nil_exprt();
+  }
+  else if(c=="declare-fun")
   {
     if(next_token()!=SYMBOL)
     {
@@ -1018,14 +1108,14 @@ void new_smt2_parsert::command(const std::string &c)
 
     irep_idt id=buffer;
 
-    if(id_stack.back().find(id)!=id_stack.back().end())
+    if(id_map.find(id)!=id_map.end())
     {
       error() << "identifier `" << id << "' defined twice" << eom;
       ignore_command();
       return;
     }
 
-    auto &entry=id_stack.back()[id];
+    auto &entry=id_map[id];
     entry.type=function_signature_declaration();
     entry.definition=nil_exprt();
   }
@@ -1040,7 +1130,7 @@ void new_smt2_parsert::command(const std::string &c)
 
     const irep_idt id=buffer;
 
-    if(id_stack.back().find(id)!=id_stack.back().end())
+    if(id_map.find(id)!=id_map.end())
     {
       error() << "identifier `" << id << "' defined twice" << eom;
       ignore_command();
@@ -1048,16 +1138,19 @@ void new_smt2_parsert::command(const std::string &c)
     }
 
     // create the entry
-    id_stack.back()[id];
+    id_map[id];
 
-    id_stack.push_back(id_mapt());
     auto signature=function_signature_definition();
     exprt body=expression();
-    id_stack.pop_back();
 
-    auto &entry=id_stack.back()[id];
+    // set up the entry
+    auto &entry=id_map[id];
     entry.type=signature;
     entry.definition=body;
+  }
+  else if(c=="exit")
+  {
+    exit=true;
   }
   else
     ignore_command();

@@ -18,9 +18,10 @@ Author: Daniel Kroening, kroening@kroening.com
 class new_smt2_parsert:public smt2_tokenizert
 {
 public:
-  explicit new_smt2_parsert(std::istream &_in):smt2_tokenizert(_in)
+  explicit new_smt2_parsert(std::istream &_in):
+    smt2_tokenizert(_in),
+    exit(false)
   {
-    id_stack.push_back(id_mapt());
   }
 
   bool parse() override
@@ -31,17 +32,30 @@ public:
 
   struct idt
   {
+    idt():type(nil_typet())
+    {
+    }
+
     typet type;
     exprt definition;
   };
 
   using id_mapt=std::map<irep_idt, idt>;
-  std::vector<id_mapt> id_stack;
+  id_mapt id_map;
 
 protected:
+  bool exit;
   void command_sequence();
 
   virtual void command(const std::string &);
+
+  // for let/quantifier bindings, function parameters
+  using renaming_mapt=std::map<irep_idt, irep_idt>;
+  renaming_mapt renaming_map;
+  using renaming_counterst=std::map<irep_idt, unsigned>;
+  renaming_counterst renaming_counters;
+  irep_idt get_fresh_id(const irep_idt &);
+  irep_idt rename_id(const irep_idt &) const;
 
   void ignore_command();
   exprt expression();
