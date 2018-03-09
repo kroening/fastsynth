@@ -9,7 +9,8 @@ class sygus_parsert:public smt2_tokenizert
 {
 public:
   explicit sygus_parsert(std::istream &_in):
-    smt2_tokenizert(_in)
+    smt2_tokenizert(_in),
+    id_counter(0)
   {
   }
 
@@ -48,6 +49,10 @@ public:
   using variable_mapt=std::map<irep_idt, typet>;
   variable_mapt variable_map;
   variable_mapt local_variable_map;
+
+  unsigned id_counter;
+  using renaming_mapt=std::map<irep_idt, irep_idt>;
+  renaming_mapt renaming_map;
 
 protected:
   void command_sequence();

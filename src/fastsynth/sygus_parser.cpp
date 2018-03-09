@@ -103,11 +103,10 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
 
     next_token(); // eat the '(' that starts the next binding
 
-    // get op0
+    // get the symbol that is bound
     if(next_token()==SYMBOL)
     {
-      symbol_exprt operand0(buffer, sort());
-      result.op0() = operand0;
+      result.symbol() = symbol_exprt(buffer, sort());
     }
     else
     {
@@ -115,15 +114,24 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
       return result;
     }
 
-    // get op1
-    result.op1() = expression();
+    // get value
+    result.value() = expression();
     next_token(); // eat the ')' that closes this binding
+
+    // now rename op0 -- this really happens at the very
+    // end of the let, but that's hard with recursion
+    irep_idt old_id=result.symbol().get_identifier();
+    irep_idt new_id=id2string(old_id)+
+                    '#'+std::to_string(id_counter++);
+
+    result.symbol().set_identifier(new_id);
+    renaming_map[old_id]=new_id;
 
     if(peek()!=CLOSE) // we are still in a chain of bindings
     {
       // get op2
-      result.op2() = let_expression(false);
-      result.type() = result.op2().type();
+      result.where() = let_expression(false);
+      result.type() = result.where().type();
     }
     else
     {
@@ -136,10 +144,13 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
         return result;
       }
 
-      result.op2() = expression();
-      result.type()=result.op2().type();
+      result.where() = expression();
+      result.type()=result.where().type();
       next_token(); // eat the final ')' that closes the let exprt
     }
+
+    // don't rename any longer
+    renaming_map.erase(old_id);
   }
   return result;
 }
@@ -314,7 +325,12 @@ exprt sygus_parsert::expression()
     else
     {
       // hash it
-      const irep_idt identifier=buffer;
+      irep_idt identifier=buffer;
+
+      // renamed?
+      const auto r_it=renaming_map.find(identifier);
+      if(r_it!=renaming_map.end())
+        identifier=r_it->second;
 
       if(identifier==ID_true)
         return true_exprt();
