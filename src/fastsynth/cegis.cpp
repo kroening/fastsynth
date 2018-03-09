@@ -94,11 +94,6 @@ decision_proceduret::resultt cegist::loop(
         std::map<symbol_exprt, exprt> old_functions;
         old_functions.swap(solution.functions);
 
-        #if 0
-        synth_solver.print_assignment(debug());
-        debug() << eom;
-        #endif
-
         solution=learn.get_solution();
 
         for(auto &f : solution.functions)

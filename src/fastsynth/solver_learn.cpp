@@ -124,10 +124,21 @@ decision_proceduret::resultt solver_learnt::operator()(
     }
   }
 
-  const decision_proceduret::resultt result(solver());
+  const decision_proceduret::resultt result=solver();
 
-  if(decision_proceduret::resultt::D_SATISFIABLE == result)
+  switch(result)
+  {
+  case decision_proceduret::resultt::D_SATISFIABLE:
+    #if 1
+    solver.print_assignment(debug());
+    debug() << eom;
+    #endif
+
     last_solution = synth_encoding.get_solution(solver);
+    break;
+
+  default:;
+  }
 
   return result;
 }
