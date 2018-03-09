@@ -125,6 +125,7 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
                     '#'+std::to_string(id_counter++);
 
     result.symbol().set_identifier(new_id);
+    let_variable_map[new_id]=result.value().type();
     renaming_map[old_id]=new_id;
 
     if(peek()!=CLOSE) // we are still in a chain of bindings
@@ -151,6 +152,7 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
 
     // don't rename any longer
     renaming_map.erase(old_id);
+    let_variable_map.clear();
   }
   return result;
 }
@@ -347,6 +349,12 @@ exprt sygus_parsert::expression()
               variable_map.end())
       {
         return symbol_exprt(identifier, variable_map[identifier]);
+      }
+      else if(let_variable_map.find(identifier)!=
+          let_variable_map.end())
+      {
+        // search let variables, we clear let variables when done with parsing let
+        return symbol_exprt(identifier, let_variable_map[identifier]);
       }
       else if(function_map.find(identifier)!=
               function_map.end())
@@ -644,6 +652,11 @@ exprt sygus_parsert::expression()
         else if(local_variable_map.find(id)!=local_variable_map.end())
         {
           symbol_exprt result(id, local_variable_map[id]);
+          return result;
+        }
+        else if(let_variable_map.find(id)!=let_variable_map.end())
+        {
+          symbol_exprt result(id, let_variable_map[id]);
           return result;
         }
         else if(variable_map.find(id)!=variable_map.end())

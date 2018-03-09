@@ -49,6 +49,7 @@ public:
   using variable_mapt=std::map<irep_idt, typet>;
   variable_mapt variable_map;
   variable_mapt local_variable_map;
+  variable_mapt let_variable_map;
 
   unsigned id_counter;
   using renaming_mapt=std::map<irep_idt, irep_idt>;
