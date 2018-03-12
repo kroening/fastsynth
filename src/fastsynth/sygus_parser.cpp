@@ -87,6 +87,7 @@ exprt::operandst sygus_parsert::operands()
 let_exprt sygus_parsert::let_expression(bool first_in_chain)
 {
   let_exprt result;
+  let_counter++;
 
   if(peek()!=OPEN && !first_in_chain)
   {
@@ -122,10 +123,12 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
     // end of the let, but that's hard with recursion
     irep_idt old_id=result.symbol().get_identifier();
     irep_idt new_id=id2string(old_id)+
-                    '#'+std::to_string(id_counter++);
+                    '#'+std::to_string(id_counter++)+
+                    'L'+std::to_string(let_counter++);
 
     result.symbol().set_identifier(new_id);
     let_variable_map[new_id]=result.value().type();
+    full_let_variable_map[new_id]=result.value().type();
     renaming_map[old_id]=new_id;
 
     if(peek()!=CLOSE) // we are still in a chain of bindings
