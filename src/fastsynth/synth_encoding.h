@@ -11,12 +11,13 @@
 struct e_datat
 {
 public:
-  e_datat():enable_bitwise(false), setup_done(false) { }
+  e_datat():enable_bitwise(false), enable_division(false), setup_done(false) { }
 
   exprt operator()(
     const function_application_exprt &expr,
     const std::size_t program_size,
-    bool enable_bitwise)
+    bool enable_bitwise,
+    bool enable_division)
   {
     setup(expr, program_size, enable_bitwise);
     return result(expr.arguments());
@@ -102,6 +103,7 @@ public:
   std::size_t instance_number(const argumentst &);
 
   bool enable_bitwise;
+  bool enable_division;
 
   /// Pre-configured constants to include in the expression set.
   std::set<constant_exprt> literals;
@@ -120,7 +122,7 @@ protected:
 class synth_encodingt
 {
 public:
-  synth_encodingt():program_size(1), enable_bitwise(false)
+  synth_encodingt():program_size(1), enable_bitwise(false), enable_division(false)
   {
   }
 
@@ -131,6 +133,7 @@ public:
   std::string suffix;
   std::size_t program_size;
   bool enable_bitwise;
+  bool enable_division;
 
   using constraintst=std::list<exprt>;
   constraintst constraints;

@@ -1,5 +1,6 @@
 #include <util/std_types.h>
 #include <util/config.h>
+#include <util/bv_arithmetic.h>
 
 #include "synth_encoding.h"
 
@@ -106,7 +107,7 @@ void e_datat::setup(
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min" };
+        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div };
 
     std::size_t binary_op_index=0;
 
@@ -118,6 +119,11 @@ void e_datat::setup(
            operation==ID_bitor ||
            operation==ID_bitxor)
           continue;
+
+     if( (word_type.id()!=ID_unsignedbv &&
+         word_type.id()!=ID_signedbv) || !enable_division)
+       if(operation==ID_div)
+         continue;
 
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
@@ -154,7 +160,8 @@ void e_datat::setup(
                operation==ID_le ||
                operation==ID_notequal || // we got bitxor
                operation=="max" ||
-               operation=="min")
+               operation=="min" ||
+               operation==ID_div)
              continue;
 
             if(operation==ID_bitand)
@@ -263,6 +270,23 @@ exprt e_datat::instructiont::constraint(
           binary_predicate_exprt rel(op0, op, op1);
           if_exprt if_expr(rel, op0, op1);
           result_expr=chain(option.sel, if_expr, result_expr);
+        }
+        else if(option.operation=="ID_div")
+        {
+          // if op1 is zero, smt division returns 1111
+          equal_exprt op_divbyzero;
+          op_divbyzero.op0() = op1; //op1 is equal to 0?
+          op_divbyzero.op1() = constant_exprt("0", op1.type());
+          op_divbyzero.type() = bool_typet();
+
+          binary_exprt binary_expr(option.operation, word_type);
+          binary_expr.op0() = op0;
+          binary_expr.op1() = op1;
+
+          bv_spect spec(op0.type());
+          if_exprt if_expr(op_divbyzero, constant_exprt(integer2string(spec.max_value()), op0.type()),
+              binary_expr);
+          result_expr = chain(option.sel, if_expr, result_expr);
         }
         else
         {
@@ -510,7 +534,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
     e_datat &e_data=e_data_map[tmp.function()];
     if(e_data.word_type.id().empty())
       e_data.literals=literals;
-    exprt final_result=e_data(tmp, program_size, enable_bitwise);
+    exprt final_result=e_data(tmp, program_size, enable_bitwise, enable_division);
 
     for(const auto &c : e_data.constraints)
       constraints.push_back(c);
