@@ -16,6 +16,7 @@
    "(verbosity):" \
    "(smt)" \
    "(literals)" \
+   "(enable-division)" \
 
 int main(int argc, const char *argv[])
 {

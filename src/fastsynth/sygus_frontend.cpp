@@ -71,6 +71,7 @@ int sygus_frontend(const cmdlinet &cmdline)
   cegis.use_fm=cmdline.isset("fm");
   cegis.enable_bitwise=!cmdline.isset("no-bitwise");
   cegis.use_smt=cmdline.isset("smt");
+  cegis.enable_division=cmdline.isset("enable-division");
   cegis.logic=parser.logic;
 
   problemt problem;

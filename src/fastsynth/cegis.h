@@ -36,6 +36,7 @@ public:
   bool use_simp_solver;
   bool use_fm;
   bool enable_bitwise;
+  bool enable_division;
   bool use_smt;
   std::string logic; // used by smt
 
