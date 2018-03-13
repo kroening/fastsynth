@@ -1,5 +1,6 @@
 #include "sygus_parser.h"
 
+#include <util/bv_arithmetic.h>
 #include <util/std_types.h>
 #include <util/std_expr.h>
 #include <util/replace_symbol.h>
@@ -593,20 +594,51 @@ exprt sygus_parsert::expression()
         result.type()=result.op0().type();
         return result;
       }
-      else if(id=="bvsdiv" || id=="bvudiv")
+      else if(id=="bvudiv")
       {
-        div_exprt result;
-        result.operands()=op;
-        fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
+        div_exprt div_res;
+        div_res.operands()=op;
+        fix_binary_operation_operand_types(div_res);
+        div_res.type()=div_res.op0().type();
 
-        if(id=="bvsdiv")
-        {
-          result.op0()=cast_bv_to_signed(result.op0());
-          result.op1()=cast_bv_to_signed(result.op1());
-          return cast_bv_to_unsigned(result);
-        }
+        // is op1 equal to zero? If it is, division returns max value of op0
+        equal_exprt op_divbyzero;
+        op_divbyzero.op0() = div_res.op1();
+        op_divbyzero.op1() = constant_exprt("0", div_res.op1().type());
+        op_divbyzero.type() = bool_typet();
 
+        bv_spect spec(div_res.op0().type());
+        if_exprt result(
+            op_divbyzero,
+            constant_exprt(integer2string(spec.max_value()), div_res.op0().type()),
+            div_res);
+
+        result.type()=div_res.type();
+        return result;
+      }
+      else if(id == "bvsdiv")
+      {
+        div_exprt div_res;
+        div_res.operands() = op;
+        fix_binary_operation_operand_types(div_res);
+        div_res.type() = div_res.op0().type();
+
+        div_res.op0() = cast_bv_to_signed(div_res.op0());
+        div_res.op1() = cast_bv_to_signed(div_res.op1());
+        exprt signed_res = cast_bv_to_unsigned(div_res);
+
+        // is op1 equal to zero? If it is, division returns max value of op0
+        equal_exprt op_divbyzero;
+        op_divbyzero.op0() = signed_res.op1();
+        op_divbyzero.op1() = constant_exprt("0", signed_res.op1().type());
+        op_divbyzero.type() = bool_typet();
+
+        bv_spect spec(signed_res.op0().type());
+        if_exprt result(op_divbyzero,
+            constant_exprt(integer2string(spec.max_value()),
+                signed_res.op0().type()), signed_res);
+
+        result.type() = signed_res.type();
         return result;
       }
       else if(id=="/" || id=="div")
