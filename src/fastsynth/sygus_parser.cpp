@@ -108,7 +108,8 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
     // get the symbol that is bound
     if(next_token()==SYMBOL)
     {
-      result.symbol() = symbol_exprt(buffer, sort());
+      std::string tmp_buffer;
+      result.symbol() = symbol_exprt(tmp_buffer, sort());
     }
     else
     {
