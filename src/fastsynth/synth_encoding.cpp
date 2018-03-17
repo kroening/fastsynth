@@ -107,14 +107,17 @@ void e_datat::setup(
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div };
+        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div, ID_shl, ID_lshr, };
+   // static const irep_idt ops[]=
+     ///     { ID_plus, ID_minus, ID_ashr, ID_shr, ID_bitor };
 
     std::size_t binary_op_index=0;
 
     for(const auto operation : ops)
     {
       if(!enable_bitwise || word_type.id()==ID_integer)
-        if(operation==ID_shl ||
+        if(operation==ID_lshr ||
+           operation==ID_shl ||
            operation==ID_bitand ||
            operation==ID_bitor ||
            operation==ID_bitxor)
@@ -155,6 +158,7 @@ void e_datat::setup(
           {
             if(operation==ID_plus ||
                operation==ID_minus ||
+               operation==ID_lshr ||
                operation==ID_shl ||
                operation==ID_lt ||
                operation==ID_le ||
@@ -287,6 +291,19 @@ exprt e_datat::instructiont::constraint(
           if_exprt if_expr(op_divbyzero, constant_exprt(integer2string(spec.max_value()), op0.type()),
               binary_expr);
           result_expr = chain(option.sel, if_expr, result_expr);
+        }
+        else if(option.operation=="ID_lshr")
+        {
+          // shift operator
+          lshr_exprt shift_expr(op0, op1);
+                  shift_expr.type()=op0.type();
+
+         predicate_exprt shift_greater_than_width(ID_ge);
+         shift_greater_than_width.op0()=op1;
+         shift_greater_than_width.op1()=constant_exprt(integer2string(to_unsignedbv_type(op0.type()).get_width()),op0.type());
+
+         if_exprt if_expr(shift_greater_than_width, constant_exprt("0", op0.type()), shift_expr);
+         result_expr=chain(option.sel, if_expr, result_expr);
         }
         else
         {
