@@ -1,5 +1,3 @@
-#include "smt2_parser.h"
-
 #include <util/cmdline.h>
 #include <util/cout_message.h>
 #include <util/namespace.h>
@@ -7,27 +5,18 @@
 
 #include <solvers/flattening/boolbv.h>
 #include <solvers/sat/satcheck.h>
-
-#if 0
-#include <util/time_stopping.h>
-#include <util/config.h>
-
-#include <ansi-c/ansi_c_language.h>
-
-#include <langapi/language_util.h>
-#include <langapi/mode.h>
-#endif
+#include <solvers/smt2/smt2_parser.h>
 
 #include <fstream>
 #include <iostream>
 
-class smt2_frontendt:public new_smt2_parsert
+class smt2_frontendt:public smt2_parsert
 {
 public:
   smt2_frontendt(
     std::ifstream &_in,
     decision_proceduret &_solver):
-    new_smt2_parsert(_in),
+    smt2_parsert(_in),
     solver(_solver)
   {
   }
@@ -62,7 +51,7 @@ void smt2_frontendt::command(const std::string &c)
     }
   }
   else
-    new_smt2_parsert::command(c);
+    smt2_parsert::command(c);
 }
 
 int smt2_frontend(const cmdlinet &cmdline)
