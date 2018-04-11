@@ -605,13 +605,13 @@ exprt sygus_parsert::expression()
         // is op1 equal to zero? If it is, division returns max value of op0
         equal_exprt op_divbyzero;
         op_divbyzero.op0() = div_res.op1();
-        op_divbyzero.op1() = constant_exprt("0", div_res.op1().type());
+        op_divbyzero.op1() = from_integer(0, div_res.op1().type());
         op_divbyzero.type() = bool_typet();
 
         bv_spect spec(div_res.op0().type());
         if_exprt result(
             op_divbyzero,
-            constant_exprt(integer2string(spec.max_value()), div_res.op0().type()),
+            from_integer(spec.max_value(), div_res.op0().type()),
             div_res);
 
         result.type()=div_res.type();
@@ -631,13 +631,12 @@ exprt sygus_parsert::expression()
         // is op1 equal to zero? If it is, division returns max value of op0
         equal_exprt op_divbyzero;
         op_divbyzero.op0() = signed_res.op1();
-        op_divbyzero.op1() = constant_exprt("0", signed_res.op1().type());
+        op_divbyzero.op1() = from_integer(0, signed_res.op1().type());
         op_divbyzero.type() = bool_typet();
 
         bv_spect spec(signed_res.op0().type());
         if_exprt result(op_divbyzero,
-            constant_exprt(integer2string(spec.max_value()),
-                signed_res.op0().type()), signed_res);
+            from_integer(spec.max_value(), signed_res.op0().type()), signed_res);
 
         result.type() = signed_res.type();
         return result;
