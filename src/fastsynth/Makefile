@@ -4,23 +4,25 @@ SRC = fastsynth_main.cpp \
       literals.cpp solver_learn.cpp incremental_solver_learn.cpp \
       synth_encoding.cpp sygus_parser.cpp fourier_motzkin.cpp
 
-OBJ+= $(CBMC)/src/ansi-c/ansi-c$(LIBEXT) \
-      $(CBMC)/src/assembler/assembler$(LIBEXT) \
-      $(CBMC)/src/linking/linking$(LIBEXT) \
-      $(CBMC)/src/big-int/big-int$(LIBEXT) \
-      $(CBMC)/src/goto-symex/goto-symex$(LIBEXT) \
-      $(CBMC)/src/goto-programs/goto-programs$(LIBEXT) \
-      $(CBMC)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
-      $(CBMC)/src/langapi/langapi$(LIBEXT) \
-      $(CBMC)/src/solvers/solvers$(LIBEXT) \
-      $(CBMC)/src/analyses/dirty$(OBJEXT) \
-      $(CBMC)/src/util/util$(LIBEXT)
+OBJ+= ../../$(CPROVER_DIR)/src/ansi-c/ansi-c$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/assembler/assembler$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/linking/linking$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/big-int/big-int$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/goto-symex/goto-symex$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/goto-programs/goto-programs$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/langapi/langapi$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/analyses/dirty$(OBJEXT) \
+      ../../$(CPROVER_DIR)/src/util/util$(LIBEXT)
 
-include ../config.inc
-
-INCLUDES= -I $(CBMC)/src -I ..
+INCLUDES= -I ../../$(CPROVER_DIR)/src -I ..
 
 LIBS =
+
+include ../config.inc
+include ../../$(CPROVER_DIR)/src/config.inc
+include ../../$(CPROVER_DIR)/src/common
 
 CLEANFILES = fastsynth$(EXEEXT)
 
