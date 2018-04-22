@@ -1,25 +1,24 @@
-SUBDIRS = fastsynth
+DIRS = fastsynth
 
-#CPROVER_DIR = lib/cbmc/src
-#export CPROVER_DIR
+include config.inc
 
-all: fastsynth
+all: fastsynth.dir
 
-.PHONY: $(SUBDIRS)
-.PHONY: clean
+.PHONY: $(DIRS)
 
-$(SUBDIRS):
-	$(MAKE) -C $@
+$(patsubst %, %.dir, $(DIRS)):
+	$(MAKE) $(MAKEARGS) -C $(basename $@)
 
 # Dependencies
 
-fastsynth: 
+fastsynth.dir: cprover.dir
 
 # building cbmc proper
 .PHONY: cprover.dir
-cprover:
-	$(MAKE) $(MAKEARGS) -C ../$(CPROVER_DIR)
+cprover.dir:
+	$(MAKE) $(MAKEARGS) -C ../$(CPROVER_DIR)/src
 
+.PHONY: clean
 clean: $(patsubst %, %_clean, $(SUBDIRS))
 
 $(patsubst %, %_clean, $(SUBDIRS)):
