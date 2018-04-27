@@ -140,6 +140,8 @@ public:
 
   /// Pre-configured constants to include in the expression set.
   std::set<constant_exprt> literals;
+  std::vector<std::vector<exprt>> get_selector_variables();
+  std::vector<exprt> get_constant_variables();
 
 protected:
   std::map<symbol_exprt, e_datat> e_data_map;
