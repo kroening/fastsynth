@@ -589,6 +589,43 @@ exprt synth_encodingt::operator()(const exprt &expr)
   }
 }
 
+std::vector<exprt> synth_encodingt::get_constant_variables()
+{
+  std::vector<exprt> result;
+  for(const auto &it : e_data_map)
+  {
+    for(std::size_t pc=0; pc<it.second.instructions.size(); pc++)
+   {
+     const auto &instruction=it.second.instructions[pc];
+     result.push_back(instruction.constant_val);
+   }
+  }
+  return result;
+}
+
+std::vector<std::vector<exprt>> synth_encodingt::get_selector_variables()
+{
+  std::vector<std::vector<exprt>> result;
+  for(const auto &it : e_data_map)
+  {
+    for(std::size_t pc=0; pc<it.second.instructions.size(); pc++)
+    {
+      std::vector<exprt> instruction_exprt;
+      const auto &instruction=it.second.instructions[pc];
+      for(e_datat::instructiont::optionst::const_reverse_iterator
+             o_it=instruction.options.rbegin();
+              o_it!=instruction.options.rend();
+             o_it++)
+      {
+        instruction_exprt.push_back(o_it->sel);
+      }
+      if(instruction_exprt.size()!=0)
+        result.push_back(instruction_exprt);
+    }
+  }
+  return result;
+}
+
 solutiont synth_encodingt::get_solution(
   const decision_proceduret &solver) const
 {
