@@ -5,6 +5,8 @@
 #include <bitset>
 #include <util/namespace.h>
 
+#include "solver_learn.h"
+
 
 class enumerative_assignment_generatort :
     public decision_proceduret
@@ -36,7 +38,6 @@ public:
   virtual std::string decision_procedure_text() const;
 
   std::vector<std::vector<exprt>> selector_variables;
-
 
   std::map<exprt, exprt> assignment;
 };
