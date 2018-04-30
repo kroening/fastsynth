@@ -107,7 +107,7 @@ void e_datat::setup(
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div, ID_shl, ID_lshr, };
+        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div, ID_lshr, };
    // static const irep_idt ops[]=
      ///     { ID_plus, ID_minus, ID_ashr, ID_shr, ID_bitor };
 
