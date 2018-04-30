@@ -93,21 +93,18 @@ void enumerative_program_generatort::set_up(problemt &problem)
   for(const exprt &e : problem.side_conditions)
    {
      const exprt encoded = synth_encoding(e);
-     std::cout << "sc: " << from_expr(ns, "", encoded) << std::endl;
      solver.set_to_true(encoded);
    }
 
    for(const auto &e : problem.constraints)
    {
      const exprt encoded = synth_encoding(e);
-     std::cout << "co: " << from_expr(ns, "", encoded) << std::endl;
      solver.set_to_true(encoded);
    }
 
    for(const auto &c : synth_encoding.constraints)
    {
      solver.set_to_true(c);
-     std::cout << "ec: " << from_expr(ns, "", c) << std::endl;
    }
   solver.find_variables(synth_encoding);
 }
@@ -116,31 +113,27 @@ void enumerative_program_generatort::output_program(std::ostream &out, const std
 {
   solutiont solution=get_nth_program(index);
 
-  out<<"PROGRAM "<< index << "\n";
-  out <<"###########################\n";
+  out<<"<program "<< index << ">\n";
+
   for(const auto &f: solution.functions)
   {
     std::string stripped_id=
             std::string(id2string(f.first.get_identifier()), 11, std::string::npos);
 
-          out << "Result: "
+          out << "C Result: "
                            << stripped_id
                            << " -> "
                            << from_expr(ns, "", f.second)
                            << '\n';
 
           smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, out);
-          out << "SMT: "
+          out << "SMT Result:  "
                            << stripped_id
                            << " -> ";
           smt.convert_expr(f.second);
           out << '\n';
-
-          out << "Parse tree\n"
-                          << f.second.pretty() << "\n";
-
   }
-  out <<"###########################\n";
+  out <<"</program " << index << ">\n";
 }
 
 
