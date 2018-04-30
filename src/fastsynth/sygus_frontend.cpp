@@ -10,6 +10,8 @@
 
 #include <ansi-c/ansi_c_language.h>
 
+#include <solvers/smt2/smt2_conv.h>
+
 #include <langapi/language_util.h>
 #include <langapi/mode.h>
 
@@ -105,6 +107,14 @@ int sygus_frontend(const cmdlinet &cmdline)
                        << " -> "
                        << from_expr(ns, "", f.second)
                        << '\n';
+
+      smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, message.result());
+      message.result() << "SMT: "
+                       << f.first.get_identifier()
+                       << " -> ";
+      smt.convert_expr(f.second);
+
+      message.result() << '\n';
     }
 
     message.result() << messaget::eom;
