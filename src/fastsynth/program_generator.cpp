@@ -78,9 +78,9 @@ int generate_programs(const cmdlinet &cmdline)
 
   symbol_tablet symbol_table;
   namespacet ns(symbol_table);
-  int program_size=4;
-  int program_index_min=100;
-  int program_index_max=101;
+  int program_size=5;
+  int program_index_min=0;
+  int program_index_max=10;
 
 
   if(cmdline.isset("program-size"))
