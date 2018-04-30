@@ -37,7 +37,7 @@ public:
   std::vector<std::vector<exprt>> selector_variables;
 
 
-  std::map<exprt, constant_exprt> assignment;
+  std::map<exprt, exprt> assignment;
 };
 
 
