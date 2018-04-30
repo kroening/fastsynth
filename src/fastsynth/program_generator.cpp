@@ -20,8 +20,6 @@
 #include "synth_encoding.h"
 #include "sygus_parser.h"
 
-
-#include <iostream>
 #include <fstream>
 
 
@@ -89,8 +87,8 @@ int generate_programs(const cmdlinet &cmdline)
     program_size=std::stol(
         cmdline.get_value("program-size"));
   else
-    std::cout << "no program size given, "
-                      <<"generating all possible programs for default size 5\n";
+    message.warning() << "no program size given, "
+                      <<"generating all possible programs for default size 5" << messaget::eom;
 
 
   if(cmdline.isset("program-index-min")&&cmdline.isset("program-index-max"))
@@ -101,28 +99,24 @@ int generate_programs(const cmdlinet &cmdline)
         cmdline.get_value("program-index-max"));
   }
   else
-    std::cout << "program index min and program index max must be given:\n"
-                      << "generating default range programs 0->9 \n";
+    message.warning() << "program index min and program index max should be given:\n"
+                      << "generating default range programs 0->9" << messaget::eom;
 
 
-
+  message.status() << "generating programs of size "
+                  << program_size
+                  << " from index "<<program_index_min << " to "
+                  << program_index_max << messaget::eom;
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = !cmdline.isset("no-bitwise");
-
-  for(const auto &c: synth_encoding.constraints)
-  {
-    std::cout<<"constraint\n";
-    std::cout<<from_expr(ns, "",c)<<std::endl<<std::endl;
-  }
 
   enumerative_program_generatort program_generator(ns,synth_encoding, problem);
 
   for(int i=program_index_min; i<program_index_max; i++)
   {
-    std::cout<<"Program "<< i<<"\n";
-    program_generator.output_program(std::cout,i);
-    std::cout<<std::flush;
+    program_generator.output_program(message.status(),i);
+    message.status() << messaget::eom;
   }
   return 0;
 }

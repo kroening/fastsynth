@@ -42,11 +42,13 @@ int main(int argc, const char *argv[])
   {
     if(has_suffix(cmdline.args.back(), ".sl"))
     {
-    generate_programs(cmdline);
-    return 1;
-    }
-    else
+      std::cout<<"Generating possible programs \n";
+      generate_programs(cmdline);
+      return 0;
+      }
+     else
       std::cerr<<"Error: generate programs must be given .sl file\n";
+    return 1;
   }
 
   try
