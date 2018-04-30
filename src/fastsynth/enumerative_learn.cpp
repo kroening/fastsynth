@@ -52,21 +52,23 @@ void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
   for(const auto &sel_vec: selector_variables)
   {
     int size_of_vec = sel_vec.size();
-    assignment_index=local_n%size_of_vec;
+    // use size_of_vec+1 to allow for the case where no selector variables
+    // are true and we use a constant
+    assignment_index=local_n%(size_of_vec+1);
 
-    for(std::size_t i=0; i<sel_vec.size(); i++)
-    {
-      if(i==assignment_index)
+      for(std::size_t i=0; i<sel_vec.size(); i++)
       {
-        assignment[sel_vec[i]]=true_exprt();
-        get(sel_vec[i]);
+        if(i==assignment_index)
+        {
+          assignment[sel_vec[i]]=true_exprt();
+          get(sel_vec[i]);
+        }
+        else
+        {
+          assignment[sel_vec[i]]=false_exprt();
+        }
       }
-      else
-      {
-        assignment[sel_vec[i]]=false_exprt();
-      }
-    }
-    local_n=local_n/size_of_vec;
+    local_n=local_n/(size_of_vec+1);
   }
 
 }
@@ -75,9 +77,12 @@ void enumerative_assignment_generatort::find_variables(
     synth_encodingt &synth_encoding)
 {
    selector_variables = synth_encoding.get_selector_variables();
+   std::size_t index=0;
    for(const auto &v: synth_encoding.get_constant_variables())
    {
-     assignment[v]=constant_exprt("CONST",unsignedbv_typet(32));
+    irep_idt ID="constant_value"+std::to_string(index);
+    assignment[v]=symbol_exprt(ID, unsignedbv_typet(32));
+    index++;
    }
 }
 
