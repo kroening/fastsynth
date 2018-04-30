@@ -107,11 +107,11 @@ void e_datat::setup(
 
     static const irep_idt ops[]=
       { ID_plus, ID_minus, ID_shl, ID_bitand, ID_bitor, ID_bitxor,
-        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div, ID_shl, ID_lshr, };
+        ID_le, ID_lt, ID_equal, ID_notequal, "max", "min", ID_div, ID_lshr, };
    // static const irep_idt ops[]=
      ///     { ID_plus, ID_minus, ID_ashr, ID_shr, ID_bitor };
 
-    std::size_t binary_op_index=0;
+    std::size_t binary_option_index=0;
 
     for(const auto operation : ops)
     {
@@ -178,7 +178,7 @@ void e_datat::setup(
 
           irep_idt sel_id=id2string(identifier)+"_"+
                    std::to_string(pc)+"_b"+
-                   std::to_string(binary_op_index)+"sel";
+                   std::to_string(binary_option_index)+"sel";
 
           auto &option=instruction.add_option(sel_id);
           option.operand0=operand0;
@@ -193,10 +193,11 @@ void e_datat::setup(
           else
             option.kind=instructiont::optiont::BINARY;
 
-          binary_op_index++;
+          binary_option_index++;
         }
     }
 
+    std::size_t ternary_option_index=0;
     // trinary operator, if-then-else
     for(std::size_t operand0=0; operand0<pc; operand0++)
       for(std::size_t operand1=0; operand1<pc; operand1++)
@@ -210,8 +211,10 @@ void e_datat::setup(
           if(operand0==operand1 || operand0==operand2)
             continue;
 
-          irep_idt sel_id = id2string(identifier)+'_'+
-              std::to_string(pc)+"_ite_sel";
+          irep_idt sel_id=id2string(identifier)+"_"+
+                   std::to_string(pc)+"_t"+
+                   std::to_string(ternary_option_index)+"ite_sel";
+
 
           auto &option=instruction.add_option(sel_id);
           option.operand0=operand0;
@@ -219,6 +222,8 @@ void e_datat::setup(
           option.operand2=operand2;
           option.operation=ID_if;
           option.kind=instructiont::optiont::ITE;
+
+          ternary_option_index++;
         }
 
   }
