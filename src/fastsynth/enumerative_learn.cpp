@@ -118,25 +118,27 @@ void enumerative_program_generatort::output_program(std::ostream &out, const std
 {
   solutiont solution=get_nth_program(index);
 
-  out<<"<program "<< index << ">\n";
+
+
+  out<<"<program "<< index << ">";
 
   for(const auto &f: solution.functions)
   {
-    std::string stripped_id=
-            std::string(id2string(f.first.get_identifier()), 11, std::string::npos);
+   // std::string stripped_id=
+     //       std::string(id2string(f.first.get_identifier()), 11, std::string::npos);
 
-          out << "C Result: "
+        /*  out << "C Result: "
                            << stripped_id
                            << " -> "
                            << from_expr(ns, "", f.second)
-                           << '\n';
-
+                           << '\n';*/
+          out.setstate(std::ios_base::badbit);
           smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, out);
-          out << "SMT Result:  "
-                           << stripped_id
-                           << " -> ";
+          out.clear();
+      //    out << "SMT Result:  "
+                   //        << stripped_id
+                    //       << " -> ";
           smt.convert_expr(f.second);
-          out << '\n';
   }
   out <<"</program " << index << ">\n";
 }
