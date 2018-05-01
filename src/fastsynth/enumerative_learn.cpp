@@ -26,13 +26,14 @@ void enumerative_assignment_generatort::set_to(const exprt &expr, bool value)
 
 exprt enumerative_assignment_generatort::get(const exprt &expr) const
 {
-  assert(assignment.count(expr)!=0);
+  PRECONDITION(assignment.count(expr)!=0);
   return assignment.at(expr);
 }
 
-void enumerative_assignment_generatort::print_assignment(std::ostream &out) const
+void enumerative_assignment_generatort::print_assignment(
+    std::ostream &out) const
 {
-  for(const auto & var: assignment)
+  for(const auto & var : assignment)
   {
     out<<from_expr(ns, "", var.first) << " ";
     out<<from_expr(ns, "", var.second) << "\n";
@@ -49,7 +50,7 @@ void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
 {
   std::size_t assignment_index=n+1; // don't do anything with index 0
   std::size_t local_n=n;
-  for(const auto &sel_vec: selector_variables)
+  for(const auto &sel_vec : selector_variables)
   {
     int size_of_vec = sel_vec.size();
     // use size_of_vec+1 to allow for the case where no selector variables
@@ -70,20 +71,19 @@ void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
       }
     local_n=local_n/(size_of_vec+1);
   }
-
 }
 
 void enumerative_assignment_generatort::find_variables(
     synth_encodingt &synth_encoding)
 {
-   selector_variables = synth_encoding.get_selector_variables();
-   std::size_t index=0;
-   for(const auto &v: synth_encoding.get_constant_variables())
-   {
+  selector_variables = synth_encoding.get_selector_variables();
+  std::size_t index=0;
+  for(const auto &v : synth_encoding.get_constant_variables())
+  {
     irep_idt ID="constant_value"+std::to_string(index);
     assignment[v]=symbol_exprt(ID, unsignedbv_typet(32));
     index++;
-   }
+  }
 }
 
 
@@ -96,36 +96,36 @@ solutiont enumerative_program_generatort::get_nth_program(const std::size_t &n)
 void enumerative_program_generatort::set_up(problemt &problem)
 {
   for(const exprt &e : problem.side_conditions)
-   {
+  {
      const exprt encoded = synth_encoding(e);
      solver.set_to_true(encoded);
-   }
+  }
 
-   for(const auto &e : problem.constraints)
-   {
+  for(const auto &e : problem.constraints)
+  {
      const exprt encoded = synth_encoding(e);
      solver.set_to_true(encoded);
-   }
+  }
 
-   for(const auto &c : synth_encoding.constraints)
-   {
+  for(const auto &c : synth_encoding.constraints)
+  {
      solver.set_to_true(c);
-   }
+  }
   solver.find_variables(synth_encoding);
 }
 
-void enumerative_program_generatort::output_program(std::ostream &out, const std::size_t &index)
+void enumerative_program_generatort::output_program(
+    std::ostream &out, const std::size_t &index)
 {
   solutiont solution=get_nth_program(index);
 
-
-
   out<<"<program "<< index << ">";
 
-  for(const auto &f: solution.functions)
+  for(const auto &f : solution.functions)
   {
-   // std::string stripped_id=
-     //       std::string(id2string(f.first.get_identifier()), 11, std::string::npos);
+    // std::string stripped_id=
+     // std::string(
+    // id2string(f.first.get_identifier()), 11, std::string::npos);
 
         /*  out << "C Result: "
                            << stripped_id
@@ -142,5 +142,3 @@ void enumerative_program_generatort::output_program(std::ostream &out, const std
   }
   out <<"</program " << index << ">\n";
 }
-
-
