@@ -6,7 +6,8 @@
 #include <util/namespace.h>
 
 
-class enumerative_assignment_generatort:public decision_proceduret
+class enumerative_assignment_generatort :
+    public decision_proceduret
 {
 public:
   explicit enumerative_assignment_generatort(
@@ -61,7 +62,6 @@ public:
   synth_encodingt synth_encoding;
   solutiont get_nth_program(const std::size_t &n);
   void output_program(std::ostream &out, const std::size_t &n);
-
 };
 
 
