@@ -6,6 +6,7 @@
 #include "c_frontend.h"
 #include "sygus_frontend.h"
 #include "smt2_frontend.h"
+#include "program_generator.h"
 
 #define FASTSYNTH_OPTIONS \
    "(max-program-size):" \
@@ -17,6 +18,10 @@
    "(smt)" \
    "(literals)" \
    "(enable-division)" \
+   "(generate-programs)" \
+   "(program-size):" \
+   "(program-index-min):" \
+   "(program-index-max):" \
 
 int main(int argc, const char *argv[])
 {
@@ -29,7 +34,20 @@ int main(int argc, const char *argv[])
 
   if(cmdline.args.size()!=1)
   {
-    std::cerr << "Usage error\n";
+    std::cerr << "Usage error, file must be given\n";
+    return 1;
+  }
+
+  if(cmdline.isset("generate-programs"))
+  {
+    if(has_suffix(cmdline.args.back(), ".sl"))
+    {
+      std::cout<<"Generating possible programs \n";
+      generate_programs(cmdline);
+      return 0;
+      }
+     else
+      std::cerr<<"Error: generate programs must be given .sl file\n";
     return 1;
   }
 
