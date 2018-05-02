@@ -19,9 +19,9 @@ cprover.dir:
 	$(MAKE) $(MAKEARGS) -C ../$(CPROVER_DIR)/src
 
 .PHONY: clean
-clean: $(patsubst %, %_clean, $(SUBDIRS))
+clean: $(patsubst %, %_clean, $(DIRS))
 
-$(patsubst %, %_clean, $(SUBDIRS)):
+$(patsubst %, %_clean, $(DIRS)):
 	if [ -e $(patsubst %_clean, %, $@)/. ] ; then \
 	        $(MAKE) $(MAKEARGS) -C $(patsubst %_clean, %, $@) clean ; \
 	fi
