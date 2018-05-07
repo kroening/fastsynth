@@ -11,7 +11,7 @@ class problemt
 public:
   std::set<exprt> free_variables;
   exprt::operandst side_conditions, constraints;
-  std::set<constant_exprt> literals; /// Constant hints for solver.
+  std::set<exprt> literals; /// Constant hints for solver.
 };
   
 class solutiont
