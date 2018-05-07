@@ -3,7 +3,7 @@
 #include "solver_learn.h"
 #include "verify.h"
 #include "fm_verify.h"
-
+#include "enumerative_learn.h"
 #include <langapi/language_util.h>
 
 #include <util/simplify_expr.h>
@@ -36,6 +36,12 @@ decision_proceduret::resultt cegist::operator()(
     status() << "** incremental CEGIS" << eom;
     learner=std::unique_ptr<learnt>(new incremental_solver_learnt(
       ns, problem, use_simp_solver, get_message_handler()));
+  }
+  else if(enumerative_engine)
+  {
+   status() << "** enumerative engine" << eom;
+   learner=std::unique_ptr<learnt>(new enumerative_learnt(
+       ns, problem, get_message_handler()));
   }
   else
   {
@@ -101,6 +107,11 @@ decision_proceduret::resultt cegist::loop(
 
         if(old_functions==solution.functions)
         {
+          status()<<"size of old functions "<<old_functions.size()<<eom;
+          for(const auto &expr: old_functions)
+            status()<< from_expr(ns, "", expr.first)<<" "
+                    << from_expr(ns, "", expr.second)<<eom;
+
           error() << "NO PROGRESS MADE" << eom;
           return decision_proceduret::resultt::D_ERROR;
         }

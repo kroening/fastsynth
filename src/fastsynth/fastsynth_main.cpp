@@ -22,6 +22,8 @@
    "(program-size):" \
    "(program-index-min):" \
    "(program-index-max):" \
+   "(enumerative-solver)" \
+   "(number-of-constants):" \
 
 int main(int argc, const char *argv[])
 {

@@ -5,7 +5,46 @@
 #include <bitset>
 #include <util/namespace.h>
 
-#include "solver_learn.h"
+#include <fastsynth/solver_learn.h>
+#include <fastsynth/synth_encoding.h>
+
+
+class enumerative_learnt:public solver_learn_baset
+{
+protected:
+  std::size_t program_size;
+  std::vector<counterexamplet> counterexamples;
+  solutiont last_solution;
+  std::size_t program_index;
+
+
+  bool verify_solution();
+
+public:
+  /// Creates a enumerative learner.
+  /// \param msg \see msg solver_learnt::msg
+  /// \param ns \see ns solver_learnt::ns
+  /// \param problem \see solver_learnt::problem
+  enumerative_learnt(
+    const namespacet &,
+    const problemt &,
+    message_handlert &);
+
+  /// \see learnt::set_program_size(size_t)
+  void set_program_size(size_t program_size) override;
+
+  void output_program(const solutiont &solution, std::ostream &out) const;
+
+  /// \see learnt::operator()()
+  decision_proceduret::resultt operator()() override;
+
+  /// \see learnt::get_expressions()
+  solutiont get_solution() const override;
+
+  /// \see learnt::add(const verify_encodingt::counterexamplet &counterexample)
+  void add_ce(const counterexamplet &) override;
+
+};
 
 
 class enumerative_assignment_generatort :

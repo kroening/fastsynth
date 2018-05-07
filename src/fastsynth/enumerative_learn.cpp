@@ -90,6 +90,60 @@ decision_proceduret::resultt enumerative_learnt::operator()()
     synth_encoding_verif.constraints.clear();
 
 
+    add_problem(synth_encoding, solver);
+    add_problem(synth_encoding_verif, verifier);
+  }
+  else
+  {
+    std::size_t counter = 0;
+    for(const auto &c : counterexamples)
+    {
+      synth_encoding_verif.suffix = "$ce"+ std::to_string(counter);
+      synth_encoding_verif.constraints.clear();
+
+      add_counterexample(c, synth_encoding_verif, verifier);
+
+      add_problem(synth_encoding_verif, verifier);
+      counter++;
+    }
+  }
+  solver.find_variables(synth_encoding);
+  bool solution_found=false;
+
+  while(!solution_found)
+  {
+    if(program_index > solver.number_of_options)
+      return decision_proceduret::resultt::D_UNSATISFIABLE;
+    solver.generate_nth_assignment(program_index);
+    std::cout << "program index " << program_index
+        << " program size " << program_size<<std::endl;
+    program_index++;
+    std::cout<<"print synth assignment\n";
+    solver.print_assignment(std::cout);
+
+    for(auto &v : solver.assignment)
+    {
+      if(v.second.id()==ID_constant)
+      {
+        std::cout<<"setting to true "<< from_expr(ns, "", v.first)<<std::endl;
+        verifier.set_to(v.first, to_constant_expr(v.second).is_true());
+      }
+    }
+
+
+    if(verifier()==decision_proceduret::resultt::D_SATISFIABLE)
+    {
+      std::cout<<"verified correct\n";
+      last_solution = synth_encoding.get_solution(verifier);
+      verifier.print_assignment(std::cout);
+      output_program(last_solution, std::cout);
+
+      return decision_proceduret::resultt::D_SATISFIABLE;
+    }
+  }
+  return decision_proceduret::resultt::D_UNSATISFIABLE;
+}
+
 void enumerative_assignment_generatort::set_to_true(const exprt &expr)
 {
     assignment[expr]=true_exprt();
