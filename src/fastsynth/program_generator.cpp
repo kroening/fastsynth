@@ -23,6 +23,16 @@
 #include <fstream>
 
 
+void add_literals(synth_encodingt & synth_encoding, std::size_t n)
+{
+  synth_encoding.literals.clear();
+  for(std::size_t i=0; i<n; i++)
+  {
+    irep_idt ID="constant_value"+std::to_string(i);
+    symbol_exprt expr(ID, unsignedbv_typet(32));
+    synth_encoding.literals.insert(expr);
+  }
+}
 
 int generate_programs(const cmdlinet &cmdline)
 {
@@ -79,6 +89,14 @@ int generate_programs(const cmdlinet &cmdline)
   int program_size=5;
   int program_index_min=0;
   int program_index_max=10;
+  int number_of_constants=0;
+
+  if(cmdline.isset("number-of-constants"))
+      number_of_constants=std::stol(
+          cmdline.get_value("number-of-constants"));
+    else
+      message.warning() << "number of constants to use not specified, using 0 constants"
+                        << messaget::eom;
 
 
   if(cmdline.isset("program-size"))

@@ -106,7 +106,8 @@ public:
   bool enable_division;
 
   /// Pre-configured constants to include in the expression set.
-  std::set<constant_exprt> literals;
+  std::set<exprt> literals;
+
 
 protected:
   bool setup_done;
@@ -139,7 +140,7 @@ public:
   constraintst constraints;
 
   /// Pre-configured constants to include in the expression set.
-  std::set<constant_exprt> literals;
+  std::set<exprt> literals;
   std::vector<std::vector<exprt>> get_selector_variables();
   std::vector<exprt> get_constant_variables();
 

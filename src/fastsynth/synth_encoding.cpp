@@ -89,18 +89,24 @@ void e_datat::setup(
     instructions.push_back(instructiont(pc));
     auto &instruction=instructions[pc];
 
-    // constant -- hardwired default, not an option
-    irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_val=symbol_exprt(const_val_id, word_type);
 
-    // one of the arguments or constants
-    for(std::size_t i=0; i<arguments.size()+literals.size(); i++)
+      // constant -- hardwired default, not an option
+      irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
+      instruction.constant_val=symbol_exprt(const_val_id, word_type);
+
+      // one of the arguments or constants
+      // we allow the first instruction to load all N possible parameters
+      // the second instruction loads N-1 parameters
+    if(pc < arguments.size() + literals.size() && (pc!=program_size-1 || program_size==1))
     {
-      irep_idt param_sel_id=id2string(identifier)+"_"+
-               std::to_string(pc)+"_p"+std::to_string(i)+"sel";
-      auto &option=instruction.add_option(param_sel_id);
-      option.kind=instructiont::optiont::PARAMETER;
-      option.parameter_number=i;
+      for(std::size_t i = 0; i < (arguments.size() + literals.size() - pc); i++)
+      {
+        irep_idt param_sel_id = id2string(identifier) + "_" + std::to_string(pc)
+            + "_p" + std::to_string(i) + "sel";
+        auto &option = instruction.add_option(param_sel_id);
+        option.kind = instructiont::optiont::PARAMETER;
+        option.parameter_number = i;
+      }
     }
 
     // a binary operation

@@ -53,10 +53,11 @@ void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
   for(const auto &sel_vec : selector_variables)
   {
     int size_of_vec = sel_vec.size();
-    // use size_of_vec+1 to allow for the case where no selector variables
+    // Note we do not allow constants unless added into pre configured literals.
+    // to enable, use size_of_vec+1 to allow for
+    // the case where no selector variables
     // are true and we use a constant
-    assignment_index=local_n%(size_of_vec+1);
-
+    assignment_index=local_n%(size_of_vec);
       for(std::size_t i=0; i<sel_vec.size(); i++)
       {
         if(i==assignment_index)
