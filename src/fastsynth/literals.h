@@ -8,6 +8,6 @@
 /// Collects all constant literals explicitly used in the problem description.
 /// \param problem Problem in which to search for literals.
 /// \return All constant literals located in the given problem.
-std::set<constant_exprt> find_literals(const class problemt &problem);
+std::set<exprt> find_literals(const class problemt &problem);
 
 #endif /* CPROVER_FASTSYNTH_LITERALS_H_ */
