@@ -137,26 +137,17 @@ void enumerative_program_generatort::output_program(
     return;
   }
 
-  out<<"<program "<< index << ">";
+  solutiont solution=get_nth_program(index);
+ // solver.print_assignment(out);
+  out << "<program " << index << "> ";
 
   for(const auto &f : solution.functions)
   {
-    // std::string stripped_id=
-     // std::string(
-    // id2string(f.first.get_identifier()), 11, std::string::npos);
+    out.setstate(std::ios_base::badbit);
+    smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, out);
+    out.clear();
 
-        /*  out << "C Result: "
-                           << stripped_id
-                           << " -> "
-                           << from_expr(ns, "", f.second)
-                           << '\n';*/
-          out.setstate(std::ios_base::badbit);
-          smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, out);
-          out.clear();
-      //    out << "SMT Result:  "
-                   //        << stripped_id
-                    //       << " -> ";
-          smt.convert_expr(f.second);
+    smt.convert_expr(f.second);
   }
   out << "\n</program " << index << ">\n";
 }
