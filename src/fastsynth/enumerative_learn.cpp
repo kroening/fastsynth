@@ -197,6 +197,7 @@ void enumerative_assignment_generatort::use_assignment(
         assignment[sel_vec[i]]=false_exprt();
       }
     }
+    sel_vec_index++;
   }
 }
 
