@@ -70,7 +70,7 @@ void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
           assignment[sel_vec[i]]=false_exprt();
         }
       }
-    local_n=local_n/(size_of_vec+1);
+    local_n=local_n/(size_of_vec);
   }
 }
 
