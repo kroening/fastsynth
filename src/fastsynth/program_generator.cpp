@@ -130,6 +130,7 @@ int generate_programs(const cmdlinet &cmdline)
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = !cmdline.isset("no-bitwise");
+  add_literals(synth_encoding, number_of_constants);
 
   enumerative_program_generatort program_generator(
       ns, synth_encoding, problem);
