@@ -5,20 +5,20 @@ and number of function arguments:
 1_arg_func.sl = 1 argument function 
 2_arg_func.sl = 2 argument function etc.
 
-The program generator enumerates through all possible programs, starting from the given index.
+The program generator generates programs randomly. The random number generator used is std::uniform_int_distribution.
+It is seeded with std::random_device, as in the example here.
+http://en.cppreference.com/w/cpp/numeric/random/uniform_int_distribution
+
 
 The commands used are:
---generate-programs = enables program generator mode
---program-index-min = minimum index to start generating programs from
---program-index-max = maximum index
---program-size = length of program to generate
+--generate-N-programs <N> = generates <N> programs randomly
+--number-of-constants <N> = use <N> constants
+--program-size <N> = generate programs with <N> instructions
 
 
+fastsynth --generate-N-programs 10 1_arg_func.sl --program-size 3 --number-of-constants 1
 
-fastsynth --generate-programs --program-index-min 0 --program-index-max 10
---program-size 5 1_arg_func.sl
+This generates 10 programs with 3 instructions, with 1 input argument, and using 1 constant.
 
-This generates programs with 5 instructions from index 0 to index 10, with 1 input argument.
 
-The default is to generate programs with 5 instructions from index 0 to index 9.
 
