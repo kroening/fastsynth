@@ -178,6 +178,28 @@ std::string enumerative_assignment_generatort::decision_procedure_text() const
   return "enumerative solver implemented for CEGIS\n";
 }
 
+void enumerative_assignment_generatort::use_assignment(
+    std::vector<std::size_t> &assignment_indices)
+{
+  std::size_t sel_vec_index=0;
+  for(const auto &sel_vec : selector_variables)
+  {
+    PRECONDITION(sel_vec.size()> assignment_indices[sel_vec_index]);
+    for(std::size_t i=0; i<sel_vec.size(); i++)
+    {
+      if(i==assignment_indices[sel_vec_index])
+      {
+        assignment[sel_vec[i]]=true_exprt();
+        get(sel_vec[i]);
+      }
+      else
+      {
+        assignment[sel_vec[i]]=false_exprt();
+      }
+    }
+  }
+}
+
 
 void enumerative_assignment_generatort::generate_nth_assignment(std::size_t n)
 {
@@ -228,7 +250,6 @@ void enumerative_assignment_generatort::find_variables(
   std::cout<<"number of options "<< number_of_options
       <<", program size "<< synth_encoding.program_size << "\n";
 
-
 }
 
 
@@ -259,6 +280,32 @@ void enumerative_program_generatort::set_up(problemt &problem)
   solver.find_variables(synth_encoding);
 }
 
+
+void enumerative_program_generatort::output_program(
+    std::ostream &out)
+{
+  solver.use_assignment(assignment_indices);
+  solutiont solution = synth_encoding.get_solution(solver);
+
+  out << "<program.";
+  for(const auto &i : assignment_indices)
+    out<<i<<".";
+  out<<">";
+
+  for(const auto &f : solution.functions)
+  {
+    out.setstate(std::ios_base::badbit);
+    smt2_convt smt(ns, "", "", "", smt2_convt::solvert::Z3, out);
+    out.clear();
+
+    smt.convert_expr(f.second);
+  }
+  out << "</program.";
+  for(const auto &i : assignment_indices)
+    out<<i<<".";
+  out << ">\n";
+}
+
 void enumerative_program_generatort::output_program(
     std::ostream &out, const std::size_t &index)
 {
@@ -272,7 +319,7 @@ void enumerative_program_generatort::output_program(
 
   solutiont solution=get_nth_program(index);
  // solver.print_assignment(out);
-  out << "<program " << index << "> ";
+  out << "<program" << index << "> ";
 
   for(const auto &f : solution.functions)
   {
@@ -282,5 +329,5 @@ void enumerative_program_generatort::output_program(
 
     smt.convert_expr(f.second);
   }
-  out << "\n</program " << index << ">\n";
+  out << "</program " << index << ">\n";
 }

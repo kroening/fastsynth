@@ -18,10 +18,8 @@
    "(smt)" \
    "(literals)" \
    "(enable-division)" \
-   "(generate-programs)" \
+   "(generate-N-programs):" \
    "(program-size):" \
-   "(program-index-min):" \
-   "(program-index-max):" \
    "(enumerative-solver)" \
    "(number-of-constants):" \
 
@@ -40,12 +38,13 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  if(cmdline.isset("generate-programs"))
+  if(cmdline.isset("generate-N-programs"))
   {
     if(has_suffix(cmdline.args.back(), ".sl"))
     {
-      std::cout<<"Generating possible programs \n";
-      generate_programs(cmdline);
+      std::cout<<"Generating random programs \n";
+      generate_programs(cmdline, std::stol(
+          cmdline.get_value("generate-N-programs")));
       return 0;
       }
      else

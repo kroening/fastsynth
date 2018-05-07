@@ -21,6 +21,7 @@
 #include "sygus_parser.h"
 
 #include <fstream>
+#include <random>
 
 
 void add_literals(synth_encodingt & synth_encoding, std::size_t n)
@@ -34,7 +35,7 @@ void add_literals(synth_encodingt & synth_encoding, std::size_t n)
   }
 }
 
-int generate_programs(const cmdlinet &cmdline)
+int generate_programs(const cmdlinet &cmdline, std::size_t number_of_programs)
 {
   PRECONDITION(cmdline.args.size() == 1);
 
@@ -87,14 +88,12 @@ int generate_programs(const cmdlinet &cmdline)
   symbol_tablet symbol_table;
   namespacet ns(symbol_table);
   int program_size=5;
-  int program_index_min=0;
-  int program_index_max=10;
   int number_of_constants=0;
 
   if(cmdline.isset("number-of-constants"))
-      number_of_constants=std::stol(
+    number_of_constants=std::stol(
           cmdline.get_value("number-of-constants"));
-    else
+  else
       message.warning() << "number of constants to use not specified, using 0 constants"
                         << messaget::eom;
 
@@ -108,25 +107,6 @@ int generate_programs(const cmdlinet &cmdline)
                       << messaget::eom;
 
 
-  if(cmdline.isset("program-index-min")&&
-      cmdline.isset("program-index-max"))
-  {
-    program_index_min=std::stol(
-        cmdline.get_value("program-index-min"));
-    program_index_max=std::stol(
-        cmdline.get_value("program-index-max"));
-  }
-  else
-    message.warning() << "program index min and program index max"
-                      << "should be given:\n"
-                      << "generating default range programs 0->9"
-                      << messaget::eom;
-
-
-  message.status() << "generating programs of size "
-                  << program_size
-                  << " from index "<<program_index_min << " to "
-                  << program_index_max << messaget::eom;
   synth_encodingt synth_encoding;
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = !cmdline.isset("no-bitwise");
@@ -135,10 +115,47 @@ int generate_programs(const cmdlinet &cmdline)
   enumerative_program_generatort program_generator(
       ns, synth_encoding, problem);
 
-  for(int i=program_index_min; i<program_index_max; i++)
+  if(number_of_programs>=program_generator.solver.number_of_options)
   {
-    program_generator.output_program(
-        message.status(), i);
+    number_of_programs=program_generator.solver.number_of_options;
+    message.warning()<<"You have asked for more programs than is possible"
+                    << " will return "<<number_of_programs<<"\n";
+  }
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+
+  std::set<std::vector<std::size_t>> programs_generated;
+  for(int i=0; i<number_of_programs; i++)
+  {
+    program_generator.assignment_indices.clear();
+    bool got_new_assignment=false;
+    std::size_t max_iterations=0;
+    while(!got_new_assignment)
+    {
+      for(const auto &v : program_generator.solver.selector_variables)
+      {
+        std::uniform_int_distribution<> dis(0, v.size()-1);
+        program_generator.assignment_indices.push_back(dis(gen));
+      }
+      if(programs_generated.count(program_generator.assignment_indices))
+      {
+        if(max_iterations>1000)
+        {
+          message.error()<< "reached 1000 iterations without finding a new assignment"
+                         << messaget::eom;
+          throw 0;
+        }
+        program_generator.assignment_indices.clear();
+        max_iterations++;
+      }
+      else
+      {
+        programs_generated.insert(program_generator.assignment_indices);
+        got_new_assignment=true;
+      }
+    }
+    program_generator.output_program(message.status());
     message.status() << messaget::eom;
   }
   return 0;

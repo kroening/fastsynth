@@ -8,7 +8,7 @@
 #ifndef SRC_FASTSYNTH_PROGRAM_GENERATOR_H_
 #define SRC_FASTSYNTH_PROGRAM_GENERATOR_H_
 
-int generate_programs(const cmdlinet &cmdline);
+int generate_programs(const cmdlinet &cmdline, std::size_t N);
 
 
 

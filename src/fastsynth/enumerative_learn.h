@@ -64,6 +64,7 @@ public:
 
   void find_variables(synth_encodingt &synth_encoding);
   void generate_nth_assignment(std::size_t n);
+  void use_assignment(std::vector<std::size_t> &assignment);
 
   virtual void set_to_true(const exprt &expr);
   virtual void set_to(const exprt &expr, bool value);
@@ -101,9 +102,11 @@ public:
   void set_up(problemt &problem);
   namespacet ns;
   enumerative_assignment_generatort solver;
+  std::vector<std::size_t> assignment_indices;
   synth_encodingt synth_encoding;
   solutiont get_nth_program(const std::size_t &n);
   void output_program(std::ostream &out, const std::size_t &n);
+  void output_program(std::ostream &out);
 };
 
 
