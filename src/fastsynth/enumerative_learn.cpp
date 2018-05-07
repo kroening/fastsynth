@@ -85,6 +85,17 @@ void enumerative_assignment_generatort::find_variables(
     assignment[v]=symbol_exprt(ID, unsignedbv_typet(32));
     index++;
   }
+  number_of_options=1;
+  for(const auto &sv : selector_variables)
+  {
+    std::cout<<"selector variable vector "<<sv.size()<<" ";
+     number_of_options*=(sv.size());
+     std::cout<<std::endl;
+  }
+  std::cout<<"number of options "<< number_of_options
+      <<", program size "<< synth_encoding.program_size << "\n";
+
+
 }
 
 
@@ -118,7 +129,13 @@ void enumerative_program_generatort::set_up(problemt &problem)
 void enumerative_program_generatort::output_program(
     std::ostream &out, const std::size_t &index)
 {
-  solutiont solution=get_nth_program(index);
+  if(index >= solver.number_of_options)
+  {
+    out << "Index " << index
+        << " is greater than number of possible programs, which is "
+        << solver.number_of_options << "\n";
+    return;
+  }
 
   out<<"<program "<< index << ">";
 
@@ -141,5 +158,5 @@ void enumerative_program_generatort::output_program(
                     //       << " -> ";
           smt.convert_expr(f.second);
   }
-  out <<"</program " << index << ">\n";
+  out << "\n</program " << index << ">\n";
 }

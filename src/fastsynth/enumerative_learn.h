@@ -15,7 +15,8 @@ public:
   explicit enumerative_assignment_generatort(
       const namespacet &_ns,
       synth_encodingt synth_encoding):
-  decision_proceduret(_ns)
+  decision_proceduret(_ns),
+  number_of_options(1u)
   {
   }
 
@@ -34,6 +35,7 @@ public:
     return resultt::D_ERROR;
   }
 
+  std::size_t number_of_options;
   virtual void print_assignment(std::ostream &out) const;
   virtual std::string decision_procedure_text() const;
 
