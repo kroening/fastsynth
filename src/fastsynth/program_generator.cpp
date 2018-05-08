@@ -126,7 +126,7 @@ int generate_programs(const cmdlinet &cmdline, std::size_t number_of_programs)
   std::mt19937 gen(rd());
 
   std::set<std::vector<std::size_t>> programs_generated;
-  for(int i=0; i<number_of_programs; i++)
+  for(std::size_t i=0; i<number_of_programs; i++)
   {
     program_generator.assignment_indices.clear();
     bool got_new_assignment=false;
