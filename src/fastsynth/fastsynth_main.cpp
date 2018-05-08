@@ -22,6 +22,7 @@
    "(program-size):" \
    "(enumerative-solver)" \
    "(number-of-constants):" \
+   "(seed):" \
 
 int main(int argc, const char *argv[])
 {

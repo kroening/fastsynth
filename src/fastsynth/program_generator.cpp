@@ -122,8 +122,20 @@ int generate_programs(const cmdlinet &cmdline, std::size_t number_of_programs)
                     << " will return "<<number_of_programs<<"\n";
   }
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+
+  int seed;
+  if(cmdline.isset("seed"))
+    seed = std::stol(
+        cmdline.get_value("seed"));
+  else
+  {
+    message.warning() << "No seed given, seeding mersenne twister with std::random_device."
+                      << "Not guaranteed to produce random numbers on all systems\n";
+    std::random_device rd;
+    seed = rd();
+  }
+
+  std::mt19937 gen(seed);
 
   std::set<std::vector<std::size_t>> programs_generated;
   for(std::size_t i=0; i<number_of_programs; i++)
