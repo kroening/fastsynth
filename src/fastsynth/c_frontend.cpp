@@ -188,7 +188,8 @@ int c_frontend(const cmdlinet &cmdline)
   symex_target_equationt equation;
   path_strategy_choosert path_strategy_chooser;
   auto path_storage=path_strategy_chooser.get("lifo");
-  goto_symext goto_symex(mh, goto_model.symbol_table, equation, *path_storage);
+  optionst options;
+  goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);
 
   goto_symex.symex_from_entry_point_of(
     goto_model.goto_functions,
