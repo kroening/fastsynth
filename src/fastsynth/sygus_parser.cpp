@@ -724,29 +724,30 @@ exprt sygus_parsert::expression()
 
 mathematical_function_typet sygus_parsert::function_signature()
 {
-  mathematical_function_typet result;
-
   if(next_token()!=OPEN)
   {
     error() << "expected '(' at beginning of signature" << eom;
-    return result;
+    return mathematical_function_typet({}, nil_typet());
   }
+
+  mathematical_function_typet::domaint domain;
 
   while(peek()!=CLOSE)
   {
     if(next_token()!=OPEN)
     {
       error() << "expected '(' at beginning of parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
 
     if(next_token()!=SYMBOL)
     {
       error() << "expected symbol in parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
 
-    auto &var=result.add_variable();
+    domain.push_back(mathematical_function_typet::variablet());
+    auto &var=domain.back();
     std::string id=buffer;
     var.set_identifier(id);
     var.type()=sort();
@@ -755,15 +756,15 @@ mathematical_function_typet sygus_parsert::function_signature()
     if(next_token()!=CLOSE)
     {
       error() << "expected ')' at end of parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
   }
 
   next_token(); // eat the ')'
 
-  result.codomain()=sort();
+  auto codomain = sort();
 
-  return result;
+  return mathematical_function_typet(domain, codomain);
 }
 
 void sygus_parsert::command(const std::string &c)
@@ -960,29 +961,30 @@ void sygus_parsert::command(const std::string &c)
 
 mathematical_function_typet sygus_parsert::inv_function_signature()
 {
-  mathematical_function_typet result;
-
   if(next_token()!=OPEN)
   {
     error() << "expected '(' at beginning of signature" << eom;
-    return result;
+    return mathematical_function_typet({}, nil_typet());
   }
+
+  mathematical_function_typet::domaint domain;
 
   while(peek()!=CLOSE)
   {
     if(next_token()!=OPEN)
     {
       error() << "expected '(' at beginning of parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
 
     if(next_token()!=SYMBOL)
     {
       error() << "expected symbol in parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
 
-    auto &var=result.add_variable();
+    domain.push_back(mathematical_function_typet::variablet());
+    auto &var=domain.back();
     std::string id=buffer;
     var.set_identifier(id);
     var.type()=sort();
@@ -991,15 +993,13 @@ mathematical_function_typet sygus_parsert::inv_function_signature()
     if(next_token()!=CLOSE)
     {
       error() << "expected ')' at end of parameter" << eom;
-      return result;
+      return mathematical_function_typet({}, nil_typet());
     }
   }
 
   next_token(); // eat the ')'
 
-  result.codomain()=bool_typet();
-
-  return result;
+  return mathematical_function_typet(domain, bool_typet());
 }
 
 

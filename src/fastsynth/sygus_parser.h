@@ -42,6 +42,9 @@ public:
   {
     mathematical_function_typet type;
     exprt body;
+    functiont():type({}, nil_typet())
+    {
+    }
   };
 
   using function_mapt=std::map<irep_idt, functiont>;
