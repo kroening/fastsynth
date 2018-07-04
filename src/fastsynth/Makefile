@@ -11,6 +11,7 @@ OBJ+= ../../$(CPROVER_DIR)/src/ansi-c/ansi-c$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/goto-symex/goto-symex$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/goto-programs/goto-programs$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/pointer-analysis/pointer-analysis$(LIBEXT) \
+      ../../$(CPROVER_DIR)/src/analyses/analyses$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/langapi/langapi$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/solvers/solvers$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/analyses/dirty$(OBJEXT) \
