@@ -8,17 +8,20 @@
 #include "synth_encoding.h"
 #include "solver_learn.h"
 
-solver_learn_baset::solver_learn_baset(
-  const namespacet &_ns,
-  const problemt &_problem,
-  message_handlert &_message_handler):
-  learnt(_message_handler), ns(_ns), problem(_problem)
-{
+solver_learn_baset::solver_learn_baset(const namespacet &_ns,
+                                       const problemt &_problem,
+                                       synth_encoding_baset &_synth_encoding,
+                                       message_handlert &_message_handler)
+    : learnt(_message_handler),
+      ns(_ns),
+      problem(_problem),
+      synth_encoding(_synth_encoding) {
+  synth_encoding.literals = problem.literals;
 }
 
 void solver_learn_baset::add_counterexample(
   const counterexamplet &ce,
-  synth_encodingt &synth_encoding,
+  synth_encoding_baset &synth_encoding,
   decision_proceduret &solver)
 {
   for(const auto &it : ce.assignment)
@@ -33,7 +36,7 @@ void solver_learn_baset::add_counterexample(
 }
 
 void solver_learn_baset::add_problem(
-  synth_encodingt &encoding,
+  synth_encoding_baset &encoding,
   decision_proceduret &solver)
 {
   for(const exprt &e : problem.side_conditions)
@@ -60,9 +63,10 @@ void solver_learn_baset::add_problem(
 solver_learnt::solver_learnt(
   const namespacet &_ns,
   const problemt &_problem,
+  synth_encoding_baset &synth_encoding,
   message_handlert &_message_handler):
-  solver_learn_baset(_ns, _problem, _message_handler),
-  program_size(1u)
+  solver_learn_baset(_ns, _problem, synth_encoding, _message_handler),
+  program_size(1u), use_smt(false)
 {
 }
 
@@ -95,10 +99,9 @@ decision_proceduret::resultt solver_learnt::operator()()
 decision_proceduret::resultt solver_learnt::operator()(
   decision_proceduret &solver)
 {
-  synth_encodingt synth_encoding;
+  synth_encoding.clear();
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = enable_bitwise;
-  synth_encoding.literals = problem.literals;
 
   if(counterexamples.empty())
   {

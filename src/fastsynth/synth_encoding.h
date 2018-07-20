@@ -5,7 +5,7 @@
 
 #include <solvers/decision_procedure.h>
 
-#include "cegis_types.h"
+#include "synth_encoding_base.h"
 
 #include <set>
 
@@ -120,27 +120,16 @@ protected:
     const bool enable_bitwise);
 };
 
-class synth_encodingt
+class synth_encodingt : public synth_encoding_baset
 {
-public:
-  synth_encodingt():program_size(1), enable_bitwise(false), enable_division(false)
-  {
-  }
+ public:
+  synth_encodingt() {}
 
-  exprt operator()(const exprt &);
+  exprt operator()(const exprt &) override;
 
-  solutiont get_solution(const decision_proceduret &) const;
+  solutiont get_solution(const decision_proceduret &) const override;
 
-  std::string suffix;
-  std::size_t program_size;
-  bool enable_bitwise;
-  bool enable_division;
-
-  using constraintst=std::list<exprt>;
-  constraintst constraints;
-
-  /// Pre-configured constants to include in the expression set.
-  std::set<constant_exprt> literals;
+  void clear() override;
 
 protected:
   std::map<symbol_exprt, e_datat> e_data_map;
