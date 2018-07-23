@@ -11,12 +11,17 @@ class decision_proceduret;
 /// verify a candidate solution
 class verifyt:public messaget
 {
+  /// Encoding for the verification decision procedure call.
+  verify_encoding_baset &verify_encoding;
+
 public:
   verifyt(
     const namespacet &_ns,
     const problemt &_problem,
+    verify_encoding_baset &verify_encoding,
     message_handlert &_message_handler):
     messaget(_message_handler),
+    verify_encoding(verify_encoding),
     use_smt(false),
     ns(_ns), problem(_problem)
   {
@@ -25,7 +30,7 @@ public:
   /// Check a new candidate.
   /// \return \see decision_proceduret::resultt
   virtual decision_proceduret::resultt operator()(const solutiont &);
-    
+
   const counterexamplet &get_counterexample() const
   {
     return counterexample;
@@ -39,7 +44,7 @@ protected:
   const problemt &problem;
   counterexamplet counterexample;
 
-  void add_problem(verify_encodingt &, decision_proceduret &);
+  void add_problem(verify_encoding_baset &, decision_proceduret &);
 
   void output(
     const solutiont::functionst &,

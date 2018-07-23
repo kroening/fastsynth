@@ -11,7 +11,8 @@
 #include <memory>
 
 decision_proceduret::resultt cegist::operator()(
-  const problemt &problem, synth_encoding_baset &synth_encoding)
+    const problemt &problem, synth_encoding_baset &synth_encoding,
+    verify_encoding_baset &verify_encoding)
 {
   std::unique_ptr<learnt> learner;
   std::unique_ptr<verifyt> verifier;
@@ -59,7 +60,7 @@ decision_proceduret::resultt cegist::operator()(
   else
   {
     verifier=std::unique_ptr<verifyt>(new verifyt(
-      ns, problem, get_message_handler()));
+      ns, problem, verify_encoding, get_message_handler()));
   }
 
   verifier->use_smt=use_smt;

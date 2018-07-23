@@ -2,6 +2,7 @@
 #include <fastsynth/literals.h>
 #include <fastsynth/symex_problem_factory.h>
 #include <fastsynth/synth_encoding.h>
+#include <fastsynth/verify_encoding.h>
 
 #include <iostream>
 #include <fstream>
@@ -216,10 +217,11 @@ int c_frontend(const cmdlinet &cmdline)
   cegis.enable_division=cmdline.isset("enable-division");
   cegis.logic="BV"; //default logic
   synth_encodingt synth_encoding;
+  verify_encodingt verify_encoding;
 
   auto start_time=std::chrono::steady_clock::now();
 
-  switch(cegis(problem, synth_encoding))
+  switch(cegis(problem, synth_encoding, verify_encoding))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
 

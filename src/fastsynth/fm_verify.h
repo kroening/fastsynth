@@ -6,12 +6,15 @@
 /// verify a candidate solution with FM generalization
 class fm_verifyt:public verifyt
 {
+  /// FM expects bitvector word types and a compatible verification encoding.
+  verify_encodingt verify_encoding;
+
 public:
   fm_verifyt(
     const namespacet &_ns,
     const problemt &_problem,
     message_handlert &_message_handler):
-    verifyt(_ns, _problem, _message_handler)
+    verifyt(_ns, _problem, verify_encoding, _message_handler)
   {
   }
 
