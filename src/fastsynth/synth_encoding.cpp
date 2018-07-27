@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
 typet promotion(const typet &t0, const typet &t1)
 {
