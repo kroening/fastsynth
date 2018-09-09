@@ -564,9 +564,16 @@ exprt sygus_parsert::expression()
         result.type()=result.op0().type();
         return result;
       }
-      else if(id=="bvnot" || id=="bvneg")
+      else if(id=="bvnot")
       {
         bitnot_exprt result;
+        result.operands()=op;
+        result.type()=result.op0().type();
+        return result;
+      }
+      else if(id=="bvneg")
+      {
+        unary_minus_exprt result;
         result.operands()=op;
         result.type()=result.op0().type();
         return result;
