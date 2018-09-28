@@ -81,7 +81,7 @@ decision_proceduret::resultt cegist::loop(
   while(true)
   {
     iteration++;
-    status() << "** CEGIS iteration " << iteration << eom;
+    status() << blue() << "** CEGIS iteration " << iteration << reset() << eom;
 
     status() << "** Synthesis phase" << eom;
 
@@ -101,7 +101,7 @@ decision_proceduret::resultt cegist::loop(
 
         if(old_functions==solution.functions)
         {
-          error() << "NO PROGRESS MADE" << eom;
+          error() << bold() << "NO PROGRESS MADE" << reset() << eom;
           return decision_proceduret::resultt::D_ERROR;
         }
       }
@@ -117,7 +117,7 @@ decision_proceduret::resultt cegist::loop(
         continue; // do another attempt to synthesize
       }
 
-      error() << "FAILED TO GET CANDIDATE" << eom;
+      error() << bold() << "FAILED TO GET CANDIDATE" << reset() << eom;
       return decision_proceduret::resultt::D_UNSATISFIABLE;
 
     case decision_proceduret::resultt::D_ERROR:
@@ -136,7 +136,7 @@ decision_proceduret::resultt cegist::loop(
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
       status() << "Result obtained with " << iteration << " iteration(s)"
                << eom;
-      result() << "VERIFICATION SUCCESSFUL" << eom;
+      result() << bold() << "VERIFICATION SUCCESSFUL" << reset() << eom;
       return decision_proceduret::resultt::D_SATISFIABLE;
 
     case decision_proceduret::resultt::D_ERROR:
