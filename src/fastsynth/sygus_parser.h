@@ -33,8 +33,7 @@ public:
   void expand_function_applications(exprt &);
   void generate_invariant_constraints();
 
-  void apply_function_to_variables(
-    function_application_exprt &expr,
+  function_application_exprt apply_function_to_variables(
     invariant_constraint_functiont id,
     invariant_variablet variable_use);
 

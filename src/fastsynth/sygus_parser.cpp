@@ -168,10 +168,10 @@ exprt sygus_parsert::function_application(
 {
   const auto &f = function_map[identifier];
 
-  function_application_exprt result;
-
-  result.function()=symbol_exprt(identifier, f.type);
-  result.arguments()=op;
+  function_application_exprt result(
+    symbol_exprt(identifier, f.type),
+    op,
+    f.type.codomain());
 
   // check the arguments
   if(op.size()!=f.type.domain().size())
@@ -189,7 +189,6 @@ exprt sygus_parsert::function_application(
     }
   }
 
-  result.type()=f.type.codomain();
   return result;
 }
 
@@ -1009,11 +1008,9 @@ mathematical_function_typet sygus_parsert::inv_function_signature()
   return mathematical_function_typet(domain, bool_typet());
 }
 
-
-void sygus_parsert::apply_function_to_variables(
-    function_application_exprt &expr,
-    invariant_constraint_functiont function_type,
-    invariant_variablet var_use)
+function_application_exprt sygus_parsert::apply_function_to_variables(
+  invariant_constraint_functiont function_type,
+  invariant_variablet var_use)
 {
   std::string suffix;
   if(var_use == PRIMED)
@@ -1036,15 +1033,17 @@ void sygus_parsert::apply_function_to_variables(
     break;
   }
 
-  expr.function() = symbol_exprt(id, bool_typet());
   if(function_map.find(id) == function_map.end())
   {
-    error() << "undeclared function " << id << eom;
-    return;
+    error() << "undeclared function `" << id << '\'' << eom;
+    throw 0;
   }
+
   const auto &f = function_map[id];
-  expr.type() = f.type.codomain();
-  expr.arguments().resize(f.type.domain().size());
+
+  exprt::operandst arguments;
+  arguments.resize(f.type.domain().size());
+
   // get arguments
   for(std::size_t i = 0; i < f.type.domain().size(); i++)
   {
@@ -1052,32 +1051,37 @@ void sygus_parsert::apply_function_to_variables(
         + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
-      error() << "use of undeclared variable " << var_id << eom;
-    symbol_exprt operand(var_id, f.type.domain()[i].type());
-    expr.arguments()[i] = operand;
-  }
-}
+      error() << "use of undeclared variable `" << var_id << '\'' << eom;
 
+    arguments[i] = symbol_exprt(var_id, f.type.domain()[i].type());
+  }
+
+  return function_application_exprt(
+    symbol_exprt(id, f.type),
+    arguments,
+    f.type.codomain());
+}
 
 void sygus_parsert::generate_invariant_constraints()
 {
   // pre-condition application
-  function_application_exprt pre_f;
-  apply_function_to_variables(pre_f, PRE, UNPRIMED);
+  function_application_exprt pre_f =
+    apply_function_to_variables(PRE, UNPRIMED);
 
   // invariant application
-  function_application_exprt inv;
-  function_application_exprt primed_inv;
-  apply_function_to_variables(inv, INV, UNPRIMED);
-  apply_function_to_variables(primed_inv, INV, PRIMED);
+  function_application_exprt inv =
+    apply_function_to_variables(INV, UNPRIMED);
+
+  function_application_exprt primed_inv =
+    apply_function_to_variables(INV, PRIMED);
 
   // transition function application
-  function_application_exprt trans_f;
-  apply_function_to_variables(trans_f, TRANS, UNPRIMED);
+  function_application_exprt trans_f =
+    apply_function_to_variables(TRANS, UNPRIMED);
 
   //post-condition function application
-  function_application_exprt post_f;
-  apply_function_to_variables(post_f, POST, UNPRIMED);
+  function_application_exprt post_f =
+    apply_function_to_variables(POST, UNPRIMED);
 
   // create constraints
   implies_exprt pre_condition(pre_f, inv);
@@ -1199,10 +1203,11 @@ void sygus_parsert::expand_function_applications(exprt &expr)
       std::map<irep_idt, exprt> parameter_map;
       for(std::size_t i=0; i<f.type.domain().size(); i++)
       {
-        const irep_idt p_identifier=
-          f.type.domain()[i].get_identifier();
+        const auto & parameter = f.type.domain()[i];
 
-        replace_symbol.insert(p_identifier, app.arguments()[i]);
+        replace_symbol.insert(
+          symbol_exprt(parameter.get_identifier(), parameter.type()),
+          app.arguments()[i]);
       }
 
       exprt body=f.body;

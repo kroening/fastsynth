@@ -60,9 +60,10 @@ void instrument_expressions(
              c.lhs().is_not_nil())
           {
             i.type=ASSIGN;
-            function_application_exprt e(c.lhs().type());
-            e.arguments()=c.arguments();
-            e.function()=symbol_exprt(identifier, code_typet());
+            function_application_exprt e(
+              symbol_exprt(identifier, code_typet()),
+              c.arguments(),
+              c.lhs().type());
             i.code=code_assignt(c.lhs(), e);
           }
         }
