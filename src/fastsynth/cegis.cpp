@@ -1,5 +1,6 @@
 #include "cegis.h"
 #include "incremental_solver_learn.h"
+#include "local_cegis.h"
 #include "solver_learn.h"
 #include "verify.h"
 #include "fm_verify.h"
@@ -74,6 +75,13 @@ decision_proceduret::resultt cegist::loop(
   learnt &learn,
   verifyt &verify)
 {
+  local_cegist local_cegis(ns, verify, problem);
+  local_cegis.set_message_handler(get_message_handler());
+  local_cegis.incremental_solving = incremental_solving;
+  local_cegis.use_simp_solver = use_simp_solver;
+  local_cegis.use_smt = use_smt;
+  local_cegis.logic = logic;
+
   unsigned iteration=0;
 
   std::size_t program_size=min_program_size;
@@ -81,6 +89,13 @@ decision_proceduret::resultt cegist::loop(
   // now enter the CEGIS loop
   while(true)
   {
+    if(local_cegis.has_solution())
+    {
+      status() << "** CEGIS local search successful " << iteration << eom;
+      solution = local_cegis.solution;
+      return decision_proceduret::resultt::D_SATISFIABLE;
+    }
+
     iteration++;
     status() << blue << "** CEGIS iteration " << iteration << reset << eom;
 
@@ -135,6 +150,11 @@ decision_proceduret::resultt cegist::loop(
     case decision_proceduret::resultt::D_SATISFIABLE: // counterexample
       status() << "** Verification failed" << eom;
       learn.add_ce(verify.get_counterexample());
+      if(use_local_search)
+      {
+        local_cegis.push_back(solution, program_size);
+        local_cegis();
+      }
       break;
 
     case decision_proceduret::resultt::D_UNSATISFIABLE: // done, got solution
@@ -149,3 +169,16 @@ decision_proceduret::resultt cegist::loop(
   }
 }
 
+void output_expressions(
+  const std::map<symbol_exprt, exprt> &expressions,
+  const namespacet &ns,
+  std::ostream &out)
+{
+  for(const auto &e : expressions)
+  {
+    out << e.first.get_identifier()
+        << " -> "
+        << from_expr(ns, "", e.second)
+        << '\n';
+  }
+}

@@ -102,6 +102,7 @@ decision_proceduret::resultt solver_learnt::operator()(
   synth_encoding.clear();
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = enable_bitwise;
+  synth_encoding.literals = problem.literals;
 
   if(counterexamples.empty())
   {

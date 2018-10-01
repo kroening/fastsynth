@@ -83,6 +83,7 @@ int sygus_frontend(const cmdlinet &cmdline)
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
+  cegis.use_local_search=cmdline.isset("local-search");
   cegis.enable_bitwise=!cmdline.isset("no-bitwise");
   cegis.use_smt=cmdline.isset("smt");
   cegis.enable_division=cmdline.isset("enable-division");
