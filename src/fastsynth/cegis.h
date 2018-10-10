@@ -25,6 +25,7 @@ public:
     use_simp_solver(false),
     use_fm(false),
     enable_bitwise(false),
+    enable_division(false),
     use_smt(false),
     logic("BV"),
     ns(_ns)
