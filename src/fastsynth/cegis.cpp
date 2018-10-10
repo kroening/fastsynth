@@ -84,6 +84,9 @@ decision_proceduret::resultt cegist::loop(
     iteration++;
     status() << blue << "** CEGIS iteration " << iteration << reset << eom;
 
+    if(max_iterations && iteration > max_iterations)
+      return decision_proceduret::resultt::D_ERROR;
+
     status() << "** Synthesis phase" << eom;
 
     learn.set_program_size(program_size);
