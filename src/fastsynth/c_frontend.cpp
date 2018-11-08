@@ -170,7 +170,8 @@ int c_frontend(const cmdlinet &cmdline)
 
   try
   {
-    goto_model=initialize_goto_model(cmdline, mh);
+    optionst options;
+    goto_model=initialize_goto_model(cmdline, mh, options);
   }
   catch(...)
   {

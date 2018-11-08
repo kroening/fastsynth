@@ -85,59 +85,71 @@ exprt::operandst sygus_parsert::operands()
   return result;
 }
 
-let_exprt sygus_parsert::let_expression(bool first_in_chain)
+exprt sygus_parsert::let_expression(bool first_in_chain)
 {
-  let_exprt result;
   let_counter++;
 
   if(peek()!=OPEN && !first_in_chain)
   {
     // no need for chaining, single let exprt.
-    result.operands()=operands();
-    return result;
+    auto ops=operands();
+
+    if(ops.size()!=3)
+    {
+      error() << "let expression has three components";
+      return nil_exprt();
+    }
+    else if(ops[0].id()!=ID_symbol)
+    {
+      error() << "expected symbol in let expression";
+      return nil_exprt();
+    }
+    else
+      return let_exprt(to_symbol_expr(ops[0]), ops[1], ops[2]);
   }
   else
   {
     if(peek()==OPEN && first_in_chain)
     {
-      next_token(); // eat the '('that starts the bindings list
+      next_token(); // eat the '(' that starts the bindings list
     }
 
     next_token(); // eat the '(' that starts the next binding
+
+    exprt symbol_expr, value_expr, where_expr;
 
     // get the symbol that is bound
     if(next_token()==SYMBOL)
     {
       std::string tmp_buffer;
-      result.symbol() = symbol_exprt(tmp_buffer, sort());
+      symbol_expr = symbol_exprt(tmp_buffer, sort());
     }
     else
     {
       error() << "expected symbol in let expression" << eom;
-      return result;
+      return nil_exprt();
     }
 
     // get value
-    result.value() = expression();
+    value_expr = expression();
     next_token(); // eat the ')' that closes this binding
 
     // now rename op0 -- this really happens at the very
     // end of the let, but that's hard with recursion
-    irep_idt old_id=result.symbol().get_identifier();
+    irep_idt old_id=to_symbol_expr(symbol_expr).get_identifier();
     irep_idt new_id=id2string(old_id)+
                     '#'+std::to_string(id_counter++)+
                     'L'+std::to_string(let_counter++);
 
-    result.symbol().set_identifier(new_id);
-    let_variable_map[new_id]=result.value().type();
-    full_let_variable_map[new_id]=result.value().type();
+    to_symbol_expr(symbol_expr).set_identifier(new_id);
+    let_variable_map[new_id]=value_expr.type();
+    full_let_variable_map[new_id]=value_expr.type();
     renaming_map[old_id]=new_id;
 
     if(peek()!=CLOSE) // we are still in a chain of bindings
     {
       // get op2
-      result.where() = let_expression(false);
-      result.type() = result.where().type();
+      where_expr = let_expression(false);
     }
     else
     {
@@ -147,19 +159,19 @@ let_exprt sygus_parsert::let_expression(bool first_in_chain)
       if(peek()!=OPEN)
       {
         error() << "let expects where here" << eom;
-        return result;
+        return nil_exprt();
       }
 
-      result.where() = expression();
-      result.type()=result.where().type();
+      where_expr = expression();
       next_token(); // eat the final ')' that closes the let exprt
     }
 
     // don't rename any longer
     renaming_map.erase(old_id);
     let_variable_map.clear();
+
+    return let_exprt(to_symbol_expr(symbol_expr), value_expr, where_expr);
   }
-  return result;
 }
 
 exprt sygus_parsert::function_application(
