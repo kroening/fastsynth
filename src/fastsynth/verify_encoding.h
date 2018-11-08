@@ -19,6 +19,8 @@ public:
   counterexamplet get_counterexample(
     const decision_proceduret &) const override;
 
+  void clear() override;
+
   // check that the function body uses symbols that
   // are consistent with the signature of the function
   static void check_function_body(

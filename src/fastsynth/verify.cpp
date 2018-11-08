@@ -56,6 +56,8 @@ void verifyt::add_problem(
   verify_encoding_baset &verify_encoding,
   decision_proceduret &solver)
 {
+  verify_encoding.clear();
+
   for(const auto &e : problem.side_conditions)
   {
     const exprt encoded=verify_encoding(e);
@@ -66,5 +68,11 @@ void verifyt::add_problem(
   const exprt encoded=verify_encoding(conjunction(problem.constraints));
   debug() << "co: !(" << from_expr(ns, "", encoded) << ')' << eom;
   solver.set_to_false(encoded);
+
+  for(const auto &c : verify_encoding.constraints)
+  {
+    solver.set_to_true(c);
+    debug() << "ec: " << from_expr(ns, "", c) << eom;
+  }
 }
 

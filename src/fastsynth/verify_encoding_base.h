@@ -19,6 +19,9 @@ class verify_encoding_baset {
   /// Free input variables by which to test.
   std::set<exprt> free_variables;
 
+  /// Holds additional constraints generated during instrumentation.
+  mutable exprt::operandst constraints;
+
   /// Encodes a verification constraint according to the configuration.
   /// \param constraint Constraint (sub-)expression to encode.
   /// \return Encoded verification expression.
@@ -30,6 +33,9 @@ class verify_encoding_baset {
   /// \return Expression assignments representing the counterexamle input.
   virtual counterexamplet get_counterexample(
       const class decision_proceduret &solver) const = 0;
+
+  /// To be invoked between verifying two different solutions.
+  virtual void clear() = 0;
 };
 
 #endif /* CPROVER_FASTSYNTH_VERIFY_ENCODING_BASE_H_ */

@@ -161,3 +161,6 @@ counterexamplet verify_encodingt::get_counterexample(
   return result;
 }
 
+void verify_encodingt::clear()
+{
+}
