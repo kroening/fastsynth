@@ -11,10 +11,12 @@
 class verify_encodingt
 {
 public:
-  exprt operator()(const exprt &) const;
+  exprt operator()(const exprt &);
 
   std::map<symbol_exprt, exprt> functions;
   std::set<exprt> free_variables;
+
+  std::map<function_application_exprt, exprt> f_apps;
 
   counterexamplet get_counterexample(
     const decision_proceduret &) const;
