@@ -830,6 +830,26 @@ void sygus_parsert::command(const std::string &c)
     auto signature=function_signature();
     exprt body=expression();
 
+    // check type of body
+    if(signature.id() == ID_mathematical_function)
+    {
+      const auto &f_signature = to_mathematical_function_type(signature);
+      if(body.type() != f_signature.codomain())
+      {
+        error() << "type mismatch in function definition: expected `"
+                << f_signature.codomain().pretty() << "' but got `"
+                << body.type().pretty() << '\'' << eom;
+        return;
+      }
+    }
+    else if(body.type() != signature)
+    {
+      error() << "type mismatch in function definition: expected `"
+              << signature.pretty() << "' but got `"
+              << body.type().pretty() << '\'' << eom;
+      return;
+    }
+
     auto &f=function_map[id];
     f.type=signature;
     f.body=body;
