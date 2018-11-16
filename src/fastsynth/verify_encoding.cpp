@@ -50,6 +50,10 @@ void verify_encodingt::check_function_body(
             id2string(identifier);
     }
   }
+  else if(expr.id()==ID_nondet_symbol)
+  {
+    throw "function body must not have nondet_symbol";
+  }
   else
   {
     for(const auto &op : expr.operands())
