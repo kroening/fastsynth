@@ -22,7 +22,7 @@ public:
 
   /// Check a new candidate.
   /// \return \see decision_proceduret::resultt
-  virtual decision_proceduret::resultt operator()(solutiont &);
+  virtual decision_proceduret::resultt operator()(const solutiont &);
     
   const counterexamplet &get_counterexample() const
   {

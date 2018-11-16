@@ -17,7 +17,7 @@ void verifyt::output(
 }
 
 decision_proceduret::resultt verifyt::operator()(
-  solutiont &solution)
+  const solutiont &solution)
 {
   output(solution.functions, debug());
   debug() << eom;
