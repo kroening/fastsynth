@@ -4,6 +4,59 @@
 
 //#include <langapi/language_util.h>
 
+void verify_encodingt::check_function_bodies(
+  const functionst &functions)
+{
+  for(const auto &f : functions)
+  {
+    const auto &signature = to_mathematical_function_type(f.first.type());
+    check_function_body(signature, f.second);
+    if(f.second.type()!=signature.codomain())
+    {
+      throw "function body has wrong type";
+    }
+  }
+}
+
+void verify_encodingt::check_function_body(
+  const mathematical_function_typet &signature,
+  const exprt &expr)
+{
+  if(expr.id()==ID_symbol)
+  {
+    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    static const std::string parameter_prefix="synth::parameter";
+
+    if(std::string(id2string(identifier), 0, parameter_prefix.size())==parameter_prefix)
+    {
+      std::string suffix(id2string(identifier), parameter_prefix.size(), std::string::npos);
+      std::size_t count=std::stoul(suffix);
+      const auto &parameters=signature.domain();
+      if(count>=parameters.size())
+      {
+        throw "invalid parameter in function body: "+
+              id2string(identifier);
+      }
+
+      if(expr.type()!=parameters[count].type())
+      {
+        throw "parameter with invalid type in function body: "+
+              id2string(identifier);
+      }
+    }
+    else
+    {
+      throw "unexpected symbol in function body: "+
+            id2string(identifier);
+    }
+  }
+  else
+  {
+    for(const auto &op : expr.operands())
+      check_function_body(signature, op);
+  }
+}
+
 exprt verify_encodingt::operator()(const exprt &expr) const
 {
   if(expr.id()==ID_function_application)

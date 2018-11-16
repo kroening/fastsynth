@@ -22,6 +22,10 @@ decision_proceduret::resultt verifyt::operator()(
   output(solution.functions, debug());
   debug() << eom;
 
+  // check that the parameters in the given solution
+  // are consistent with the function signature
+  verify_encodingt::check_function_bodies(solution.functions);
+
   solvert solver_container(use_smt, logic, ns, get_message_handler());
   auto &solver=solver_container.get();
 
