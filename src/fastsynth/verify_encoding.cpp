@@ -24,7 +24,7 @@ void verify_encodingt::check_function_body(
 {
   if(expr.id()==ID_symbol)
   {
-    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    const irep_idt identifier=to_symbol_expr(expr).get_identifier();
     static const std::string parameter_prefix="synth::parameter";
 
     if(std::string(id2string(identifier), 0, parameter_prefix.size())==parameter_prefix)
@@ -90,7 +90,7 @@ exprt verify_encodingt::instantiate(
 {
   if(expr.id()==ID_symbol)
   {
-    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    const irep_idt identifier=to_symbol_expr(expr).get_identifier();
     static const std::string parameter_prefix="synth::parameter";
 
     if(std::string(id2string(identifier), 0, parameter_prefix.size())==parameter_prefix)
