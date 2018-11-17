@@ -17,6 +17,20 @@ public:
 class solutiont
 {
 public:
+  #if 0
+  struct functiont
+  {
+    mathematical_function_typet signature;
+    exprt body;
+  };
+
+  // map from function identifiers
+  using functionst=std::map<irep_idt, functiont>;
+
+  functionst functions;
+  functionst s_functions; // symbolic encoding
+  #endif
+
   using functionst=std::map<symbol_exprt, exprt>;
   functionst functions, s_functions;
 };
