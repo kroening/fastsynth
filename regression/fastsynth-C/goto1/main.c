@@ -1,12 +1,13 @@
 int EXPRESSION(int);
-int nondet_int();
+int nondet_int(void);
 
 int main()
 {
-  int in=nondet_int(), out;
+  int in=nondet_int();
   if(in < 0)
     goto ignore;
-  out=EXPRESSION(in);
+
+  int out=EXPRESSION(in);
   __CPROVER_assert(out==in, "");
 
   ignore:
