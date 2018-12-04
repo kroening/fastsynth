@@ -1,5 +1,6 @@
 #include <fastsynth/c_frontend.h>
 #include <fastsynth/literals.h>
+#include <fastsynth/symex_problem_factory.h>
 
 #include <iostream>
 #include <fstream>
@@ -10,6 +11,7 @@
 #include <util/cout_message.h>
 #include <util/config.h>
 #include <util/arith_tools.h>
+#include <util/expr_iterator.h>
 #include <util/std_types.h>
 
 #include <goto-programs/initialize_goto_model.h>
@@ -89,58 +91,6 @@ void show_formula(
   }
 }
 
-void get_free_variables(
-  const exprt &expr,
-  std::set<exprt> &free_variables)
-{
-  for(const auto &op : expr.operands())
-    get_free_variables(op, free_variables);
-
-  if(expr.id()==ID_nondet_symbol)
-  {
-    // record
-    free_variables.insert(expr);
-  }
-}
-
-problemt generate_cegis_problem(
-  const symex_target_equationt &src, const bool use_literals)
-{
-  problemt result;
-
-  exprt::operandst assertions;
-
-  for(const auto &step : src.SSA_steps)
-  {
-    if(step.is_assignment())
-      result.side_conditions.push_back(step.cond_expr);
-    else if(step.is_assume())
-    {
-      if(assertions.empty())
-        result.side_conditions.push_back(step.cond_expr);
-      else
-        result.side_conditions.push_back(
-          implies_exprt(conjunction(assertions), step.cond_expr));
-    }
-    else if(step.is_assert())
-    {
-      assertions.push_back(step.cond_expr);
-      result.constraints.push_back(step.cond_expr);
-    }
-  }
-
-  for(const auto &c : result.constraints)
-    get_free_variables(c, result.free_variables);
-
-  for(const auto &c : result.side_conditions)
-    get_free_variables(c, result.free_variables);
-
-  if(use_literals)
-    result.literals=find_literals(result);
-
-  return result;
-}
-
 int c_frontend(const cmdlinet &cmdline)
 {
   console_message_handlert mh;
@@ -201,8 +151,9 @@ int c_frontend(const cmdlinet &cmdline)
   show_formula(equation, ns);
   #endif
 
-  const bool use_literals=cmdline.isset("literals");
-  const auto problem=generate_cegis_problem(equation, use_literals);
+  problemt problem = to_problem(mh, options, goto_model);
+  if(cmdline.isset("literals"))
+    add_literals(problem);
 
   cegist cegis(ns);
   cegis.set_message_handler(mh);
