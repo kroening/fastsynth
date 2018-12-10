@@ -24,11 +24,19 @@ find_literals(std::set<constant_exprt> &result, const containert &expressions)
     }
 }
 
-std::set<constant_exprt> find_literals(const problemt &problem)
+/// Collects all constant literals explicitly used in the problem description.
+/// \param problem Problem in which to search for literals.
+/// \return All constant literals located in the given problem.
+static std::set<constant_exprt> find_literals(const problemt &problem)
 {
   std::set<constant_exprt> result;
   find_literals(result, problem.constraints);
   find_literals(result, problem.free_variables);
   find_literals(result, problem.side_conditions);
   return result;
+}
+
+void add_literals(problemt &problem)
+{
+  problem.literals = find_literals(problem);
 }

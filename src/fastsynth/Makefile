@@ -2,7 +2,8 @@ SRC = fastsynth_main.cpp \
       smt2_frontend.cpp c_frontend.cpp sygus_frontend.cpp \
       cegis.cpp solver.cpp verify.cpp fm_verify.cpp verify_encoding.cpp \
       literals.cpp solver_learn.cpp incremental_solver_learn.cpp \
-      synth_encoding.cpp sygus_parser.cpp fourier_motzkin.cpp
+      synth_encoding.cpp sygus_parser.cpp fourier_motzkin.cpp \
+      symex_problem_factory.cpp
 
 OBJ+= ../../$(CPROVER_DIR)/src/ansi-c/ansi-c$(LIBEXT) \
       ../../$(CPROVER_DIR)/src/assembler/assembler$(LIBEXT) \

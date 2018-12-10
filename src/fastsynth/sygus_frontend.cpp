@@ -89,7 +89,7 @@ int sygus_frontend(const cmdlinet &cmdline)
     parser.expand_function_applications(c);
 
   if(cmdline.isset("literals"))
-    problem.literals=find_literals(problem);
+    add_literals(problem);
 
   auto start_time=std::chrono::steady_clock::now();
 

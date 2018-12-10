@@ -1,5 +1,5 @@
-#ifndef CPROVER_CEGIS_TYPES_H_
-#define CPROVER_CEGIS_TYPES_H_
+#ifndef CPROVER_FASTSYNTH_CEGIS_TYPES_H_
+#define CPROVER_FASTSYNTH_CEGIS_TYPES_H_
 
 #include <set>
 #include <map>
@@ -13,7 +13,7 @@ public:
   exprt::operandst side_conditions, constraints;
   std::set<constant_exprt> literals; /// Constant hints for solver.
 };
-  
+
 class solutiont
 {
 public:
@@ -42,4 +42,4 @@ public:
   void clear() { assignment.clear(); }
 };
 
-#endif /* CPROVER_FASTSYNTH_SOLUTION_H_ */
+#endif /* CPROVER_FASTSYNTH_CEGIS_TYPES_H_ */
