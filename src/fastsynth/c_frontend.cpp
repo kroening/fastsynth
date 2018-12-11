@@ -61,9 +61,25 @@ void instrument_expressions(
           if(expressions.find(identifier)!=expressions.end() &&
              c.lhs().is_not_nil())
           {
+            const code_typet &code_type = to_code_type(c.function().type());
+            const typet &codomain = code_type.return_type();
+            const code_typet::parameterst &params = code_type.parameters();
+            mathematical_function_typet::domaint domain(params.size());
+            transform(
+              begin(params),
+              end(params),
+              begin(domain),
+              [](const code_typet::parametert &param) {
+                mathematical_function_typet::variablet result;
+                result.set_identifier(param.get_identifier());
+                result.type() = param.type();
+                return result;
+              });
+            const mathematical_function_typet type(domain, codomain);
+
             i.type=ASSIGN;
             function_application_exprt e(
-              symbol_exprt(identifier, code_typet()),
+              symbol_exprt(identifier, type),
               c.arguments(),
               c.lhs().type());
             i.code=code_assignt(c.lhs(), e);
@@ -180,8 +196,9 @@ int c_frontend(const cmdlinet &cmdline)
 
     for(const auto &f : cegis.solution.functions)
     {
+      const exprt &name = to_ssa_expr(f.first).get_original_expr();
       message.result() << "Result: "
-                       << f.first.get_identifier()
+                       << to_symbol_expr(name).get_identifier()
                        << " -> "
                        << from_expr(ns, "", f.second)
                        << '\n';
