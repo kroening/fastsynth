@@ -9,6 +9,9 @@ void verify_encodingt::check_function_bodies(
 {
   for(const auto &f : functions)
   {
+    if(ID_bool == f.second.type().id())
+      continue; // Synth encoding with just literal assignments as solution.
+
     const auto &signature = to_mathematical_function_type(f.first.type());
     check_function_body(signature, f.second);
     if(f.second.type()!=signature.codomain())
