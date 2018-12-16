@@ -32,14 +32,19 @@ static void symex(
   symbol_tablet &new_symbol_table,
   symex_target_equationt &equation,
   const optionst &options,
-  const abstract_goto_modelt &model)
+  abstract_goto_modelt &model)
 {
   const symbol_tablet &symbol_table = model.get_symbol_table();
   path_lifot path_storage;
   goto_symext goto_symex(msg, symbol_table, equation, options, path_storage);
 
-  const goto_functionst &functions = model.get_goto_functions();
-  goto_symex.symex_from_entry_point_of(functions, new_symbol_table);
+  auto get_goto_function = [&model](const irep_idt &id) ->
+    const goto_functionst::goto_functiont &
+    {
+      return model.get_goto_function(id);
+    };
+
+  goto_symex.symex_from_entry_point_of(get_goto_function, new_symbol_table);
 }
 
 /// Indicates whether the given step is part of the CEGIS constraint.
@@ -276,7 +281,7 @@ get_free_variables(std::set<exprt> &free_variables, const exprt &expr)
 problemt to_problem(
   message_handlert &msg,
   const optionst &options,
-  const abstract_goto_modelt &model)
+  abstract_goto_modelt &model)
 {
   symbol_tablet new_sym_tab;
   symex_target_equationt equation;

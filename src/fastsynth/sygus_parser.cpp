@@ -15,33 +15,26 @@ void sygus_parsert::command_sequence()
   while(next_token()==OPEN)
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected symbol as command" << eom;
-      return;
-    }
+      throw error("expected symbol as command");
 
     command(buffer);
 
     switch(next_token())
     {
     case END_OF_FILE:
-      error() << "expected closing parenthesis at end of command, but got EOF" << eom;
-      return;
+      throw error("expected closing parenthesis at end of command, but got EOF");
 
     case CLOSE:
       // what we expect
       break;
 
     default:
-      error() << "expected end of command" << eom;
-      return;
+      throw error("expected end of command");
     }
   }
 
   if(token!=END_OF_FILE)
-  {
-    error() << "unexpected token in command sequence" << eom;
-  }
+    throw error("unexpected token in command sequence");
 }
 
 void sygus_parsert::ignore_command()
@@ -65,8 +58,7 @@ void sygus_parsert::ignore_command()
       break;
 
     case END_OF_FILE:
-      error() << "unexpected EOF in command" << eom;
-      return;
+      throw error("unexpected EOF in command");
 
     default:
       next_token();
@@ -95,15 +87,9 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
     auto ops=operands();
 
     if(ops.size()!=3)
-    {
-      error() << "let expression has three components";
-      return nil_exprt();
-    }
+      throw error("let expression has three components");
     else if(ops[0].id()!=ID_symbol)
-    {
-      error() << "expected symbol in let expression";
-      return nil_exprt();
-    }
+      throw error("expected symbol in let expression");
     else
       return let_exprt(to_symbol_expr(ops[0]), ops[1], ops[2]);
   }
@@ -125,10 +111,7 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
       symbol_expr = symbol_exprt(tmp_buffer, sort());
     }
     else
-    {
-      error() << "expected symbol in let expression" << eom;
-      return nil_exprt();
-    }
+      throw error("expected symbol in let expression");
 
     // get value
     value_expr = expression();
@@ -157,10 +140,7 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
       next_token(); // eat the ')' that closes the bindings list
 
       if(peek()!=OPEN)
-      {
-        error() << "let expects where here" << eom;
-        return nil_exprt();
-      }
+        throw error("let expects where here");
 
       where_expr = expression();
       next_token(); // eat the final ')' that closes the let exprt
@@ -187,23 +167,16 @@ exprt sygus_parsert::function_application(
 
   // check the arguments
   if(op.size()!=f.type.domain().size())
-  {
-    error() << "wrong number of arguments for function" << eom;
-    return nil_exprt();
-  }
+    throw error("wrong number of arguments for function");
 
   for(std::size_t i=0; i<op.size(); i++)
   {
-    if(op[i].type() != f.type.domain()[i].type())
-    {
-      error() << "wrong type for arguments for function" << eom;
-      return result;
-    }
+    if(op[i].type() != f.type.domain()[i])
+      throw error("wrong type for arguments for function");
   }
 
   return result;
 }
-
 
 void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
@@ -232,9 +205,7 @@ void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
 
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op1().type()!=expr.op2().type())
-    {
-      error() << "mismatching types for ite operand" << eom;
-    }
+      throw error("mismatching types for ite operand");
   }
 
   expr.type()=expr.op1().type();
@@ -244,10 +215,7 @@ void sygus_parsert::fix_binary_operation_operand_types(exprt &expr)
 {
   // TODO: deal with different widths of bitvector
   if(expr.operands().size()!=2)
-  {
-    error() << "two operands expected for binary operation " << expr.id() << eom;
-    return;
-  }
+    throw error("two operands expected for binary operation");
 
   if(expr.op0().type()!=expr.op1().type())
   {
@@ -271,9 +239,7 @@ void sygus_parsert::fix_binary_operation_operand_types(exprt &expr)
 
     // throw error if still mismatching. Could be because bitvector widths are different
     if(expr.op0().type()!=expr.op1().type())
-    {
-      error() << "mismatching types for binary operand" << expr.id() << eom;
-    }
+      throw error("mismatching types for binary operator");
   }
 }
 
@@ -284,10 +250,7 @@ exprt sygus_parsert::cast_bv_to_signed(exprt &expr)
     return expr;
 
   if(expr.type().id()!=ID_unsignedbv)
-  {
-    error() << "expected unsigned bitvector" << eom;
-    return expr;
-  }
+    throw error("expected unsigned bitvector");
 
  signedbv_typet signed_type(to_unsignedbv_type(expr.type()).get_width());
  typecast_exprt result(expr, signed_type);
@@ -303,10 +266,7 @@ exprt sygus_parsert::cast_bv_to_unsigned(exprt &expr)
     return expr;
 
   if(expr.type().id()!=ID_signedbv)
-  {
-    error() << "expected signed bitvector" << eom;
-    return expr;
-  }
+    throw error("expected signed bitvector");
 
   unsignedbv_typet unsigned_type(to_signedbv_type(expr.type()).get_width());
   typecast_exprt result(expr, unsigned_type);
@@ -379,8 +339,9 @@ exprt sygus_parsert::expression()
       }
       else
       {
-        error() << "unknown symbol " << buffer << eom;
-        return symbol_exprt(identifier, bool_typet());
+        std::ostringstream msg;
+        msg << "unknown symbol `" << buffer << '\'';
+        throw error(msg.str());
       }
     }
 
@@ -516,10 +477,7 @@ exprt sygus_parsert::expression()
       else if(id=="bvashr")
       {
         if(op.size()!=2)
-        {
-          error() << "bit shift must have 2 operands" << eom;
-          return nil_exprt();
-        }
+          throw error("bit shift must have 2 operands");
 
         ashr_exprt result(op[0], op[1]);
         result.type()=op[0].type();
@@ -528,10 +486,7 @@ exprt sygus_parsert::expression()
       else if(id=="bvlshr" || id=="bvshr")
       {
         if(op.size()!=2)
-        {
-          error() << "bit shift must have two operands" << eom;
-          return nil_exprt();
-        }
+          throw error("bit shift must have two operands");
 
         lshr_exprt result(op[0], op[1]);
         result.type()=op[0].type();
@@ -540,10 +495,7 @@ exprt sygus_parsert::expression()
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
         if(op.size()!=2)
-        {
-          error() << "bit shift must have two operands" << eom;
-          return nil_exprt();
-        }
+          throw error("bit shift must have two operands");
 
         shl_exprt result(op[0], op[1]);
         result.type()=op[0].type();
@@ -718,71 +670,53 @@ exprt sygus_parsert::expression()
           return result;
         }
         else
-        {
-          error() << "use of undeclared symbol or function " << id << eom;
-          return nil_exprt();
-        }
+          throw error("use of undeclared symbol or function");
       }
     }
     else
-    {
-      error() << "expected symbol after '(' in an expression" << eom;
-      return nil_exprt();
-    }
+      throw error("expected symbol after '(' in an expression");
 
   case END_OF_FILE:
-    error() << "EOF in an expression" << eom;
-    return nil_exprt();
+    throw error("EOF in an expression");
 
   default:
-    error() << "unexpected token in an expression" << eom;
-    return nil_exprt();
+    throw error("unexpected token in an expression");
   }
 }
 
-mathematical_function_typet sygus_parsert::function_signature()
+sygus_parsert::signature_with_parameter_idst sygus_parsert::function_signature()
 {
   if(next_token()!=OPEN)
-  {
-    error() << "expected '(' at beginning of signature" << eom;
-    return mathematical_function_typet({}, nil_typet());
-  }
+    throw error("expected '(' at beginning of signature");
 
   mathematical_function_typet::domaint domain;
+  std::vector<irep_idt> parameter_ids;
 
   while(peek()!=CLOSE)
   {
     if(next_token()!=OPEN)
-    {
-      error() << "expected '(' at beginning of parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected '(' at beginning of parameter");
 
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected symbol in parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected symbol in parameter");
 
-    domain.push_back(mathematical_function_typet::variablet());
-    auto &var=domain.back();
-    std::string id=buffer;
-    var.set_identifier(id);
-    var.type()=sort();
-    local_variable_map[id]=var.type();
+    const irep_idt id=buffer;
+
+    const auto parameter_type=sort();
+    domain.push_back(parameter_type);
+    parameter_ids.push_back(id);
+    local_variable_map[id]=parameter_type;
 
     if(next_token()!=CLOSE)
-    {
-      error() << "expected ')' at end of parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected ')' at end of parameter");
   }
 
   next_token(); // eat the ')'
 
   auto codomain = sort();
 
-  return mathematical_function_typet(domain, codomain);
+  auto type=mathematical_function_typet(domain, codomain);
+  return signature_with_parameter_idst(type, parameter_ids);
 }
 
 void sygus_parsert::command(const std::string &c)
@@ -790,40 +724,24 @@ void sygus_parsert::command(const std::string &c)
   if(c=="declare-var")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after declare-var" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after declare-var");
 
     irep_idt id=buffer;
 
     if(variable_map.find(id)!=variable_map.end())
-    {
-      error() << "variable declared twice" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("variable declared twice");
 
     variable_map[id]=sort();
   }
   else if(c=="define-fun")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after define-fun" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after define-fun");
 
     const irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
-    {
-      error() << "function declared twice" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("function declared twice");
 
     local_variable_map.clear();
 
@@ -831,38 +749,37 @@ void sygus_parsert::command(const std::string &c)
     exprt body=expression();
 
     // check type of body
-    if(signature.id() == ID_mathematical_function)
+    if(signature.type.id() == ID_mathematical_function)
     {
-      const auto &f_signature = to_mathematical_function_type(signature);
+      const auto &f_signature = to_mathematical_function_type(signature.type);
       if(body.type() != f_signature.codomain())
       {
-        error() << "type mismatch in function definition: expected `"
-                << f_signature.codomain().pretty() << "' but got `"
-                << body.type().pretty() << '\'' << eom;
-        return;
+        std::ostringstream msg;
+        msg << "type mismatch in function definition: expected `"
+            << f_signature.codomain().pretty() << "' but got `"
+            << body.type().pretty() << '\'';
+        throw error(msg.str());
       }
     }
-    else if(body.type() != signature)
+    else if(body.type() != signature.type)
     {
-      error() << "type mismatch in function definition: expected `"
-              << signature.pretty() << "' but got `"
-              << body.type().pretty() << '\'' << eom;
-      return;
+      std::ostringstream msg;
+      msg << "type mismatch in function definition: expected `"
+          << signature.type.pretty() << "' but got `"
+          << body.type().pretty() << '\'';
+      throw error(msg.str());
     }
 
     auto &f=function_map[id];
-    f.type=signature;
+    f.type=signature.type;
+    f.parameter_ids=signature.parameter_ids;
     f.body=body;
     local_variable_map.clear();
   }
   else if(c=="set-logic")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after set-logic" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after set-logic");
 
     logic=buffer;
     status() << "Logic: " << logic << eom;
@@ -870,19 +787,15 @@ void sygus_parsert::command(const std::string &c)
   else if(c=="define-fun")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after define-fun" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after define-fun");
 
     irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
     {
-      error() << "function `" << id << "' declared twice" << eom;
-      ignore_command();
-      return;
+      std::ostringstream msg;
+      msg << "function `" << id << "' declared twice";
+      throw error(msg.str());
     }
 
     local_variable_map.clear();
@@ -891,35 +804,33 @@ void sygus_parsert::command(const std::string &c)
     exprt body=expression();
 
     auto &f=function_map[id];
-    f.type=signature;
+    f.type=signature.type;
+    f.parameter_ids=signature.parameter_ids;
     f.body=body;
     local_variable_map.clear();
   }
   else if(c=="synth-fun" || c=="synth-inv")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after synth-fun" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after synth-fun");
 
     irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
     {
-      error() << "function `" << id << " declared twice" << eom;
-      ignore_command();
-      return;
+      std::ostringstream msg;
+      msg << "function `" << id << "' declared twice";
+      throw error(msg.str());
     }
 
     auto signature=(id=="inv-f")?
-        inv_function_signature() : function_signature();
+      inv_function_signature() : function_signature();
 
     NTDef_seq();
 
     auto &f=function_map[id];
-    f.type=signature;
+    f.type=signature.type;
+    f.parameter_ids=signature.parameter_ids;
     f.body=nil_exprt();
 
     synth_fun_set.insert(id);
@@ -927,19 +838,15 @@ void sygus_parsert::command(const std::string &c)
   else if(c=="declare-var")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after declare-var" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after declare-var");
 
     irep_idt id=buffer;
 
     if(variable_map.find(id)!=variable_map.end())
     {
-      error() << "variable `" << id << "' declared twice" << eom;
-      ignore_command();
-      return;
+      std::ostringstream msg;
+      msg << "variable `" << id << "' declared twice";
+      throw error(msg);
     }
 
     variable_map[id]=sort();
@@ -947,33 +854,20 @@ void sygus_parsert::command(const std::string &c)
   else if(c=="declare-primed-var")
   {
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected a symbol after declare-primed-var" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("expected a symbol after declare-primed-var");
 
     irep_idt id=buffer;
     irep_idt id_prime=buffer+"!";
 
     if(variable_map.find(id)!=variable_map.end())
-    {
-      error() << "variable declared twice" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("variable declared twice");
 
     variable_map[id]=sort();
 
     if(variable_map.find(id_prime)!=variable_map.end())
-    {
-      error() << "variable declared twice" << eom;
-      ignore_command();
-      return;
-    }
+      throw error("variable declared twice");
 
     variable_map[id_prime]=variable_map[id];
-
   }
   else if(c=="constraint")
   {
@@ -997,47 +891,36 @@ void sygus_parsert::command(const std::string &c)
     ignore_command();
 }
 
-mathematical_function_typet sygus_parsert::inv_function_signature()
+sygus_parsert::signature_with_parameter_idst sygus_parsert::inv_function_signature()
 {
   if(next_token()!=OPEN)
-  {
-    error() << "expected '(' at beginning of signature" << eom;
-    return mathematical_function_typet({}, nil_typet());
-  }
+    throw error("expected '(' at beginning of signature");
 
   mathematical_function_typet::domaint domain;
+  std::vector<irep_idt> parameter_ids;
 
   while(peek()!=CLOSE)
   {
     if(next_token()!=OPEN)
-    {
-      error() << "expected '(' at beginning of parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected '(' at beginning of parameter");
 
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected symbol in parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected symbol in parameter");
 
-    domain.push_back(mathematical_function_typet::variablet());
-    auto &var=domain.back();
-    std::string id=buffer;
-    var.set_identifier(id);
-    var.type()=sort();
-    local_variable_map[id]=var.type();
+    const irep_idt id=buffer;
+    const auto parameter_type = sort();
+    domain.push_back(parameter_type);
+    parameter_ids.push_back(id);
+    local_variable_map[id]=parameter_type;
 
     if(next_token()!=CLOSE)
-    {
-      error() << "expected ')' at end of parameter" << eom;
-      return mathematical_function_typet({}, nil_typet());
-    }
+      throw error("expected ')' at end of parameter");
   }
 
   next_token(); // eat the ')'
 
-  return mathematical_function_typet(domain, bool_typet());
+  auto type = mathematical_function_typet(domain, bool_typet());
+  return signature_with_parameter_idst(type, parameter_ids);
 }
 
 function_application_exprt sygus_parsert::apply_function_to_variables(
@@ -1067,8 +950,9 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
 
   if(function_map.find(id) == function_map.end())
   {
-    error() << "undeclared function `" << id << '\'' << eom;
-    throw 0;
+    std::ostringstream msg;
+    msg << "undeclared function `" << id << '\'';
+    throw error(msg.str());
   }
 
   const auto &f = function_map[id];
@@ -1076,16 +960,21 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   exprt::operandst arguments;
   arguments.resize(f.type.domain().size());
 
+  assert(f.parameter_ids.size()==f.type.domain().size());
+
   // get arguments
   for(std::size_t i = 0; i < f.type.domain().size(); i++)
   {
-    std::string var_id = id2string(f.type.domain()[i].get_identifier())
-        + suffix;
+    std::string var_id = id2string(f.parameter_ids[i]) + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
-      error() << "use of undeclared variable `" << var_id << '\'' << eom;
+    {
+      std::ostringstream msg;
+      msg << "use of undeclared variable `" << var_id << '\'';
+      throw error(msg.str());
+    }
 
-    arguments[i] = symbol_exprt(var_id, f.type.domain()[i].type());
+    arguments[i] = symbol_exprt(var_id, f.type.domain()[i]);
   }
 
   return function_application_exprt(
@@ -1153,29 +1042,20 @@ void sygus_parsert::NTDef()
 {
   // (Symbol Sort GTerm+)
   if(next_token()!=OPEN)
-  {
-    error() << "NTDef must begin with '('" << eom;
-    return;
-  }
+    throw error("NTDef must begin with '('");
 
   if(peek()==OPEN)
     next_token(); // symbol might be in another set of parenthesis
 
   if(next_token()!=SYMBOL)
-  {
-    error() << "NTDef must have a symbol" << eom;
-    return;
-  }
+    throw error("NTDef must have a symbol");
 
   sort();
 
   GTerm_seq();
 
   if(next_token()!=CLOSE)
-  {
-    error() << "NTDef must end with ')'" << eom;
-    return;
-  }
+    throw error("NTDef must end with ')'");
 }
 
 void sygus_parsert::GTerm()
@@ -1199,8 +1079,7 @@ void sygus_parsert::GTerm()
     break;
 
   default:
-    error() << "Unexpected GTerm" << eom;
-    return;
+    throw error("Unexpected GTerm");
   }
 }
 
@@ -1235,10 +1114,11 @@ void sygus_parsert::expand_function_applications(exprt &expr)
       std::map<irep_idt, exprt> parameter_map;
       for(std::size_t i=0; i<f.type.domain().size(); i++)
       {
-        const auto & parameter = f.type.domain()[i];
+        const auto &parameter_type = f.type.domain()[i];
+        const auto &parameter_id = f.parameter_ids[i];
 
         replace_symbol.insert(
-          symbol_exprt(parameter.get_identifier(), parameter.type()),
+          symbol_exprt(parameter_id, parameter_type),
           app.arguments()[i]);
       }
 
@@ -1263,45 +1143,41 @@ typet sygus_parsert::sort()
       return real_typet();
     else
     {
-      error() << "unexpected sort: `" << buffer << '\'' << eom;
-      return nil_typet();
+      std::ostringstream msg;
+      msg << "unexpected sort: `" << buffer << '\'';
+      throw error(msg.str());
     }
 
   case OPEN:
     if(next_token()!=SYMBOL)
-    {
-      error() << "expected symbol after '(' in a sort" << eom;
-      return nil_typet();
-    }
+      throw error("expected symbol after '(' in a sort");
 
     if(buffer=="BitVec")
     {
       // this has slightly different symtax compared to SMT-LIB2
       if(next_token()!=NUMERAL)
-      {
-        error() << "expected number after BitVec" << eom;
-        return nil_typet();
-      }
+        throw error("expected number after BitVec");
 
       auto width=std::stoll(buffer);
 
       if(next_token()!=CLOSE)
-      {
-        error() << "expected ')' after BitVec width" << eom;
-        return nil_typet();
-      }
+        throw error("expected ')' after BitVec width");
 
       return unsignedbv_typet(width);
     }
     else
     {
-      error() << "unexpected sort: `" << buffer << '\'' << eom;
-      return nil_typet();
+      std::ostringstream msg;
+      msg << "unexpected sort: `" << buffer << '\'';
+      throw error(msg.str());
     }
 
   default:
-    error() << "unexpected token in a sort " << buffer << eom;
-    return nil_typet();
+    {
+      std::ostringstream msg;
+      msg << "unexpected token in a sort " << buffer;
+      throw error(msg.str());
+    }
   }
 }
 

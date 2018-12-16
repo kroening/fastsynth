@@ -99,10 +99,19 @@ int smt2_frontend(const cmdlinet &cmdline)
   smt2_frontendt smt2(in, solver);
   smt2.set_message_handler(message_handler);
 
-  smt2.parse();
-
-  if(!smt2)
-    return 20;
-  else
+  try
+  {
+    smt2.parse();
     return 0;
+  }
+  catch(const smt2_frontendt::smt2_errort &error)
+  {
+    message.error() << error.get_line_no() << ": "
+                    << error.what() << messaget::eom;
+    return 20;
+  }
+  catch(...)
+  {
+    return 20;
+  }
 }

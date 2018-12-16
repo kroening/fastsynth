@@ -65,23 +65,22 @@ void instrument_expressions(
             const typet &codomain = code_type.return_type();
             const code_typet::parameterst &params = code_type.parameters();
             mathematical_function_typet::domaint domain(params.size());
+
             transform(
               begin(params),
               end(params),
               begin(domain),
-              [](const code_typet::parametert &param) {
-                mathematical_function_typet::variablet result;
-                result.set_identifier(param.get_identifier());
-                result.type() = param.type();
-                return result;
-              });
+              [](const code_typet::parametert &param) { return param.type(); });
+
             const mathematical_function_typet type(domain, codomain);
 
             i.type=ASSIGN;
+
             function_application_exprt e(
               symbol_exprt(identifier, type),
               c.arguments(),
               c.lhs().type());
+
             i.code=code_assignt(c.lhs(), e);
           }
         }
@@ -137,7 +136,7 @@ int c_frontend(const cmdlinet &cmdline)
   try
   {
     optionst options;
-    goto_model=initialize_goto_model(cmdline, mh, options);
+    goto_model=initialize_goto_model(cmdline.args, mh, options);
   }
   catch(...)
   {
@@ -157,10 +156,17 @@ int c_frontend(const cmdlinet &cmdline)
   path_strategy_choosert path_strategy_chooser;
   auto path_storage=path_strategy_chooser.get("lifo");
   optionst options;
+
   goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);
 
+  auto get_goto_function = [&goto_model](const irep_idt &id) ->
+    const goto_functionst::goto_functiont &
+    {
+      return goto_model.get_goto_function(id);
+    };
+
   goto_symex.symex_from_entry_point_of(
-    goto_model.goto_functions,
+    get_goto_function,
     new_symbol_table);
 
   #if 0

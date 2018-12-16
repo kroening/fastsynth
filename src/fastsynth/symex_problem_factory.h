@@ -18,6 +18,6 @@
 class problemt to_problem(
   class message_handlert &msg,
   const class optionst &options,
-  const class abstract_goto_modelt &model);
+  class abstract_goto_modelt &model);
 
 #endif /* CPROVER_FASTSYNTH_SYMEX_PROBLEM_FACTORY_H_ */

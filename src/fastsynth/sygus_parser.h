@@ -15,21 +15,34 @@ public:
   {
   }
 
-  virtual bool parse() override
+  bool parse() override
   {
     command_sequence();
-    return !ok;
+    return false;
   }
 
   enum invariant_variablet { PRIMED, UNPRIMED };
   enum invariant_constraint_functiont { PRE, INV, TRANS, POST };
+
+  struct signature_with_parameter_idst
+  {
+    mathematical_function_typet type;
+    std::vector<irep_idt> parameter_ids;
+
+    signature_with_parameter_idst(
+      const mathematical_function_typet &_type,
+      const std::vector<irep_idt> &_parameter_ids):
+      type(_type), parameter_ids(_parameter_ids)
+    {
+    }
+  };
 
   exprt::operandst constraints;
   std::string logic, action;
 
   std::set<irep_idt> synth_fun_set;
 
-  mathematical_function_typet inv_function_signature();
+  signature_with_parameter_idst inv_function_signature();
   void expand_function_applications(exprt &);
   void generate_invariant_constraints();
 
@@ -40,6 +53,7 @@ public:
   struct functiont
   {
     mathematical_function_typet type;
+    std::vector<irep_idt> parameter_ids;
     exprt body;
     functiont():type({}, nil_typet())
     {
@@ -50,6 +64,7 @@ public:
   function_mapt function_map;
 
   using variable_mapt=std::map<irep_idt, typet>;
+
   variable_mapt variable_map;
   variable_mapt local_variable_map;
   variable_mapt let_variable_map;
@@ -71,7 +86,7 @@ protected:
   exprt let_expression(bool first_in_chain);
   typet sort();
   exprt::operandst operands();
-  mathematical_function_typet function_signature();
+  signature_with_parameter_idst function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);

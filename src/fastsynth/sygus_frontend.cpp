@@ -52,10 +52,16 @@ int sygus_frontend(const cmdlinet &cmdline)
   sygus_parsert parser(in);
   parser.set_message_handler(message_handler);
 
-  parser.parse();
-
-  if(!parser)
+  try
+  {
+    parser.parse();
+  }
+  catch(const sygus_parsert::smt2_errort &e)
+  {
+    message.error() << e.get_line_no() << ": "
+                    << e.what() << messaget::eom;
     return 20;
+  }
 
   symbol_tablet symbol_table;
   namespacet ns(symbol_table);
