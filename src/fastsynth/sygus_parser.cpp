@@ -338,11 +338,7 @@ exprt sygus_parsert::expression()
         return function_application(identifier, exprt::operandst());
       }
       else
-      {
-        std::ostringstream msg;
-        msg << "unknown symbol `" << buffer << '\'';
-        throw error(msg.str());
-      }
+        throw error() << "unknown symbol `" << buffer << '\'';
     }
 
   case NUMERAL:
@@ -754,20 +750,18 @@ void sygus_parsert::command(const std::string &c)
       const auto &f_signature = to_mathematical_function_type(signature.type);
       if(body.type() != f_signature.codomain())
       {
-        std::ostringstream msg;
-        msg << "type mismatch in function definition: expected `"
-            << f_signature.codomain().pretty() << "' but got `"
-            << body.type().pretty() << '\'';
-        throw error(msg.str());
+        throw error()
+          << "type mismatch in function definition: expected `"
+          << f_signature.codomain().pretty() << "' but got `"
+          << body.type().pretty() << '\'';
       }
     }
     else if(body.type() != signature.type)
     {
-      std::ostringstream msg;
-      msg << "type mismatch in function definition: expected `"
-          << signature.type.pretty() << "' but got `"
-          << body.type().pretty() << '\'';
-      throw error(msg.str());
+      throw error()
+        << "type mismatch in function definition: expected `"
+        << signature.type.pretty() << "' but got `"
+        << body.type().pretty() << '\'';
     }
 
     auto &f=function_map[id];
@@ -792,11 +786,7 @@ void sygus_parsert::command(const std::string &c)
     irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
-    {
-      std::ostringstream msg;
-      msg << "function `" << id << "' declared twice";
-      throw error(msg.str());
-    }
+      throw error() << "function `" << id << "' declared twice";
 
     local_variable_map.clear();
 
@@ -817,11 +807,7 @@ void sygus_parsert::command(const std::string &c)
     irep_idt id=buffer;
 
     if(function_map.find(id)!=function_map.end())
-    {
-      std::ostringstream msg;
-      msg << "function `" << id << "' declared twice";
-      throw error(msg.str());
-    }
+      throw error() << "function `" << id << "' declared twice";
 
     auto signature=(id=="inv-f")?
       inv_function_signature() : function_signature();
@@ -843,11 +829,7 @@ void sygus_parsert::command(const std::string &c)
     irep_idt id=buffer;
 
     if(variable_map.find(id)!=variable_map.end())
-    {
-      std::ostringstream msg;
-      msg << "variable `" << id << "' declared twice";
-      throw error(msg);
-    }
+      throw error() << "variable `" << id << "' declared twice";
 
     variable_map[id]=sort();
   }
@@ -949,11 +931,7 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   }
 
   if(function_map.find(id) == function_map.end())
-  {
-    std::ostringstream msg;
-    msg << "undeclared function `" << id << '\'';
-    throw error(msg.str());
-  }
+    throw error() << "undeclared function `" << id << '\'';
 
   const auto &f = function_map[id];
 
@@ -968,11 +946,7 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
     std::string var_id = id2string(f.parameter_ids[i]) + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
-    {
-      std::ostringstream msg;
-      msg << "use of undeclared variable `" << var_id << '\'';
-      throw error(msg.str());
-    }
+      throw error() << "use of undeclared variable `" << var_id << '\'';
 
     arguments[i] = symbol_exprt(var_id, f.type.domain()[i]);
   }
@@ -1142,11 +1116,7 @@ typet sygus_parsert::sort()
     else if(buffer=="Real")
       return real_typet();
     else
-    {
-      std::ostringstream msg;
-      msg << "unexpected sort: `" << buffer << '\'';
-      throw error(msg.str());
-    }
+      throw error() << "unexpected sort: `" << buffer << '\'';
 
   case OPEN:
     if(next_token()!=SYMBOL)
@@ -1166,18 +1136,10 @@ typet sygus_parsert::sort()
       return unsignedbv_typet(width);
     }
     else
-    {
-      std::ostringstream msg;
-      msg << "unexpected sort: `" << buffer << '\'';
-      throw error(msg.str());
-    }
+      throw error() << "unexpected sort: `" << buffer << '\'';
 
   default:
-    {
-      std::ostringstream msg;
-      msg << "unexpected token in a sort " << buffer;
-      throw error(msg.str());
-    }
+    throw error() << "unexpected token in a sort " << buffer;
   }
 }
 
