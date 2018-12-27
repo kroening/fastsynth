@@ -123,10 +123,10 @@ void e_datat::setup(
            operation==ID_bitxor)
           continue;
 
-     if( (word_type.id()!=ID_unsignedbv &&
-         word_type.id()!=ID_signedbv) || !enable_division)
-       if(operation==ID_div)
-         continue;
+      if((word_type.id()!=ID_unsignedbv &&
+          word_type.id()!=ID_signedbv) || !enable_division)
+        if(operation==ID_div)
+          continue;
 
       for(std::size_t operand0=0; operand0<pc; operand0++)
         for(std::size_t operand1=0; operand1<pc; operand1++)
@@ -166,7 +166,7 @@ void e_datat::setup(
                operation=="max" ||
                operation=="min" ||
                operation==ID_div)
-             continue;
+              continue;
 
             if(operation==ID_bitand)
               final_operation=ID_and;
