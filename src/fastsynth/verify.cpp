@@ -7,20 +7,26 @@ void verifyt::output(
   const solutiont::functionst &functions,
   std::ostream &out)
 {
+  bool first = true;
   for(const auto &f : functions)
   {
+    if(first)
+      first = false;
+    else
+      out << '\n';
+
     out << f.first.get_identifier()
         << " -> "
-        << from_expr(ns, "", f.second)
-        << '\n';
+        << from_expr(ns, "", f.second);
   }
 }
 
 decision_proceduret::resultt verifyt::operator()(
   const solutiont &solution)
 {
-  output(solution.functions, debug());
-  debug() << eom;
+  status() << green;
+  output(solution.functions, status());
+  status() << reset << eom;
 
   // check that the parameters in the given solution
   // are consistent with the function signature
