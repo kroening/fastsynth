@@ -1,0 +1,7 @@
+g++ -c -std=c++11 test.cpp \
+  -I /opt/local//Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/torch/lib/include/torch/csrc/api/include \
+  -I /opt/local//Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/torch/lib/include
+
+g++ -std=c++11 test.o -o a.out \
+  -lcaffe2 -lc10 -ltorch \
+  -L /opt/local//Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/torch/lib
