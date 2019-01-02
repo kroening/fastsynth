@@ -30,7 +30,7 @@ void train(
 {
   size_t batch_index = 0;
 
-  for(unsigned i=0; i<1000; i++)
+  for(unsigned i=0; i<=20; i++, batch_index++)
   {
     // reset gradients
     optimizer.zero_grad();
@@ -53,10 +53,11 @@ void train(
     // Update the parameters based on the calculated gradients
     optimizer.step();
 
-    if(batch_index++ % 10 == 0)
+    if(batch_index % 10 == 0)
     {
-      std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
-                << " | Loss: " << loss << std::endl;
+      std::cout << "Epoch: " << std::setw(2) << epoch
+                << " | Batch: " << std::setw(3) << batch_index
+                << " | Loss: " << std::fixed << std::setw(5) << std::setprecision(5) << loss.data<float>()[0] << '\n';
     }
   }
 }
