@@ -1,3 +1,5 @@
 
+# git clone https://github.com/pytorch/pytorch.git
 
-git clone https://github.com/pytorch/pytorch.git
+sudo port install py37-pip
+sudo pip-3.7 install torch
