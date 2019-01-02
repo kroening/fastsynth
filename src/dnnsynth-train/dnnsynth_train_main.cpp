@@ -5,7 +5,8 @@
 class synth_net : public torch::nn::Module
 {
 public:
-  torch::nn::Linear fc1 = nullptr, fc2 = nullptr;
+  torch::nn::Linear fc1 = nullptr;
+  torch::nn::Linear fc2 = nullptr;
 
   synth_net()
   {
@@ -29,16 +30,21 @@ void train(
 {
   size_t batch_index = 0;
 
+  for(unsigned i=0; i<1000; i++)
   {
     // reset gradients
     optimizer.zero_grad();
 
+    // produce data
+    torch::Tensor data = torch::zeros(8);
+    torch::Tensor label = torch::zeros(1);
+
+    data[0] = (int64_t)batch_index;
+
     // Execute the model on the input data
-    torch::Tensor data;
     auto prediction = net.forward(data);
 
     // Compute loss value
-    torch::Tensor label;
     auto loss = torch::binary_cross_entropy(prediction, label);
 
     // Compute gradients of the loss w.r.t. the parameters of our model
@@ -61,7 +67,7 @@ int main()
 
   torch::optim::SGD optimizer(net.parameters(), /*lr=*/0.1);
 
-  for(size_t epoch = 1; epoch <= 10; ++epoch)
+  for(size_t epoch = 1; epoch <= 3; ++epoch)
   {
     train(epoch, net, optimizer);
   }
