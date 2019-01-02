@@ -3,3 +3,5 @@
 
 sudo port install py37-pip
 sudo pip-3.7 install torch
+
+export DYLD_LIBRARY_PATH=/opt/local//Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/torch/lib:$DYLD_LIBRARY_PATH
