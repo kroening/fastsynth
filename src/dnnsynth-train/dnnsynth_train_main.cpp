@@ -22,6 +22,39 @@ public:
   }
 };
 
+void train(
+  const std::size_t epoch,
+  synth_net &net,
+  torch::optim::SGD &optimizer)
+{
+  size_t batch_index = 0;
+
+  {
+    // reset gradients
+    optimizer.zero_grad();
+
+    // Execute the model on the input data
+    torch::Tensor data;
+    auto prediction = net.forward(data);
+
+    // Compute loss value
+    torch::Tensor label;
+    auto loss = torch::binary_cross_entropy(prediction, label);
+
+    // Compute gradients of the loss w.r.t. the parameters of our model
+    loss.backward();
+
+    // Update the parameters based on the calculated gradients
+    optimizer.step();
+
+    if(batch_index++ % 10 == 0)
+    {
+      std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
+                << " | Loss: " << loss << std::endl;
+    }
+  }
+}
+
 int main()
 {
   synth_net net;
@@ -30,33 +63,7 @@ int main()
 
   for(size_t epoch = 1; epoch <= 10; ++epoch)
   {
-    size_t batch_index = 0;
-
-    //for (auto batch : data_loader)
-    {
-      // reset gradients
-      optimizer.zero_grad();
-
-      // Execute the model on the input data
-      torch::Tensor data;
-      auto prediction = net.forward(data);
-
-      // Compute loss value
-      torch::Tensor label;
-      auto loss = torch::binary_cross_entropy(prediction, label);
-
-      // Compute gradients of the loss w.r.t. the parameters of our model
-      loss.backward();
-
-      // Update the parameters based on the calculated gradients
-      optimizer.step();
-
-      if(batch_index++ % 10 == 0)
-      {
-        std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
-                  << " | Loss: " << loss << std::endl;
-      }
-    }
+    train(epoch, net, optimizer);
   }
 
   // Serialize the net
