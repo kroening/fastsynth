@@ -47,7 +47,7 @@ void train(
     // Compute loss value
     auto loss = torch::binary_cross_entropy(prediction, label);
 
-    // Compute gradients of the loss w.r.t. the parameters of our model
+    // Compute gradients of the loss
     loss.backward();
 
     // Update the parameters based on the calculated gradients
@@ -57,7 +57,9 @@ void train(
     {
       std::cout << "Epoch: " << std::setw(2) << epoch
                 << " | Batch: " << std::setw(3) << batch_index
-                << " | Loss: " << std::fixed << std::setw(5) << std::setprecision(5) << loss.data<float>()[0] << '\n';
+                << " | Loss: "
+                << std::fixed << std::setw(5) << std::setprecision(5)
+                << loss.data<float>()[0] << '\n';
     }
   }
 }
