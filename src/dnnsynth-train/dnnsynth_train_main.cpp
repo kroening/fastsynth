@@ -74,5 +74,7 @@ int main()
   }
 
   // Serialize the net
-  //torch::save(net, "synth_net.pt");
+  torch::serialize::OutputArchive o;
+  net.save(o);
+  o.save_to("synthnet.pt");
 }
