@@ -9,8 +9,8 @@ INCLUDES= \
   -I $(TORCH)/lib/include/torch/csrc/api/include \
   -I $(TORCH)/lib/include
 
-LIBS = -lcaffe2 -lc10 -ltorch \
-       -lmkldnn $(TORCH)/lib/libgomp-7bcb08ae.so.1 \
+LIBS = -lmkldnn $(TORCH)/lib/libgomp-7bcb08ae.so.1 \
+       -lcaffe2 -lc10 -ltorch \
        -L $(TORCH)/lib
 
 include ../config.inc
