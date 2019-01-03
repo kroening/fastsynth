@@ -17,7 +17,7 @@ include ../config.inc
 include ../../$(CPROVER_DIR)/src/config.inc
 include ../../$(CPROVER_DIR)/src/common
 
-CXXFLAGS = -MMD -MP -std=c++11 -O2
+CXXFLAGS = -MMD -MP -std=c++11 -O2 -D_GLIBCXX_USE_CXX11_ABI=0
 
 CLEANFILES = dnnsynth-train$(EXEEXT)
 
