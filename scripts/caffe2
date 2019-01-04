@@ -1,7 +1,13 @@
-
 # git clone https://github.com/pytorch/pytorch.git
+
+# Mac
 
 sudo port install py37-pip
 sudo pip-3.7 install torch
 
 export DYLD_LIBRARY_PATH=/opt/local//Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/torch/lib:$DYLD_LIBRARY_PATH
+
+# Ubuntu 18.04
+
+apt-get install python3-pip
+pip3 install https://download.pytorch.org/whl/cpu/torch-1.0.0-cp36-cp36m-linux_x86_64.whl
