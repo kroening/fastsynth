@@ -1,4 +1,4 @@
-SRC = dnnsynth_train_main.cpp
+SRC = dnnsynth_train_main.cpp produce_training_data.cpp train.cpp
 
 OBJ+= 
 
