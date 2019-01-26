@@ -10,13 +10,22 @@
 #ifndef CPROVER_FASTSYNTH_SYMEX_PROBLEM_FACTORY_H_
 #define CPROVER_FASTSYNTH_SYMEX_PROBLEM_FACTORY_H_
 
+/// Converts a previously symexed SSA equation to a CEGIS problem.
+/// \param msg Message sink for SSA conversion tasks.
+/// \param ns Namespace for prop_convt conversion from SSA to solver equation.
+/// \param equation SSA equation to convert to CEGIS problem.
+class problemt to_problem(
+  class message_handlert &msg,
+  const class namespacet &ns,
+  class symex_target_equationt &equation);
+
 /// Symexes and converts the given GOTO model to a CEGIS problem.
 /// \param msg Message sink for all symbolic execution and SSA conversion tasks.
 /// \param options Symbolic execution options.
 /// \param model GOTO model to convert.
 /// \return CEGIS problem modelling the given GOTO program.
-class problemt to_problem(
-  class message_handlert &msg,
+problemt to_problem(
+  message_handlert &msg,
   const class optionst &options,
   class abstract_goto_modelt &model);
 

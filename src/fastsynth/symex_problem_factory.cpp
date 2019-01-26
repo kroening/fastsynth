@@ -7,8 +7,8 @@
 
 \*******************************************************************/
 
-#include <fastsynth/symex_problem_factory.h>
 #include <fastsynth/cegis_types.h>
+#include <fastsynth/symex_problem_factory.h>
 
 #include <goto-programs/abstract_goto_model.h>
 
@@ -43,11 +43,10 @@ static void symex(
   goto_symext goto_symex(
     msg, symbol_table, equation, options, path_storage, guard_manager);
 
-  auto get_goto_function = [&model](const irep_idt &id) ->
-    const goto_functionst::goto_functiont &
-    {
-      return model.get_goto_function(id);
-    };
+  auto get_goto_function =
+    [&model](const irep_idt &id) -> const goto_functionst::goto_functiont & {
+    return model.get_goto_function(id);
+  };
 
   goto_symex.symex_from_entry_point_of(get_goto_function, new_symbol_table);
 }
@@ -291,14 +290,9 @@ get_free_variables(std::set<exprt> &free_variables, const exprt &expr)
 
 problemt to_problem(
   message_handlert &msg,
-  const optionst &options,
-  abstract_goto_modelt &model)
+  const namespacet &ns,
+  symex_target_equationt &equation)
 {
-  symbol_tablet new_sym_tab;
-  symex_target_equationt equation(msg);
-  symex(msg, new_sym_tab, equation, options, model);
-
-  const namespacet ns(model.get_symbol_table());
   problemt result;
   step_filtert step_filter(equation.SSA_steps);
   step_filter.ignore(is_assert_or_assume);
@@ -317,4 +311,16 @@ problemt to_problem(
     get_free_variables(result.free_variables, c);
 
   return result;
+}
+
+problemt to_problem(
+  message_handlert &msg,
+  const optionst &options,
+  abstract_goto_modelt &model)
+{
+  symbol_tablet new_sym_tab;
+  symex_target_equationt equation(msg);
+  symex(msg, new_sym_tab, equation, options, model);
+
+  return to_problem(msg, namespacet(model.get_symbol_table()), equation);
 }
