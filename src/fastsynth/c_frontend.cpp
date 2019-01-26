@@ -12,6 +12,7 @@
 #include <util/config.h>
 #include <util/arith_tools.h>
 #include <util/expr_iterator.h>
+#include <util/mathematical_types.h>
 #include <util/std_types.h>
 
 #include <goto-programs/initialize_goto_model.h>
@@ -153,8 +154,7 @@ int c_frontend(const cmdlinet &cmdline)
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
   symex_target_equationt equation;
-  path_strategy_choosert path_strategy_chooser;
-  auto path_storage=path_strategy_chooser.get("lifo");
+  auto path_storage=get_path_strategy("lifo");
   optionst options;
 
   goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);

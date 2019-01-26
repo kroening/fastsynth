@@ -2,8 +2,8 @@
 
 #include <solvers/smt2/smt2_tokenizer.h>
 
-#include <util/std_expr.h>
-#include <util/std_types.h>
+#include <util/mathematical_expr.h>
+#include <util/mathematical_types.h>
 
 class sygus_parsert:public smt2_tokenizert
 {
@@ -15,10 +15,9 @@ public:
   {
   }
 
-  bool parse() override
+  void parse()
   {
     command_sequence();
-    return false;
   }
 
   enum invariant_variablet { PRIMED, UNPRIMED };

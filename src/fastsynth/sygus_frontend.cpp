@@ -50,7 +50,6 @@ int sygus_frontend(const cmdlinet &cmdline)
   }
 
   sygus_parsert parser(in);
-  parser.set_message_handler(message_handler);
 
   try
   {

@@ -1,7 +1,7 @@
 #ifndef CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
 #define CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
 
-#include <util/std_expr.h>
+#include <util/mathematical_expr.h>
 #include <util/decision_procedure.h>
 
 #include "cegis_types.h"

@@ -97,14 +97,13 @@ int smt2_frontend(const cmdlinet &cmdline)
   solver.set_message_handler(message_handler);
 
   smt2_frontendt smt2(in, solver);
-  smt2.set_message_handler(message_handler);
 
   try
   {
     smt2.parse();
     return 0;
   }
-  catch(const smt2_frontendt::smt2_errort &error)
+  catch(const smt2_tokenizert::smt2_errort &error)
   {
     message.error() << error.get_line_no() << ": "
                     << error.what() << messaget::eom;

@@ -776,7 +776,6 @@ void sygus_parsert::command(const std::string &c)
       throw error("expected a symbol after set-logic");
 
     logic=buffer;
-    status() << "Logic: " << logic << eom;
   }
   else if(c=="define-fun")
   {
@@ -867,7 +866,6 @@ void sygus_parsert::command(const std::string &c)
   else if(c=="check-synth")
   {
     action=c;
-    status() << "Action: " << action << eom;
   }
   else
     ignore_command();
