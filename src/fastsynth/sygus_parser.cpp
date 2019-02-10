@@ -253,11 +253,7 @@ exprt sygus_parsert::cast_bv_to_signed(exprt &expr)
     throw error("expected unsigned bitvector");
 
  signedbv_typet signed_type(to_unsignedbv_type(expr.type()).get_width());
- typecast_exprt result(expr, signed_type);
- result.op0()=expr;
- result.type()=signed_type;
-
- return result;
+ return typecast_exprt(expr, signed_type);
 }
 
 exprt sygus_parsert::cast_bv_to_unsigned(exprt &expr)
@@ -269,10 +265,7 @@ exprt sygus_parsert::cast_bv_to_unsigned(exprt &expr)
     throw error("expected signed bitvector");
 
   unsignedbv_typet unsigned_type(to_signedbv_type(expr.type()).get_width());
-  typecast_exprt result(expr, unsigned_type);
-  result.op0()=expr;
-  result.type()=unsigned_type;
-  return result;
+  return typecast_exprt(expr, unsigned_type);
 }
 
 static bool is_negative_numeral(const std::string &s)
