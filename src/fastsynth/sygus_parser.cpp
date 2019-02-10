@@ -406,7 +406,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
-        predicate_exprt result(ID_le);
+        binary_predicate_exprt result(ID_le);
         result.operands()=op;
 
         fix_binary_operation_operand_types(result);
@@ -421,7 +421,7 @@ exprt sygus_parsert::expression()
       }
       else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
-        predicate_exprt result(ID_ge);
+        binary_predicate_exprt result(ID_ge);
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
@@ -436,7 +436,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="<" || id=="bvult" || id=="bvslt")
       {
-        predicate_exprt result(ID_lt);
+        binary_predicate_exprt result(ID_lt);
         result.operands()=op;
 
         fix_binary_operation_operand_types(result);
@@ -451,7 +451,7 @@ exprt sygus_parsert::expression()
       }
       else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
-        predicate_exprt result(ID_gt);
+        binary_predicate_exprt result(ID_gt);
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
