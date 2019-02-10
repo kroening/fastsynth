@@ -180,10 +180,10 @@ exprt sygus_parsert::function_application(
 
 void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
 {
-  if(expr.op0().id()!=ID_bool)
-    expr.op0().type()=bool_typet();
+  if(expr.cond().id()!=ID_bool)
+    expr.cond().type()=bool_typet();
 
-  if(expr.op1().type()!=expr.op2().type())
+  if(expr.true_case().type()!=expr.false_case().type())
   {
    // default type is unsigned bitvector
     if(expr.op1().type().id()==ID_unsignedbv)
@@ -204,11 +204,11 @@ void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
     }
 
     // throw error if still mismatching. Could be because bitvector widths are different
-    if(expr.op1().type()!=expr.op2().type())
+    if(expr.true_case().type()!=expr.false_case().type())
       throw error("mismatching types for ite operand");
   }
 
-  expr.type()=expr.op1().type();
+  expr.type()=expr.true_case().type();
 }
 
 void sygus_parsert::fix_binary_operation_operand_types(exprt &expr)
@@ -518,17 +518,11 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvnot")
       {
-        bitnot_exprt result;
-        result.operands()=op;
-        result.type()=result.op0().type();
-        return result;
+        return bitnot_exprt(op.front());
       }
       else if(id=="bvneg")
       {
-        unary_minus_exprt result;
-        result.operands()=op;
-        result.type()=result.op0().type();
-        return result;
+        return unary_minus_exprt(op.front());
       }
       else if(id=="bvadd" || id=="+")
       {
