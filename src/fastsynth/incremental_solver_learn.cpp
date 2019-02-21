@@ -21,14 +21,13 @@ void incremental_solver_learnt::init()
 {
   if(use_simp_solver)
   {
-    synth_satcheck.reset(new satcheckt());
+    synth_satcheck.reset(new satcheckt(get_message_handler()));
     synth_solver.reset(new bv_pointerst(ns, *synth_satcheck));
   }
 
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = enable_bitwise;
 
-  synth_satcheck->set_message_handler(get_message_handler());
   synth_solver->set_message_handler(get_message_handler());
   add_problem(synth_encoding, *synth_solver);
   freeze_expression_symbols();

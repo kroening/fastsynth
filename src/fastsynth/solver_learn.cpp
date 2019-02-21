@@ -84,8 +84,7 @@ decision_proceduret::resultt solver_learnt::operator()()
   }
   else
   {
-    satcheckt satcheck;
-    satcheck.set_message_handler(get_message_handler());
+    satcheckt satcheck(get_message_handler());
 
     bv_pointerst solver(ns, satcheck);
     solver.set_message_handler(get_message_handler());
