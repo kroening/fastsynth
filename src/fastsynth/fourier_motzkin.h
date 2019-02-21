@@ -13,7 +13,7 @@ public:
   exprt get_result() const;
 
   fourier_motzkint(const namespacet &_ns, propt &_prop):
-    prop_conv_solvert(_prop), ns(_ns)
+    prop_conv_solvert(_ns, _prop), ns(_ns)
   {
   }
 

@@ -187,11 +187,14 @@ public:
   constraints_convt(
     problemt &problem,
     const namespacet &ns,
-    const bool is_single_assertion)
+    const bool is_single_assertion,
+    message_handlert &_message_handler)
     : bv_pointerst(ns, prop),
+      prop(_message_handler),
       problem(problem),
       is_single_assertion(is_single_assertion)
   {
+    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -251,9 +254,15 @@ public:
   /// Inserts generated conditions into the given problem.
   /// \param problem \see side_conditions_convt::problem
   /// \param ns Namespace to forward to nested prop_convt instances.
-  explicit side_conditions_convt(problemt &problem, const namespacet &ns)
-    : bv_pointerst(ns, prop), problem(problem)
+  explicit side_conditions_convt(
+    problemt &problem,
+    const namespacet &ns,
+    message_handlert &_message_handler)
+    : bv_pointerst(ns, prop),
+      prop(_message_handler),
+      problem(problem)
   {
+    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -291,14 +300,12 @@ problemt to_problem(
   problemt result;
   step_filtert step_filter(equation.SSA_steps);
   step_filter.ignore(is_assert_or_assume);
-  side_conditions_convt side_conditions_conv(result, ns);
-  side_conditions_conv.set_message_handler(msg);
+  side_conditions_convt side_conditions_conv(result, ns, msg);
   equation.convert(side_conditions_conv);
 
   step_filter.ignore(is_side_condition);
   const bool is_single_assertion = equation.count_assertions() == 1u;
-  constraints_convt constraints_conv(result, ns, is_single_assertion);
-  constraints_conv.set_message_handler(msg);
+  constraints_convt constraints_conv(result, ns, is_single_assertion, msg);
   equation.convert(constraints_conv);
 
   for(const exprt &c : result.constraints)
