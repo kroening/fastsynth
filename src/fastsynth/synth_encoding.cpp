@@ -303,7 +303,7 @@ exprt e_datat::instructiont::constraint(
           lshr_exprt shift_expr(op0, op1);
                   shift_expr.type()=op0.type();
 
-         predicate_exprt shift_greater_than_width(ID_ge);
+         binary_predicate_exprt shift_greater_than_width(ID_ge);
          shift_greater_than_width.op0()=op1;
          shift_greater_than_width.op1()=constant_exprt(integer2string(to_unsignedbv_type(op0.type()).get_width()),op0.type());
 
