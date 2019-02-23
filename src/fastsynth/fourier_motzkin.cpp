@@ -229,14 +229,14 @@ void fourier_motzkint::rowt::collect_addends(
   }
   else if(src.id()==ID_constant)
   {
-    mp_integer i;
-    if(to_integer(src, i))
+    auto const_int = numeric_cast<mp_integer>(to_constant_expr(src));
+    if(!const_int.has_value())
       failed=true;
     else
     {
       // constants go to the right hand side of the inequality
-      if(!negate) i.negate();
-      bound+=i;
+      if(!negate) const_int.value().negate();
+      bound+=const_int.value();
     }
   }
   else
