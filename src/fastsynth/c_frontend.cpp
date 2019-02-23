@@ -13,6 +13,7 @@
 #include <util/arith_tools.h>
 #include <util/expr_iterator.h>
 #include <util/mathematical_types.h>
+#include <util/prefix.h>
 #include <util/std_types.h>
 
 #include <goto-programs/initialize_goto_model.h>

@@ -2,6 +2,8 @@
 
 #include <solvers/flattening/bv_pointers.h>
 
+#include <util/prefix.h>
+
 incremental_solver_learnt::incremental_solver_learnt(
   const namespacet &_ns,
   const problemt &_problem,
