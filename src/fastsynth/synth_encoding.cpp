@@ -568,7 +568,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
     // add the suffix
     symbol_exprt tmp=to_symbol_expr(expr);
     tmp.set_identifier(id2string(tmp.get_identifier())+suffix);
-    return tmp;
+    return std::move(tmp);
   }
   else if(expr.id()==ID_nondet_symbol)
   {
@@ -576,7 +576,7 @@ exprt synth_encodingt::operator()(const exprt &expr)
     nondet_symbol_exprt tmp=to_nondet_symbol_expr(expr);
     irep_idt identifier=tmp.get_identifier();
     tmp.set_identifier(id2string(identifier)+suffix);
-    return tmp;
+    return std::move(tmp);
   }
   else
   {

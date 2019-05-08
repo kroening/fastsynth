@@ -175,7 +175,7 @@ exprt sygus_parsert::function_application(
       throw error("wrong type for arguments for function");
   }
 
-  return result;
+  return std::move(result);
 }
 
 void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
@@ -376,25 +376,25 @@ exprt sygus_parsert::expression()
       {
         and_exprt result;
         result.operands()=op;
-        return result;
+        return std::move(result);
       }
       else if(id==ID_or)
       {
         or_exprt result;
         result.operands()=op;
-        return result;
+        return std::move(result);
       }
       else if(id==ID_xor)
       {
         notequal_exprt result;
         result.operands()=op;
-        return result;
+        return std::move(result);
       }
       else if(id==ID_not)
       {
         not_exprt result;
         result.operands()=op;
-        return result;
+        return std::move(result);
       }
       else if(id=="=")
       {
@@ -402,7 +402,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
-        return result;
+        return std::move(result);
       }
       else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
@@ -417,7 +417,7 @@ exprt sygus_parsert::expression()
           result.op0()=cast_bv_to_signed(result.op0());
           result.op1()=cast_bv_to_signed(result.op1());
         }
-        return result;
+        return std::move(result);
       }
       else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
@@ -432,7 +432,7 @@ exprt sygus_parsert::expression()
           result.op1()=cast_bv_to_signed(result.op1());
         }
 
-        return result;
+        return std::move(result);
       }
       else if(id=="<" || id=="bvult" || id=="bvslt")
       {
@@ -447,7 +447,7 @@ exprt sygus_parsert::expression()
           result.op0()=cast_bv_to_signed(result.op0());
           result.op1()=cast_bv_to_signed(result.op1());
         }
-        return result;
+        return std::move(result);
       }
       else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
@@ -461,7 +461,7 @@ exprt sygus_parsert::expression()
           result.op0()=cast_bv_to_signed(result.op0());
           result.op1()=cast_bv_to_signed(result.op1());
         }
-        return result;
+        return std::move(result);
       }
       else if(id=="bvashr")
       {
@@ -470,7 +470,7 @@ exprt sygus_parsert::expression()
 
         ashr_exprt result(op[0], op[1]);
         result.type()=op[0].type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvlshr" || id=="bvshr")
       {
@@ -479,7 +479,7 @@ exprt sygus_parsert::expression()
 
         lshr_exprt result(op[0], op[1]);
         result.type()=op[0].type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
@@ -488,7 +488,7 @@ exprt sygus_parsert::expression()
 
         shl_exprt result(op[0], op[1]);
         result.type()=op[0].type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvand")
       {
@@ -498,7 +498,7 @@ exprt sygus_parsert::expression()
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
 
-        return result;
+        return std::move(result);
       }
       else if(id=="bvor")
       {
@@ -506,7 +506,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvxor")
       {
@@ -514,7 +514,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvnot")
       {
@@ -530,7 +530,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvsub" || id=="-")
       {
@@ -538,7 +538,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvmul" || id=="*")
       {
@@ -546,7 +546,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvudiv")
       {
@@ -568,7 +568,7 @@ exprt sygus_parsert::expression()
             div_res);
 
         result.type()=div_res.type();
-        return result;
+        return std::move(result);
       }
       else if(id == "bvsdiv")
       {
@@ -592,7 +592,7 @@ exprt sygus_parsert::expression()
             from_integer(spec.max_value(), signed_res.op0().type()), signed_res);
 
         result.type() = signed_res.type();
-        return result;
+        return std::move(result);
       }
       else if(id=="/" || id=="div")
       {
@@ -600,7 +600,7 @@ exprt sygus_parsert::expression()
         result.operands()=op;
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
-        return result;
+        return std::move(result);
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
@@ -616,20 +616,20 @@ exprt sygus_parsert::expression()
           return cast_bv_to_unsigned(result);
         }
 
-        return result;
+        return std::move(result);
       }
       else if(id=="ite")
       {
         if_exprt result;
         result.operands()=op;
         fix_ite_operation_result_type(result);
-        return result;
+        return std::move(result);
       }
       else if(id=="=>" || id=="implies")
       {
         implies_exprt result;
         result.operands()=op;
-        return result;
+        return std::move(result);
       }
       else
       {
@@ -640,17 +640,17 @@ exprt sygus_parsert::expression()
         else if(local_variable_map.find(id)!=local_variable_map.end())
         {
           symbol_exprt result(id, local_variable_map[id]);
-          return result;
+          return std::move(result);
         }
         else if(let_variable_map.find(id)!=let_variable_map.end())
         {
           symbol_exprt result(id, let_variable_map[id]);
-          return result;
+          return std::move(result);
         }
         else if(variable_map.find(id)!=variable_map.end())
         {
           symbol_exprt result(id, variable_map[id]);
-          return result;
+          return std::move(result);
         }
         else
           throw error("use of undeclared symbol or function");
