@@ -158,6 +158,9 @@ int c_frontend(const cmdlinet &cmdline)
   auto path_storage=get_path_strategy("lifo");
   optionst options;
 
+  options.set_option("propagation", true);
+  options.set_option("simplify", true);
+
   goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);
 
   auto get_goto_function = [&goto_model](const irep_idt &id) ->
