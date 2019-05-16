@@ -26,7 +26,10 @@ public:
 
   struct instructiont
   {
-    explicit instructiont(std::size_t _pc):pc(_pc)
+    explicit instructiont(
+      std::size_t _pc,
+      symbol_exprt _constant_val):
+      pc(_pc), constant_val(std::move(_constant_val))
     {
     }
 

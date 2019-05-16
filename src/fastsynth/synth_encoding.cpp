@@ -86,12 +86,12 @@ void e_datat::setup(
   instructions.reserve(program_size);
   for(std::size_t pc=0; pc<program_size; pc++)
   {
-    instructions.push_back(instructiont(pc));
-    auto &instruction=instructions[pc];
-
     // constant -- hardwired default, not an option
     irep_idt const_val_id=id2string(identifier)+"_"+std::to_string(pc)+"_cval";
-    instruction.constant_val=symbol_exprt(const_val_id, word_type);
+    symbol_exprt constant_val(const_val_id, word_type);
+
+    instructions.push_back(instructiont(pc, constant_val));
+    auto &instruction=instructions[pc];
 
     // one of the arguments or constants
     for(std::size_t i=0; i<arguments.size()+literals.size(); i++)
