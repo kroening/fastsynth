@@ -36,7 +36,8 @@ static void symex(
 {
   const symbol_tablet &symbol_table = model.get_symbol_table();
   path_lifot path_storage;
-  goto_symext goto_symex(msg, symbol_table, equation, options, path_storage);
+  guard_managert guard_manager;
+  goto_symext goto_symex(msg, symbol_table, equation, options, path_storage, guard_manager);
 
   auto get_goto_function = [&model](const irep_idt &id) ->
     const goto_functionst::goto_functiont &

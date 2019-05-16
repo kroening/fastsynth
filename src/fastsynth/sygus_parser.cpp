@@ -400,8 +400,7 @@ exprt sygus_parsert::expression()
       }
       else if(id==ID_xor)
       {
-        notequal_exprt result;
-        result.operands()=op;
+        notequal_exprt result(op[0], op[1]);
         return std::move(result);
       }
       else if(id==ID_not)
@@ -412,8 +411,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="=")
       {
-        equal_exprt result;
-        result.operands()=op;
+        equal_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
         return std::move(result);
@@ -506,9 +504,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvand")
       {
-        bitand_exprt result;
-        result.operands()=op;
-
+        bitand_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
 
@@ -516,16 +512,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvor")
       {
-        bitor_exprt result;
-        result.operands()=op;
+        bitor_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvxor")
       {
-        bitxor_exprt result;
-        result.operands()=op;
+        bitxor_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
@@ -540,40 +534,33 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvadd" || id=="+")
       {
-        plus_exprt result;
-        result.operands()=op;
+        plus_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvsub" || id=="-")
       {
-        minus_exprt result;
-        result.operands()=op;
+        minus_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvmul" || id=="*")
       {
-        mult_exprt result;
-        result.operands()=op;
+        mult_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvudiv")
       {
-        div_exprt div_res;
-        div_res.operands()=op;
+        div_exprt div_res(op[0], op[1]);
         fix_binary_operation_operand_types(div_res);
         div_res.type()=div_res.op0().type();
 
         // is op1 equal to zero? If it is, division returns max value of op0
-        equal_exprt op_divbyzero;
-        op_divbyzero.op0() = div_res.op1();
-        op_divbyzero.op1() = from_integer(0, div_res.op1().type());
-        op_divbyzero.type() = bool_typet();
+        equal_exprt op_divbyzero(div_res.op1(), from_integer(0, div_res.op1().type()));
 
         bv_spect spec(div_res.op0().type());
         if_exprt result(
@@ -586,8 +573,7 @@ exprt sygus_parsert::expression()
       }
       else if(id == "bvsdiv")
       {
-        div_exprt div_res;
-        div_res.operands() = op;
+        div_exprt div_res(op[0], op[1]);
         fix_binary_operation_operand_types(div_res);
         div_res.type() = div_res.op0().type();
 
@@ -596,10 +582,7 @@ exprt sygus_parsert::expression()
         exprt signed_res = cast_bv_to_unsigned(div_res);
 
         // is op1 equal to zero? If it is, division returns max value of op0
-        equal_exprt op_divbyzero;
-        op_divbyzero.op0() = signed_res.op1();
-        op_divbyzero.op1() = from_integer(0, signed_res.op1().type());
-        op_divbyzero.type() = bool_typet();
+        equal_exprt op_divbyzero(signed_res.op1(), from_integer(0, signed_res.op1().type()));
 
         bv_spect spec(signed_res.op0().type());
         if_exprt result(op_divbyzero,
@@ -610,16 +593,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="/" || id=="div")
       {
-        div_exprt result;
-        result.operands()=op;
+        div_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
-        mod_exprt result;
-        result.operands()=op;
+        mod_exprt result(op[0], op[1]);
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
 
@@ -634,15 +615,13 @@ exprt sygus_parsert::expression()
       }
       else if(id=="ite")
       {
-        if_exprt result;
-        result.operands()=op;
+        if_exprt result(op[0], op[1], op[2]);
         fix_ite_operation_result_type(result);
         return std::move(result);
       }
       else if(id=="=>" || id=="implies")
       {
-        implies_exprt result;
-        result.operands()=op;
+        implies_exprt result(op[0], op[1]);
         return std::move(result);
       }
       else
