@@ -2,7 +2,8 @@
 #define CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
 
 #include <util/mathematical_expr.h>
-#include <util/decision_procedure.h>
+
+#include <solvers/decision_procedure.h>
 
 #include "cegis_types.h"
 
@@ -36,7 +37,9 @@ public:
 
     struct optiont
     {
-      optiont():parameter_number(0), kind(NONE),
+      explicit optiont(symbol_exprt _sel):
+        sel(std::move(_sel)),
+        parameter_number(0), kind(NONE),
         operand0(0), operand1(0), operand2(0)
       {
       }
@@ -54,8 +57,7 @@ public:
 
     optiont &add_option(const irep_idt &sel_identifier)
     {
-      options.push_back(optiont());
-      options.back().sel=symbol_exprt(sel_identifier, bool_typet());
+      options.push_back(optiont(symbol_exprt(sel_identifier, bool_typet())));
       return options.back();
     }
 

@@ -154,14 +154,15 @@ int c_frontend(const cmdlinet &cmdline)
 
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
-  symex_target_equationt equation;
+  symex_target_equationt equation(mh);
   auto path_storage=get_path_strategy("lifo");
   optionst options;
 
   options.set_option("propagation", true);
   options.set_option("simplify", true);
 
-  goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);
+  guard_managert guard_manager;
+  goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage, guard_manager);
 
   auto get_goto_function = [&goto_model](const irep_idt &id) ->
     const goto_functionst::goto_functiont &
@@ -224,6 +225,8 @@ int c_frontend(const cmdlinet &cmdline)
     break;
 
   default:
+  case decision_proceduret::resultt::D_ERROR:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
     return 1;
   }
 

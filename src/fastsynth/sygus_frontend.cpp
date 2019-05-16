@@ -132,6 +132,8 @@ int sygus_frontend(const cmdlinet &cmdline)
     break;
 
   default:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_ERROR:
     return 1;
   }
 

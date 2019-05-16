@@ -60,8 +60,7 @@ decision_proceduret::resultt fm_verifyt::operator()(solutiont &solution)
       f_it.second=simplify_expr(f_it.second, ns);
 
     satcheck_no_simplifiert fm_satcheck(get_message_handler());
-    fourier_motzkint fm_solver(ns, fm_satcheck);
-    fm_solver.set_message_handler(get_message_handler());
+    fourier_motzkint fm_solver(ns, fm_satcheck, get_message_handler());
     fm_solver.existential_variables=problem.free_variables;
 
     verify_encodingt fm_encoding;

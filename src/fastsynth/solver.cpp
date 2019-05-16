@@ -22,7 +22,6 @@ solvert::solvert(
     prop=std::unique_ptr<propt>(new satcheckt(message_handler));
 
     decision_procedure=std::unique_ptr<decision_proceduret>(
-      new bv_pointerst(_ns, *prop));
-    decision_procedure->set_message_handler(message_handler);
+      new bv_pointerst(_ns, *prop, message_handler));
   }
 }

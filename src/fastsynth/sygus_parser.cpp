@@ -29,6 +29,12 @@ void sygus_parsert::command_sequence()
       break;
 
     default:
+    case NUMERAL:
+    case NONE:
+    case STRING_LITERAL:
+    case SYMBOL:
+    case KEYWORD:
+    case OPEN:
       throw error("expected end of command");
     }
   }
@@ -61,6 +67,11 @@ void sygus_parsert::ignore_command()
       throw error("unexpected EOF in command");
 
     default:
+    case SYMBOL:
+    case NUMERAL:
+    case NONE:
+    case KEYWORD:
+    case STRING_LITERAL:
       next_token();
     }
   }
@@ -158,7 +169,10 @@ exprt sygus_parsert::function_application(
   const irep_idt &identifier,
   const exprt::operandst &op)
 {
-  const auto &f = function_map[identifier];
+  const auto f_it = function_map.find(identifier);
+  PRECONDITION(f_it != function_map.end());
+
+  const auto &f = f_it->second;
 
   function_application_exprt result(
     symbol_exprt(identifier, f.type),
@@ -662,6 +676,10 @@ exprt sygus_parsert::expression()
   case END_OF_FILE:
     throw error("EOF in an expression");
 
+  case NONE:
+  case STRING_LITERAL:
+  case KEYWORD:
+  case CLOSE:
   default:
     throw error("unexpected token in an expression");
   }
@@ -751,10 +769,9 @@ void sygus_parsert::command(const std::string &c)
         << body.type().pretty() << '\'';
     }
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=body;
+    functiont f(signature.type, signature.parameter_ids, body);
+
+    function_map.emplace(id, f);
     local_variable_map.clear();
   }
   else if(c=="set-logic")
@@ -779,10 +796,8 @@ void sygus_parsert::command(const std::string &c)
     auto signature=function_signature();
     exprt body=expression();
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=body;
+    functiont f(signature.type, signature.parameter_ids, body);
+    function_map.emplace(id, f);
     local_variable_map.clear();
   }
   else if(c=="synth-fun" || c=="synth-inv")
@@ -800,10 +815,9 @@ void sygus_parsert::command(const std::string &c)
 
     NTDef_seq();
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=nil_exprt();
+    functiont f(signature.type, signature.parameter_ids, nil_exprt());
+
+    function_map.emplace(id, f);
 
     synth_fun_set.insert(id);
   }
@@ -915,10 +929,12 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
     break;
   }
 
-  if(function_map.find(id) == function_map.end())
+  const auto f_it = function_map.find(id);
+
+  if(f_it == function_map.end())
     throw error() << "undeclared function `" << id << '\'';
 
-  const auto &f = function_map[id];
+  const auto &f = f_it->second;
 
   exprt::operandst arguments;
   arguments.resize(f.type.domain().size());
@@ -1038,6 +1054,10 @@ void sygus_parsert::GTerm()
     break;
 
   default:
+  case END_OF_FILE:
+  case CLOSE:
+  case NONE:
+  case KEYWORD:
     throw error("Unexpected GTerm");
   }
 }
@@ -1124,6 +1144,12 @@ typet sygus_parsert::sort()
       throw error() << "unexpected sort: `" << buffer << '\'';
 
   default:
+  case END_OF_FILE:
+  case NONE:
+  case STRING_LITERAL:
+  case KEYWORD:
+  case NUMERAL:
+  case CLOSE:
     throw error() << "unexpected token in a sort " << buffer;
   }
 }

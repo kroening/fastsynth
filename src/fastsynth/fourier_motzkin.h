@@ -1,6 +1,6 @@
 #include <set>
 
-#include <solvers/prop/prop_conv.h>
+#include <solvers/prop/prop_conv_solver.h>
 
 class fourier_motzkint:public prop_conv_solvert
 {
@@ -12,8 +12,11 @@ public:
   // result of quantification
   exprt get_result() const;
 
-  fourier_motzkint(const namespacet &_ns, propt &_prop):
-    prop_conv_solvert(_prop), ns(_ns)
+  fourier_motzkint(
+    const namespacet &_ns,
+    propt &_prop,
+    message_handlert &_message_handler):
+    prop_conv_solvert(_prop, _message_handler), ns(_ns)
   {
   }
 

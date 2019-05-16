@@ -4,6 +4,8 @@
 #include "cegis_types.h"
 #include "verify_encoding.h"
 
+#include <util/message.h>
+
 class decision_proceduret;
 
 /// verify a candidate solution

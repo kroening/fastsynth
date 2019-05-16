@@ -1,6 +1,6 @@
-#include <util/decision_procedure.h>
 #include <util/namespace.h>
 
+#include <solvers/decision_procedure.h>
 #include <solvers/prop/prop.h>
 
 #include <memory>

@@ -85,9 +85,7 @@ decision_proceduret::resultt solver_learnt::operator()()
   else
   {
     satcheckt satcheck(get_message_handler());
-
-    bv_pointerst solver(ns, satcheck);
-    solver.set_message_handler(get_message_handler());
+    bv_pointerst solver(ns, satcheck, get_message_handler());
 
     return this->operator()(solver);
   }
@@ -136,6 +134,8 @@ decision_proceduret::resultt solver_learnt::operator()(
     last_solution = synth_encoding.get_solution(solver);
     break;
 
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_ERROR:
   default:;
   }
 

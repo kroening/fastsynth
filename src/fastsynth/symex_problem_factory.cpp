@@ -51,7 +51,7 @@ static void symex(
 /// \param step Step to inspect.
 /// \return <code>true</code> if the given step is an assumption or assertion,
 ///   <code>false</code> otherwise.
-static bool is_assert_or_assume(const symex_target_equationt::SSA_stept &step)
+static bool is_assert_or_assume(const SSA_stept &step)
 {
   return step.is_assert() || step.is_assume();
 }
@@ -60,7 +60,7 @@ static bool is_assert_or_assume(const symex_target_equationt::SSA_stept &step)
 /// \param step Step to inspect.
 /// \return <code>true</code> if the given step is not part of the CEGIS
 ///   constraint, <code>false</code> otherwise.
-static bool is_side_condition(const symex_target_equationt::SSA_stept &step)
+static bool is_side_condition(const SSA_stept &step)
 {
   return !is_assert_or_assume(step);
 }
@@ -75,19 +75,19 @@ class step_filtert
   symex_target_equationt::SSA_stepst &steps;
 
   /// Previously disabled steps.
-  std::vector<symex_target_equationt::SSA_stept *> disabled;
+  std::vector<SSA_stept *> disabled;
 
   /// Previously disabled assertions.
-  std::vector<symex_target_equationt::SSA_stept *> disabled_assertions;
+  std::vector<SSA_stept *> disabled_assertions;
 
   /// Remove a previously applied filter.
   void undo_previous_ignore()
   {
-    for(symex_target_equationt::SSA_stept *step : disabled)
+    for(SSA_stept *step : disabled)
       step->ignore = false;
     disabled.clear();
 
-    for(symex_target_equationt::SSA_stept *step : disabled_assertions)
+    for(SSA_stept *step : disabled_assertions)
       step->type = goto_trace_stept::typet::ASSERT;
     disabled_assertions.clear();
   }
@@ -102,11 +102,11 @@ public:
 
   /// Disables all steps which match the given filter predicate.
   /// \param pred Predicate using which to filter.
-  void ignore(bool (*const pred)(const symex_target_equationt::SSA_stept &))
+  void ignore(bool (*const pred)(const SSA_stept &))
   {
     undo_previous_ignore();
 
-    for(symex_target_equationt::SSA_stept &step : steps)
+    for(SSA_stept &step : steps)
       if(pred(step))
       {
         step.ignore = true;
@@ -189,12 +189,11 @@ public:
     const namespacet &ns,
     const bool is_single_assertion,
     message_handlert &_message_handler)
-    : bv_pointerst(ns, prop),
+    : bv_pointerst(ns, prop, _message_handler),
       prop(_message_handler),
       problem(problem),
       is_single_assertion(is_single_assertion)
   {
-    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -258,11 +257,10 @@ public:
     problemt &problem,
     const namespacet &ns,
     message_handlert &_message_handler)
-    : bv_pointerst(ns, prop),
+    : bv_pointerst(ns, prop, _message_handler),
       prop(_message_handler),
       problem(problem)
   {
-    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -293,7 +291,7 @@ problemt to_problem(
   abstract_goto_modelt &model)
 {
   symbol_tablet new_sym_tab;
-  symex_target_equationt equation;
+  symex_target_equationt equation(msg);
   symex(msg, new_sym_tab, equation, options, model);
 
   const namespacet ns(model.get_symbol_table());

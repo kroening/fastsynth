@@ -295,11 +295,12 @@ exprt fourier_motzkint::rowt::as_expr() const
     }
     else
     {
-      plus_exprt lhs;
+      exprt::operandst ops;
 
       for(const auto &a : addends)
-        lhs.copy_to_operands(a.as_expr());
-      lhs.type()=lhs.op0().type();
+        ops.push_back(a.as_expr());
+
+      plus_exprt lhs(ops, ops.front().type());
 
       exprt rhs=from_integer(bound, lhs.type());
       return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
@@ -396,7 +397,7 @@ fourier_motzkint::resultt fourier_motzkint::eliminate(
 
   for(const auto &r : rows)
   {
-    debug() << "FM BOUND: " << as_string(r) << eom;
+    log.debug() << "FM BOUND: " << as_string(r) << messaget::eom;
     auto it=r.find(x);
 
     if(it==r.end())
@@ -411,15 +412,15 @@ fourier_motzkint::resultt fourier_motzkint::eliminate(
             new_r.push_back(a);
 
         if(it->negative)
-          debug() << "FM LOWER: " << as_string(new_r)
-                  << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
-                  << (r.is_strict?" < ":" <= ") << from_expr(ns, "", x) << eom;
+          log.debug() << "FM LOWER: " << as_string(new_r)
+                      << (r.bound>0 || new_r.empty()?"":"+") << -r.bound
+                      << (r.is_strict?" < ":" <= ") << from_expr(ns, "", x) << messaget::eom;
         else
         {
           negate(new_r);
-          debug() << "FM UPPER: " << from_expr(ns, "", x)
-                  << (r.is_strict?" < ":" <= ") << as_string(new_r)
-                  << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << eom;
+          log.debug() << "FM UPPER: " << from_expr(ns, "", x)
+                      << (r.is_strict?" < ":" <= ") << as_string(new_r)
+                      << (r.bound.is_negative() || new_r.empty()?"":"+") << r.bound << messaget::eom;
         }
       }
 
@@ -444,16 +445,16 @@ fourier_motzkint::resultt fourier_motzkint::eliminate(
 
       new_row.normalize();
       new_rows.push_back(new_row);
-      debug() << "FM NEW:   " << as_string(new_row) << eom;
+      log.debug() << "FM NEW:   " << as_string(new_row) << messaget::eom;
     }
 
   for(const auto &r : unrelated)
-    debug() << "FM UNREL: " << as_string(r) << eom;
+    log.debug() << "FM UNREL: " << as_string(r) << messaget::eom;
 
   for(const auto &r : new_rows)
     if(r.is_inconsistent())
     {
-      debug() << "FM INCONSISTENT" << eom;
+      log.debug() << "FM INCONSISTENT" << messaget::eom;
       return resultt::D_UNSATISFIABLE;
     }
 
@@ -461,15 +462,15 @@ fourier_motzkint::resultt fourier_motzkint::eliminate(
     new_rows.push_back(r);
 
   if(new_rows.empty())
-    debug() << "FM CONSISTENT (TAUTOLOGY)" << eom;
+    log.debug() << "FM CONSISTENT (TAUTOLOGY)" << messaget::eom;
   else
-    debug() << "FM CONSISTENT" << eom;
+    log.debug() << "FM CONSISTENT" << messaget::eom;
 
   // subsumption check
   subsumption(new_rows);
 
   for(const auto &r : new_rows)
-    debug() << "FM FINAL: " << as_string(r) << eom;
+    log.debug() << "FM FINAL: " << as_string(r) << messaget::eom;
 
   rows.swap(new_rows);
 
@@ -519,7 +520,7 @@ void fourier_motzkint::eliminate()
   // first do the existential ones
   for(const auto &x : existential_variables)
   {
-    debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
+    log.debug() << "FM x='" << from_expr(ns, "", x) << '\'' << messaget::eom;
 
     auto result=eliminate(x, rows);
 
@@ -536,7 +537,7 @@ void fourier_motzkint::eliminate()
     if(existential_variables.find(x)!=existential_variables.end())
       continue; // done already
 
-    debug() << "FM x='" << from_expr(ns, "", x) << '\'' << eom;
+    log.debug() << "FM x='" << from_expr(ns, "", x) << '\'' << messaget::eom;
 
     auto result=eliminate(x, rows);
 
@@ -544,7 +545,7 @@ void fourier_motzkint::eliminate()
       return;
   }
 
-  debug() << "FM DONE!" << eom;
+  log.debug() << "FM DONE!" << messaget::eom;
 
   exprt::operandst conjuncts;
   for(const auto &r: projection_result)
@@ -561,10 +562,10 @@ void fourier_motzkint::assignment()
 
     exprt tmp=remove_ite(c.expr);
 
-    debug() << "FM ";
-    debug().width(9);
-    debug() << std::left << std::string(value.to_string())+": "
-            << from_expr(ns, "", tmp) << eom;
+    log.debug() << "FM ";
+    log.debug().width(9);
+    log.debug() << std::left << std::string(value.to_string())+": "
+            << from_expr(ns, "", tmp) << messaget::eom;
   }
 
   eliminate();
@@ -595,7 +596,7 @@ decision_proceduret::resultt fourier_motzkint::dec_solve()
   {
     iteration++;
 
-    status() << "******** DPLL(FM) iteration " << iteration << eom;
+    log.status() << "******** DPLL(FM) iteration " << iteration << messaget::eom;
     propt::resultt result=prop.prop_solve();
 
     switch(result)
@@ -608,6 +609,7 @@ decision_proceduret::resultt fourier_motzkint::dec_solve()
       return resultt::D_UNSATISFIABLE;
 
     default:
+    case propt::resultt::P_ERROR:
       return resultt::D_ERROR;
     }
   }

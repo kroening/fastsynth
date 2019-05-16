@@ -54,7 +54,13 @@ public:
     mathematical_function_typet type;
     std::vector<irep_idt> parameter_ids;
     exprt body;
-    functiont():type({}, nil_typet())
+
+    functiont(mathematical_function_typet _type,
+              std::vector<irep_idt> _parameter_ids,
+              exprt _body):
+      type(std::move(_type)),
+      parameter_ids(std::move(_parameter_ids)),
+      body(std::move(_body))
     {
     }
   };
