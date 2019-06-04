@@ -620,8 +620,9 @@ exprt sygus_parsert::expression()
       }
       else if(id=="ite")
       {
-        if_exprt result;
-        result.operands()=op;
+        if(op.size()!=3)
+          throw error("ITE must have three operands");
+        if_exprt result(op[0], op[1], op[2]);
         fix_ite_operation_result_type(result);
         return std::move(result);
       }
