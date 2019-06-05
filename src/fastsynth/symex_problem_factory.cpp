@@ -13,7 +13,10 @@
 #include <goto-programs/abstract_goto_model.h>
 
 #include <goto-symex/goto_symex.h>
+#include <goto-symex/ssa_step.h>
 #include <goto-symex/symex_target_equation.h>
+
+#include <analyses/guard.h>
 
 #include <solvers/flattening/bv_pointers.h>
 #include <solvers/prop/prop_conv.h>
@@ -36,7 +39,9 @@ static void symex(
 {
   const symbol_tablet &symbol_table = model.get_symbol_table();
   path_lifot path_storage;
-  goto_symext goto_symex(msg, symbol_table, equation, options, path_storage);
+  guard_managert guard_manager;
+  goto_symext goto_symex(
+    msg, symbol_table, equation, options, path_storage, guard_manager);
 
   auto get_goto_function = [&model](const irep_idt &id) ->
     const goto_functionst::goto_functiont &
@@ -51,7 +56,7 @@ static void symex(
 /// \param step Step to inspect.
 /// \return <code>true</code> if the given step is an assumption or assertion,
 ///   <code>false</code> otherwise.
-static bool is_assert_or_assume(const symex_target_equationt::SSA_stept &step)
+static bool is_assert_or_assume(const SSA_stept &step)
 {
   return step.is_assert() || step.is_assume();
 }
@@ -60,7 +65,7 @@ static bool is_assert_or_assume(const symex_target_equationt::SSA_stept &step)
 /// \param step Step to inspect.
 /// \return <code>true</code> if the given step is not part of the CEGIS
 ///   constraint, <code>false</code> otherwise.
-static bool is_side_condition(const symex_target_equationt::SSA_stept &step)
+static bool is_side_condition(const SSA_stept &step)
 {
   return !is_assert_or_assume(step);
 }
@@ -75,19 +80,19 @@ class step_filtert
   symex_target_equationt::SSA_stepst &steps;
 
   /// Previously disabled steps.
-  std::vector<symex_target_equationt::SSA_stept *> disabled;
+  std::vector<SSA_stept *> disabled;
 
   /// Previously disabled assertions.
-  std::vector<symex_target_equationt::SSA_stept *> disabled_assertions;
+  std::vector<SSA_stept *> disabled_assertions;
 
   /// Remove a previously applied filter.
   void undo_previous_ignore()
   {
-    for(symex_target_equationt::SSA_stept *step : disabled)
+    for(SSA_stept *step : disabled)
       step->ignore = false;
     disabled.clear();
 
-    for(symex_target_equationt::SSA_stept *step : disabled_assertions)
+    for(SSA_stept *step : disabled_assertions)
       step->type = goto_trace_stept::typet::ASSERT;
     disabled_assertions.clear();
   }
@@ -102,11 +107,11 @@ public:
 
   /// Disables all steps which match the given filter predicate.
   /// \param pred Predicate using which to filter.
-  void ignore(bool (*const pred)(const symex_target_equationt::SSA_stept &))
+  void ignore(bool (*const pred)(const SSA_stept &))
   {
     undo_previous_ignore();
 
-    for(symex_target_equationt::SSA_stept &step : steps)
+    for(SSA_stept &step : steps)
       if(pred(step))
       {
         step.ignore = true;
@@ -189,12 +194,11 @@ public:
     const namespacet &ns,
     const bool is_single_assertion,
     message_handlert &_message_handler)
-    : bv_pointerst(ns, prop),
+    : bv_pointerst(ns, prop, _message_handler),
       prop(_message_handler),
       problem(problem),
       is_single_assertion(is_single_assertion)
   {
-    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -217,9 +221,8 @@ public:
       replace_literalst replace_literals(expressions);
       for(exprt &constraint : constraints)
       {
-        literal_exprt &literal = to_literal_expr(constraint);
-        literal.set_literal(!literal.get_literal());
-        literal.visit(replace_literals);
+        constraint = to_not_expr(constraint).op();
+        constraint.visit(replace_literals);
       }
 
       copy(
@@ -258,11 +261,10 @@ public:
     problemt &problem,
     const namespacet &ns,
     message_handlert &_message_handler)
-    : bv_pointerst(ns, prop),
+    : bv_pointerst(ns, prop, _message_handler),
       prop(_message_handler),
       problem(problem)
   {
-    set_message_handler(_message_handler);
   }
 
   /// \see decision_proceduret::set_to(const exprt &, bool)
@@ -293,7 +295,7 @@ problemt to_problem(
   abstract_goto_modelt &model)
 {
   symbol_tablet new_sym_tab;
-  symex_target_equationt equation;
+  symex_target_equationt equation(msg);
   symex(msg, new_sym_tab, equation, options, model);
 
   const namespacet ns(model.get_symbol_table());

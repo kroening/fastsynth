@@ -1,7 +1,9 @@
 #ifndef CPROVER_FASTSYNTH_CEGIS_H_
 #define CPROVER_FASTSYNTH_CEGIS_H_
 
-#include <util/decision_procedure.h>
+#include <solvers/decision_procedure.h>
+
+#include <util/message.h>
 
 #include "cegis_types.h"
 

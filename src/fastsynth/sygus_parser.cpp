@@ -28,7 +28,12 @@ void sygus_parsert::command_sequence()
       // what we expect
       break;
 
-    default:
+    case NONE:
+    case STRING_LITERAL:
+    case NUMERAL:
+    case SYMBOL:
+    case KEYWORD:
+    case OPEN:
       throw error("expected end of command");
     }
   }
@@ -60,7 +65,11 @@ void sygus_parsert::ignore_command()
     case END_OF_FILE:
       throw error("unexpected EOF in command");
 
-    default:
+    case NONE:
+    case STRING_LITERAL:
+    case NUMERAL:
+    case SYMBOL:
+    case KEYWORD:
       next_token();
     }
   }
@@ -386,8 +395,7 @@ exprt sygus_parsert::expression()
       }
       else if(id==ID_xor)
       {
-        notequal_exprt result;
-        result.operands()=op;
+        notequal_exprt result(op.front(), op.back());
         return std::move(result);
       }
       else if(id==ID_not)
@@ -398,8 +406,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="=")
       {
-        equal_exprt result;
-        result.operands()=op;
+        equal_exprt result(op.front(), op.back());
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
         return std::move(result);
@@ -492,9 +499,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvand")
       {
-        bitand_exprt result;
-        result.operands()=op;
-
+        bitand_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
 
@@ -502,16 +507,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvor")
       {
-        bitor_exprt result;
-        result.operands()=op;
+        bitor_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvxor")
       {
-        bitxor_exprt result;
-        result.operands()=op;
+        bitxor_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
         return std::move(result);
@@ -526,40 +529,31 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvadd" || id=="+")
       {
-        plus_exprt result;
-        result.operands()=op;
+        typet type(op.front().type());
+        plus_exprt result(move(op), std::move(type));
         fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvsub" || id=="-")
       {
-        minus_exprt result;
-        result.operands()=op;
+        minus_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvmul" || id=="*")
       {
-        mult_exprt result;
-        result.operands()=op;
+        mult_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvudiv")
       {
-        div_exprt div_res;
-        div_res.operands()=op;
+        div_exprt div_res(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(div_res);
-        div_res.type()=div_res.op0().type();
 
         // is op1 equal to zero? If it is, division returns max value of op0
-        equal_exprt op_divbyzero;
-        op_divbyzero.op0() = div_res.op1();
-        op_divbyzero.op1() = from_integer(0, div_res.op1().type());
-        op_divbyzero.type() = bool_typet();
+        equal_exprt op_divbyzero(
+          div_res.op1(), from_integer(0, div_res.op1().type()));
 
         bv_spect spec(div_res.op0().type());
         if_exprt result(
@@ -572,20 +566,15 @@ exprt sygus_parsert::expression()
       }
       else if(id == "bvsdiv")
       {
-        div_exprt div_res;
-        div_res.operands() = op;
+        div_exprt div_res(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(div_res);
-        div_res.type() = div_res.op0().type();
 
         div_res.op0() = cast_bv_to_signed(div_res.op0());
         div_res.op1() = cast_bv_to_signed(div_res.op1());
         exprt signed_res = cast_bv_to_unsigned(div_res);
 
         // is op1 equal to zero? If it is, division returns max value of op0
-        equal_exprt op_divbyzero;
-        op_divbyzero.op0() = signed_res.op1();
-        op_divbyzero.op1() = from_integer(0, signed_res.op1().type());
-        op_divbyzero.type() = bool_typet();
+        equal_exprt op_divbyzero(signed_res.op1(), from_integer(0, signed_res.op1().type()));
 
         bv_spect spec(signed_res.op0().type());
         if_exprt result(op_divbyzero,
@@ -596,18 +585,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="/" || id=="div")
       {
-        div_exprt result;
-        result.operands()=op;
+        div_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
         return std::move(result);
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
-        mod_exprt result;
-        result.operands()=op;
+        mod_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
-        result.type()=result.op0().type();
 
         if(id=="bvsrem")
         {
@@ -628,8 +613,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="=>" || id=="implies")
       {
-        implies_exprt result;
-        result.operands()=op;
+        implies_exprt result(std::move(op.front()), std::move(op.back()));
         return std::move(result);
       }
       else
@@ -663,6 +647,10 @@ exprt sygus_parsert::expression()
   case END_OF_FILE:
     throw error("EOF in an expression");
 
+  case NONE:
+  case STRING_LITERAL:
+  case KEYWORD:
+  case CLOSE:
   default:
     throw error("unexpected token in an expression");
   }
@@ -1038,7 +1026,10 @@ void sygus_parsert::GTerm()
     next_token(); // eat ')'
     break;
 
-  default:
+  case NONE:
+  case END_OF_FILE:
+  case KEYWORD:
+  case CLOSE:
     throw error("Unexpected GTerm");
   }
 }
@@ -1124,6 +1115,12 @@ typet sygus_parsert::sort()
     else
       throw error() << "unexpected sort: `" << buffer << '\'';
 
+  case NONE:
+  case END_OF_FILE:
+  case STRING_LITERAL:
+  case NUMERAL:
+  case KEYWORD:
+  case CLOSE:
   default:
     throw error() << "unexpected token in a sort " << buffer;
   }

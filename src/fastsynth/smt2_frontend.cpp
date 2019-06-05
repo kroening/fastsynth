@@ -91,9 +91,7 @@ int smt2_frontend(const cmdlinet &cmdline)
   namespacet ns(symbol_table);
 
   satcheckt satcheck(message_handler);
-  boolbvt solver(ns, satcheck);
-
-  solver.set_message_handler(message_handler);
+  boolbvt solver(ns, satcheck, message_handler);
 
   smt2_frontendt smt2(in, solver);
 

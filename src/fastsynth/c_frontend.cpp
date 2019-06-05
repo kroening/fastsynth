@@ -18,9 +18,15 @@
 
 #include <goto-programs/initialize_goto_model.h>
 #include <goto-programs/goto_convert_functions.h>
+#include <goto-programs/remove_complex.h>
+#include <goto-programs/remove_returns.h>
+#include <goto-programs/remove_vector.h>
+#include <goto-programs/rewrite_union.h>
 
 #include <goto-symex/goto_symex.h>
 #include <goto-symex/symex_target_equation.h>
+
+#include <analyses/guard.h>
 
 #include <ansi-c/ansi_c_language.h>
 
@@ -151,17 +157,28 @@ int c_frontend(const cmdlinet &cmdline)
     message.status() << "EXPRESSION: " << i << messaget::eom;
 
   instrument_expressions(expressions, goto_model);
+  remove_returns(goto_model);
+  remove_vector(goto_model);
+  remove_complex(goto_model);
+  rewrite_union(goto_model);
 
   symbol_tablet new_symbol_table;
   namespacet ns(goto_model.symbol_table, new_symbol_table);
-  symex_target_equationt equation;
+  symex_target_equationt equation(mh);
   auto path_storage=get_path_strategy("lifo");
+  guard_managert guard_manager;
   optionst options;
 
   options.set_option("propagation", true);
   options.set_option("simplify", true);
 
-  goto_symext goto_symex(mh, goto_model.symbol_table, equation, options, *path_storage);
+  goto_symext goto_symex(
+    mh,
+    goto_model.symbol_table,
+    equation,
+    options,
+    *path_storage,
+    guard_manager);
 
   auto get_goto_function = [&goto_model](const irep_idt &id) ->
     const goto_functionst::goto_functiont &
@@ -206,9 +223,8 @@ int c_frontend(const cmdlinet &cmdline)
 
     for(const auto &f : cegis.solution.functions)
     {
-      const exprt &name = to_ssa_expr(f.first).get_original_expr();
       message.result() << "Result: "
-                       << to_symbol_expr(name).get_identifier()
+                       << f.first.get_identifier()
                        << " -> "
                        << from_expr(ns, "", f.second)
                        << '\n';
@@ -223,7 +239,8 @@ int c_frontend(const cmdlinet &cmdline)
                          << messaget::eom;
     break;
 
-  default:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_ERROR:
     return 1;
   }
 

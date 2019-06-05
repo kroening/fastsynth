@@ -12,17 +12,16 @@ solvert::solvert(
 {
   if(use_smt)
   {
-    decision_procedure=std::unique_ptr<decision_proceduret>(
-      new smt2_dect(_ns, "fastsynth", "created by fastsynth",
-                    logic, smt2_dect::solvert::Z3));
-    decision_procedure->set_message_handler(message_handler);    
+    std::unique_ptr<smt2_dect> smt2_dec(new smt2_dect(
+      _ns, "fastsynth", "created by fastsynth", logic, smt2_dect::solvert::Z3));
+    smt2_dec->set_message_handler(message_handler);
+    decision_procedure=move(smt2_dec);
   }
   else
   {
     prop=std::unique_ptr<propt>(new satcheckt(message_handler));
 
     decision_procedure=std::unique_ptr<decision_proceduret>(
-      new bv_pointerst(_ns, *prop));
-    decision_procedure->set_message_handler(message_handler);
+      new bv_pointerst(_ns, *prop, message_handler));
   }
 }

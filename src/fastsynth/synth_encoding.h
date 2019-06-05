@@ -2,7 +2,8 @@
 #define CPROVER_FASTSYNTH_SYNTH_ENCODING_H_
 
 #include <util/mathematical_expr.h>
-#include <util/decision_procedure.h>
+
+#include <solvers/decision_procedure.h>
 
 #include "cegis_types.h"
 
@@ -32,7 +33,7 @@ public:
     std::size_t pc;
 
     // constant, always the last resort
-    symbol_exprt constant_val;
+    symbol_exprt constant_val = symbol_exprt::typeless(ID_empty_string);
 
     struct optiont
     {
@@ -41,7 +42,7 @@ public:
       {
       }
 
-      symbol_exprt sel;
+      symbol_exprt sel = symbol_exprt::typeless(ID_empty_string);
       irep_idt operation;
       std::size_t parameter_number;
       enum { NONE, PARAMETER, UNARY, BINARY, BINARY_PREDICATE, ITE } kind;
@@ -80,7 +81,7 @@ public:
   // result of the function application
   // for a set of arguments
 
-  symbol_exprt function_symbol;
+  symbol_exprt function_symbol = symbol_exprt::typeless(ID_empty_string);
   std::vector<typet> parameter_types;
   typet return_type;
   typet word_type;

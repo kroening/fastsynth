@@ -117,7 +117,7 @@ int sygus_frontend(const cmdlinet &cmdline)
       message.result() << "SMT: "
                        << f.first.get_identifier()
                        << " -> ";
-      smt.convert_expr(f.second);
+      smt.handle(f.second);
 
       message.result() << '\n';
     }
@@ -131,7 +131,8 @@ int sygus_frontend(const cmdlinet &cmdline)
                          << messaget::eom;
     break;
 
-  default:
+  case decision_proceduret::resultt::D_UNSATISFIABLE:
+  case decision_proceduret::resultt::D_ERROR:
     return 1;
   }
 

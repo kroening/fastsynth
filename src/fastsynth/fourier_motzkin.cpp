@@ -295,11 +295,14 @@ exprt fourier_motzkint::rowt::as_expr() const
     }
     else
     {
-      plus_exprt lhs;
-
-      for(const auto &a : addends)
-        lhs.copy_to_operands(a.as_expr());
-      lhs.type()=lhs.op0().type();
+      typet type = addends.front().as_expr().type();
+      exprt::operandst ops(addends.size());
+      transform(
+        begin(addends),
+        std::end(addends),
+        begin(ops),
+        std::mem_fn(&addendt::as_expr));
+      plus_exprt lhs(std::move(ops), std::move(type));
 
       exprt rhs=from_integer(bound, lhs.type());
       return binary_predicate_exprt(lhs, is_strict?ID_lt:ID_le, rhs);
@@ -607,7 +610,7 @@ decision_proceduret::resultt fourier_motzkint::dec_solve()
     case propt::resultt::P_UNSATISFIABLE:
       return resultt::D_UNSATISFIABLE;
 
-    default:
+    case propt::resultt::P_ERROR:
       return resultt::D_ERROR;
     }
   }
