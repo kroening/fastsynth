@@ -283,10 +283,7 @@ exprt e_datat::instructiont::constraint(
         else if(option.operation=="ID_div")
         {
           // if op1 is zero, smt division returns 1111
-          equal_exprt op_divbyzero;
-          op_divbyzero.op0() = op1; //op1 is equal to 0?
-          op_divbyzero.op1() = constant_exprt("0", op1.type());
-          op_divbyzero.type() = bool_typet();
+          equal_exprt op_divbyzero(op1, constant_exprt("0", op1.type()));
 
           binary_exprt binary_expr(option.operation, word_type);
           binary_expr.op0() = op0;
@@ -357,7 +354,7 @@ exprt e_datat::instructiont::constraint(
     }
     break;
 
-    default:
+    case optiont::NONE:
       std::cout<<"error: option kind: " << option.kind<<std::endl;
       UNREACHABLE;
     }
@@ -523,7 +520,7 @@ exprt e_datat::get_function(
           }
           break;
 
-        default:
+        case instructiont::optiont::NONE:
           UNREACHABLE;
         }
       }

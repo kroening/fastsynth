@@ -1,9 +1,11 @@
 #ifndef CPROVER_FASTSYNTH_LEARN_H_
 #define CPROVER_FASTSYNTH_LEARN_H_
 
-#include <util/decision_procedure.h>
-
 #include "cegis_types.h"
+
+#include <solvers/decision_procedure.h>
+
+#include <util/message.h>
 
 /// Interface for classes which provide new candidate solutions for
 /// counterexamples.

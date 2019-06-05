@@ -54,7 +54,7 @@ public:
     mathematical_function_typet type;
     std::vector<irep_idt> parameter_ids;
     exprt body;
-    functiont():type({}, nil_typet())
+    functiont():type({}, empty_typet())
     {
     }
   };

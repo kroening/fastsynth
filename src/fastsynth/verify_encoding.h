@@ -3,9 +3,10 @@
 
 #include <set>
 
-#include <util/decision_procedure.h>
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
+
+#include <solvers/decision_procedure.h>
 
 #include "cegis_types.h"
 
