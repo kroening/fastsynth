@@ -273,7 +273,7 @@ public:
     problem.side_conditions.push_back(sc);
   }
 };
-}
+} // namespace
 
 /// Retrieves all free variables in the given expression.
 /// \param free_variables Container with all free variables to extend.
@@ -316,11 +316,11 @@ problemt to_problem(
 problemt to_problem(
   message_handlert &msg,
   const optionst &options,
+  symbol_tablet &new_symbol_table,
   abstract_goto_modelt &model)
 {
-  symbol_tablet new_sym_tab;
   symex_target_equationt equation(msg);
-  symex(msg, new_sym_tab, equation, options, model);
+  symex(msg, new_symbol_table, equation, options, model);
 
   return to_problem(msg, namespacet(model.get_symbol_table()), equation);
 }
