@@ -6,6 +6,7 @@
 #include "verify_encoding.h"
 
 #include <util/cout_message.h>
+#include <util/expr_initializer.h>
 #include <util/namespace.h>
 #include <util/symbol_table.h>
 #include <util/config.h>
@@ -127,7 +128,12 @@ int sygus_frontend(const cmdlinet &cmdline)
       message.result() << "SMT: "
                        << f.first.get_identifier()
                        << " -> ";
-      smt.handle(f.second);
+      if(ID_bool == f.second.type().id())
+        smt.handle(f.second);
+      else
+        smt.handle(equal_exprt(
+          *zero_initializer(f.second.type(), f.second.source_location(), ns),
+          f.second));
 
       message.result() << '\n';
     }
