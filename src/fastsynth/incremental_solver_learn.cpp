@@ -4,6 +4,8 @@
 
 #include <util/prefix.h>
 
+#include "synth_encoding_base.h"
+
 incremental_solver_learnt::incremental_solver_learnt(
   const namespacet &_ns,
   const problemt &_problem,
@@ -46,6 +48,7 @@ void incremental_solver_learnt::set_program_size(const size_t program_size)
   synth_satcheck.reset(new satcheck_minisat_no_simplifiert(get_message_handler()));
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck, get_message_handler()));
   synth_encoding.clear();
+  synth_encoding.literals = problem.literals;
 
   init();
 

@@ -6,6 +6,7 @@
 #include "verify_encoding.h"
 
 #include <util/cout_message.h>
+#include <util/expr_initializer.h>
 #include <util/namespace.h>
 #include <util/symbol_table.h>
 #include <util/config.h>
@@ -75,9 +76,15 @@ int sygus_frontend(const cmdlinet &cmdline)
   else
     cegis.max_program_size=5; // default
 
+  if(cmdline.isset("min-program-size"))
+    cegis.min_program_size=std::stol(cmdline.get_value("min-program-size"));
+  else
+    cegis.min_program_size=1; // default
+
   cegis.incremental_solving=cmdline.isset("incremental");
   cegis.use_simp_solver=cmdline.isset("simplifying-solver");
   cegis.use_fm=cmdline.isset("fm");
+  cegis.use_local_search=cmdline.isset("local-search");
   cegis.enable_bitwise=!cmdline.isset("no-bitwise");
   cegis.use_smt=cmdline.isset("smt");
   cegis.enable_division=cmdline.isset("enable-division");
@@ -121,7 +128,12 @@ int sygus_frontend(const cmdlinet &cmdline)
       message.result() << "SMT: "
                        << f.first.get_identifier()
                        << " -> ";
-      smt.handle(f.second);
+      if(ID_bool == f.second.type().id())
+        smt.handle(f.second);
+      else
+        smt.handle(equal_exprt(
+          *zero_initializer(f.second.type(), f.second.source_location(), ns),
+          f.second));
 
       message.result() << '\n';
     }

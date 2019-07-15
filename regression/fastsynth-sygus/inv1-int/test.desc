@@ -3,7 +3,6 @@ inv1-int.sl
 
 ^EXIT=0$
 ^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
 ^Result: inv -> (parameter0 <= 9)|(parameter0 < 10)$
 --
 ^warning: ignoring

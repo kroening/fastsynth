@@ -56,7 +56,10 @@ void solver_learn_baset::add_problem(
   for(const auto &c : encoding.constraints)
   {
     solver.set_to_true(c);
-    debug() << "ec: " << from_expr(ns, "", c) << eom;
+    // These constraints can get huge and due to recent changes to `expr2c`
+    // converting them to C is expensive and may even cause
+    if(message_handler && get_message_handler().get_verbosity() >= M_DEBUG)
+      debug() << "ec: " << from_expr(ns, "", c) << eom;
   }
 }
 
@@ -102,6 +105,7 @@ decision_proceduret::resultt solver_learnt::operator()(
   synth_encoding.clear();
   synth_encoding.program_size = program_size;
   synth_encoding.enable_bitwise = enable_bitwise;
+  synth_encoding.literals = problem.literals;
 
   if(counterexamples.empty())
   {

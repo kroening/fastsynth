@@ -2,7 +2,6 @@
 #define CPROVER_FASTSYNTH_PROP_LEARN_H_
 
 #include "learn.h"
-#include "synth_encoding.h"
 
 class solver_learn_baset:public learnt
 {

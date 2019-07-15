@@ -18,11 +18,15 @@ class cegist:public messaget
 public:
   // constructor
   explicit cegist(const namespacet &_ns):
+    min_program_size(1),
     max_program_size(0),
+    max_iterations(0),
     incremental_solving(false),
     use_simp_solver(false),
+    use_local_search(false),
     use_fm(false),
     enable_bitwise(false),
+    enable_division(false),
     use_smt(false),
     logic("BV"),
     ns(_ns)
@@ -35,9 +39,12 @@ public:
       const problemt &, synth_encoding_baset &synth_encoding,
       verify_encoding_baset &verify_encoding);
 
+  std::size_t min_program_size;
   std::size_t max_program_size;
+  std::size_t max_iterations;
   bool incremental_solving;
   bool use_simp_solver;
+  bool use_local_search;
   bool use_fm;
   bool enable_bitwise;
   bool enable_division;

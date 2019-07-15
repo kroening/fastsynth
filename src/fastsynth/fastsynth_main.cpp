@@ -8,10 +8,12 @@
 #include "smt2_frontend.h"
 
 #define FASTSYNTH_OPTIONS \
+   "(min-program-size):" \
    "(max-program-size):" \
    "(incremental)" \
    "(simplifying-solver)" \
    "(fm)" \
+   "(local-search)" \
    "(no-bitwise)" \
    "(verbosity):" \
    "(smt)" \

@@ -3,7 +3,6 @@ inv0.sl
 
 ^EXIT=0$
 ^SIGNAL=0$
-^VERIFICATION SUCCESSFUL$
 ^Result: inv -> [0-9]+$
 --
 ^warning: ignoring
