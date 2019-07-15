@@ -7,9 +7,10 @@
 incremental_solver_learnt::incremental_solver_learnt(
   const namespacet &_ns,
   const problemt &_problem,
+  synth_encoding_baset &synth_encoding,
   bool _use_simp_solver,
   message_handlert &_message_handler)
-  : solver_learn_baset(_ns, _problem, _message_handler),
+  : solver_learn_baset(_ns, _problem, synth_encoding, _message_handler),
     synth_satcheck(new satcheck_no_simplifiert(_message_handler)),
     synth_solver(new bv_pointerst(ns, *synth_satcheck, _message_handler)),
     program_size(1u),
@@ -44,8 +45,7 @@ void incremental_solver_learnt::set_program_size(const size_t program_size)
 
   synth_satcheck.reset(new satcheck_minisat_no_simplifiert(get_message_handler()));
   synth_solver.reset(new bv_pointerst(ns, *synth_satcheck, get_message_handler()));
-  synth_encoding = synth_encodingt();
-  synth_encoding.literals = problem.literals;
+  synth_encoding.clear();
 
   init();
 

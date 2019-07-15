@@ -7,8 +7,8 @@
 
 #include "cegis_types.h"
 
-class synth_encodingt;
-class verify_encodingt;
+class synth_encoding_baset;
+class verify_encoding_baset;
 class prop_convt;
 class learnt;
 class verifyt;
@@ -31,7 +31,9 @@ public:
 
   solutiont solution;
 
-  decision_proceduret::resultt operator()(const problemt &);
+  decision_proceduret::resultt operator()(
+      const problemt &, synth_encoding_baset &synth_encoding,
+      verify_encoding_baset &verify_encoding);
 
   std::size_t max_program_size;
   bool incremental_solving;

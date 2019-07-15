@@ -3,7 +3,6 @@
 
 #include <fastsynth/learn.h>
 #include <fastsynth/cegis.h>
-#include <fastsynth/synth_encoding.h>
 
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
@@ -21,9 +20,6 @@ class incremental_solver_learnt:public solver_learn_baset
 
   /// Decision procedure for synthesis logic.
   std::unique_ptr<class bv_pointerst> synth_solver;
-
-  /// Synthesis learn constraint generator.
-  synth_encodingt synth_encoding;
 
   /// \see learnt::set_program_size(size_t)
   size_t program_size;
@@ -46,10 +42,12 @@ public:
   /// \param msg \see msg incremental_solver_learnt::msg
   /// \param ns \see ns incremental_solver_learnt::ns
   /// \param problem \see incremental_solver_learnt::problem
+  /// \param synth_encoding \see solver_learn_baset::synth_encoding
   /// \param use_simp_solver indicates whether to use simplifying solver
   incremental_solver_learnt(
     const namespacet &,
     const problemt &,
+    synth_encoding_baset &synth_encoding,
     bool use_simp_solver,
     message_handlert &);
 

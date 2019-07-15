@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
 typet promotion(const typet &t0, const typet &t1)
 {
@@ -603,3 +604,8 @@ solutiont synth_encodingt::get_solution(
   return result;
 }
 
+void synth_encodingt::clear()
+{
+  e_data_map.clear();
+  constraints.clear();
+}

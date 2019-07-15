@@ -2,6 +2,8 @@
 #include "sygus_parser.h"
 #include "cegis.h"
 #include "literals.h"
+#include "synth_encoding.h"
+#include "verify_encoding.h"
 
 #include <util/cout_message.h>
 #include <util/namespace.h>
@@ -96,9 +98,11 @@ int sygus_frontend(const cmdlinet &cmdline)
   if(cmdline.isset("literals"))
     add_literals(problem);
 
+  synth_encodingt synth_encoding;
+  verify_encodingt verify_encoding;
   auto start_time=std::chrono::steady_clock::now();
 
-  switch(cegis(problem))
+  switch(cegis(problem, synth_encoding, verify_encoding))
   {
   case decision_proceduret::resultt::D_SATISFIABLE:
 

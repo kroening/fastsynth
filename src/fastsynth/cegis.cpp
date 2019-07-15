@@ -11,7 +11,8 @@
 #include <memory>
 
 decision_proceduret::resultt cegist::operator()(
-  const problemt &problem)
+    const problemt &problem, synth_encoding_baset &synth_encoding,
+    verify_encoding_baset &verify_encoding)
 {
   std::unique_ptr<learnt> learner;
   std::unique_ptr<verifyt> verifier;
@@ -35,13 +36,13 @@ decision_proceduret::resultt cegist::operator()(
   {
     status() << "** incremental CEGIS" << eom;
     learner=std::unique_ptr<learnt>(new incremental_solver_learnt(
-      ns, problem, use_simp_solver, get_message_handler()));
+      ns, problem, synth_encoding, use_simp_solver, get_message_handler()));
   }
   else
   {
     status() << "** non-incremental CEGIS" << eom;
     solver_learnt *l=new solver_learnt(
-      ns, problem, get_message_handler());
+      ns, problem, synth_encoding, get_message_handler());
 
     l->use_smt=use_smt;
     l->logic=logic;
@@ -59,7 +60,7 @@ decision_proceduret::resultt cegist::operator()(
   else
   {
     verifier=std::unique_ptr<verifyt>(new verifyt(
-      ns, problem, get_message_handler()));
+      ns, problem, verify_encoding, get_message_handler()));
   }
 
   verifier->use_smt=use_smt;

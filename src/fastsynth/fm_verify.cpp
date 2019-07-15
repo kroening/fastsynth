@@ -32,7 +32,6 @@ decision_proceduret::resultt fm_verifyt::operator()(solutiont &solution)
   solvert solver_container(use_smt, logic, ns, get_message_handler());
   auto &solver=solver_container.get();
 
-  verify_encodingt verify_encoding;
   verify_encoding.functions=solution.functions;
   verify_encoding.free_variables=problem.free_variables;
 

@@ -9,18 +9,17 @@
 #include <solvers/decision_procedure.h>
 
 #include "cegis_types.h"
+#include "verify_encoding_base.h"
 
-class verify_encodingt
+class verify_encodingt: public verify_encoding_baset
 {
 public:
-  exprt operator()(const exprt &) const;
-
-  using functionst = solutiont::functionst;
-  functionst functions;
-  std::set<exprt> free_variables;
+  exprt operator()(const exprt &) const override;
 
   counterexamplet get_counterexample(
-    const decision_proceduret &) const;
+    const decision_proceduret &) const override;
+
+  void clear() override;
 
   // check that the function body uses symbols that
   // are consistent with the signature of the function
