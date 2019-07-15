@@ -11,8 +11,6 @@
 
 #include <iterator>
 
-#include <iterator>
-
 local_cegist::local_cegist(
   const namespacet &ns,
   verifyt &verify,
@@ -209,7 +207,7 @@ local_cegist::create_learner(synth_encoding_baset &synth_encoding)
       new solver_learnt(ns, problem, synth_encoding, msg));
     learn->use_smt = use_smt;
     learn->logic = logic;
-    return learn;
+    return move(learn);
   }
 }
 
