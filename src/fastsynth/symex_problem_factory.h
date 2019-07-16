@@ -22,11 +22,14 @@ class problemt to_problem(
 /// Symexes and converts the given GOTO model to a CEGIS problem.
 /// \param msg Message sink for all symbolic execution and SSA conversion tasks.
 /// \param options Symbolic execution options.
+/// \param new_symbol_table Symbol table that holds all new symbols after the
+///   symex.
 /// \param model GOTO model to convert.
 /// \return CEGIS problem modelling the given GOTO program.
 problemt to_problem(
   message_handlert &msg,
   const class optionst &options,
+  class symbol_tablet &new_symbol_table,
   class abstract_goto_modelt &model);
 
 #endif /* CPROVER_FASTSYNTH_SYMEX_PROBLEM_FACTORY_H_ */

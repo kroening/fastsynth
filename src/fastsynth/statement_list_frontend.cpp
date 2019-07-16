@@ -1,12 +1,12 @@
 /*******************************************************************\
 
- Module: Fastsynth ANSI-C Language Frontend
+ Module: Fastsynth Statement List Language Frontend
 
- Author: Daniel Kroening, kroening@kroening.com
+ Author: Matthias Weiss, matthias.weiss@diffblue.com
 
 \*******************************************************************/
 
-#include "c_frontend.h"
+#include "statement_list_frontend.h"
 #include "cegis.h"
 #include "frontend_util.h"
 #include "literals.h"
@@ -14,7 +14,8 @@
 #include "synth_encoding.h"
 #include "verify_encoding.h"
 
-#include <ansi-c/ansi_c_language.h>
+#include <statement-list/statement_list_language.h>
+#include <statement-list/statement_list_typecheck.h>
 
 #include <langapi/mode.h>
 
@@ -28,13 +29,13 @@
 
 #include <chrono>
 
-int c_frontend(const cmdlinet &cmdline)
+int statement_list_frontend(const cmdlinet &cmdline)
 {
   // Environment setup.
   console_message_handlert mh;
   messaget message(mh);
   set_verbosity(cmdline, mh);
-  register_language(new_ansi_c_language);
+  register_language(new_statement_list_language);
   config.set(cmdline);
   config.ansi_c.set_arch_spec_i386();
 
@@ -85,7 +86,7 @@ int c_frontend(const cmdlinet &cmdline)
 
   if(decision_proceduret::resultt::D_SATISFIABLE == result)
   {
-    print_synthesis_result(message, cegis, ns);
+    print_synthesis_result(message, cegis, ns, STATEMENT_LIST_MODE);
     print_synthesis_time(message, synthesis_time);
     return 0;
   }
