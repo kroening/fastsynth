@@ -86,7 +86,7 @@ int statement_list_frontend(const cmdlinet &cmdline)
 
   if(decision_proceduret::resultt::D_SATISFIABLE == result)
   {
-    print_synthesis_result(message, cegis, ns, STATEMENT_LIST_MODE);
+    print_synthesis_result(message, cegis, ns, ID_statement_list);
     print_synthesis_time(message, synthesis_time);
     return 0;
   }
