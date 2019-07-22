@@ -17,8 +17,12 @@
 /// Searches for symbols that meet the criteria for being synthesised
 /// expressions.
 /// \param symbol_table: Symbol table to search through.
+/// \param expression_prefix: Prefix of the expressions that should be
+///   synthesised.
 /// \return A set containing the name of each synthesised expression.
-std::set<irep_idt> find_expressions(const class symbol_tablet &symbol_table);
+std::set<irep_idt> find_expressions(
+  const class symbol_tablet &symbol_table,
+  const std::string &expression_prefix);
 
 /// Sets the verbosity of the output to the level that is desired by the user.
 /// Sets it to default in the case that there is no value.
