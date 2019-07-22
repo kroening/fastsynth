@@ -40,7 +40,7 @@ int statement_list_frontend(const cmdlinet &cmdline)
   set_verbosity(cmdline, mh);
   register_language(new_statement_list_language);
   config.set(cmdline);
-  config.ansi_c.set_arch_spec_i386();
+  config.ansi_c.set_arch_spec_x86_64();
 
   // Initialise GOTO model.
   PRECONDITION(cmdline.args.size() == 1);
