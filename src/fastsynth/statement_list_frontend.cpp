@@ -7,11 +7,11 @@
 \*******************************************************************/
 
 #include "statement_list_frontend.h"
+#include "bool_synth_encoding.h"
 #include "cegis.h"
 #include "frontend_util.h"
 #include "literals.h"
 #include "symex_problem_factory.h"
-#include "synth_encoding.h"
 #include "verify_encoding.h"
 
 #include <statement-list/statement_list_language.h>
@@ -74,17 +74,17 @@ int statement_list_frontend(const cmdlinet &cmdline)
 
   // Use symbol tables for creating a namespace and CEGIS instance.
   namespacet ns(goto_model.symbol_table, symex_symbol_table);
-  synth_encodingt synth_encoding;
-  verify_encodingt verify_encoding;
   cegist cegis(ns);
   cegis.set_message_handler(mh);
   set_cegis_cmdline_properties(cmdline, cegis);
 
   // Perform synthesis and measure the time.
+  bool_synth_encodingt bool_synth_encoding;
+  verify_encodingt verify_encoding;
   std::chrono::steady_clock::time_point start_time{
     std::chrono::steady_clock::now()};
   decision_proceduret::resultt result{
-    cegis(problem, synth_encoding, verify_encoding)};
+    cegis(problem, bool_synth_encoding, verify_encoding)};
   std::chrono::duration<double> synthesis_time{
     std::chrono::steady_clock::now() - start_time};
 
