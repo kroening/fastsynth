@@ -19,9 +19,6 @@
 /// Used to indicate that the ID is a selector.
 #define SELECTOR_FLAG "sel"
 
-/// Used to indicate that the affected option is an if-then-else statement.
-#define ITE_POSTFIX "ite"
-
 /// Separates function name, selector ID and other tags from each other.
 #define SELECTOR_SEPARATOR '_'
 
@@ -33,9 +30,6 @@
 
 /// Prefix of a binary operation, used in selector names.
 #define BINARY_PREFIX 'b'
-
-/// Prefix of a ternary operation, used in selector names.
-#define TERNARY_PREFIX 't'
 
 /// Prefix of a constant, used in selector names.
 #define CONSTANT_TAG "cval"
@@ -56,7 +50,6 @@ static const irep_idt unary_ops[] = {
 
 /// Names of all supported binary operations.
 static const irep_idt binary_ops[] = {
-  ID_xor,
   ID_or,
   ID_and,
   ID_equal,
@@ -165,48 +158,6 @@ static void add_binary_options(
       }
 }
 
-/// Adds all ternary options supported by this module (if-then-else) to the
-/// given instruction.
-/// \param [out] instruction: Instruction to add the options to.
-/// \param current_program_size: Maximum number of allowed operands for the
-///   current iteration.
-/// \param function_identifier: Name of the synthesised expression.
-static void add_ternary_options(
-  bool_e_datat::instructiont &instruction,
-  const size_t &current_program_size,
-  const irep_idt &function_identifier)
-{
-  std::size_t ternary_option_index = 0;
-  for(std::size_t operand0 = 0; operand0 < current_program_size; ++operand0)
-    for(std::size_t operand1 = 0; operand1 < current_program_size; ++operand1)
-      for(std::size_t operand2 = 0; operand2 < current_program_size; ++operand2)
-      {
-        // There is no point in using if-then-else if operand 1 and operand 2
-        // are the same.
-        if(operand1 == operand2)
-          continue;
-
-        if(operand0 == operand1 || operand0 == operand2)
-          continue;
-
-        const irep_idt sel_id{
-          id2string(function_identifier) + SELECTOR_SEPARATOR +
-          std::to_string(current_program_size) + SELECTOR_SEPARATOR +
-          TERNARY_PREFIX + std::to_string(ternary_option_index) + ITE_POSTFIX +
-          SELECTOR_SEPARATOR + SELECTOR_FLAG};
-
-        bool_e_datat::instructiont::optiont &option =
-          instruction.add_option(sel_id);
-        option.operand0 = operand0;
-        option.operand1 = operand1;
-        option.operand2 = operand2;
-        option.operation = ID_if;
-        option.kind = bool_e_datat::instructiont::optiont::ITE;
-
-        ternary_option_index++;
-      }
-}
-
 /// Creates a ternary if-then-else with the selector deciding which
 /// expression shall be executed.
 /// \param selector: Symbol deciding which part of the expression shall be
@@ -299,28 +250,6 @@ static void chain_predicate(
   result_expr = chain(option.sel, binary_expr, result_expr);
 }
 
-/// Adds a selector for the given ternary operation to the current result.
-/// \param option: Option that includes a parameter.
-/// \param results: Data structure holding the results of other instructions.
-/// \param [out] result_expr: Current result to which the option shall be
-///   added.
-static void chain_ternary(
-  const bool_e_datat::instructiont::optiont &option,
-  const std::vector<exprt> &results,
-  exprt &result_expr)
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-  PRECONDITION(option.operand2 < results.size());
-
-  const exprt &op0 = results[option.operand0];
-  const exprt &op1 = results[option.operand1];
-  const exprt &op2 = results[option.operand2];
-
-  if_exprt if_expr(op0, op1, op2);
-  result_expr = chain(option.sel, if_expr, result_expr);
-}
-
 bool_e_datat::instructiont::optiont::optiont()
   : parameter_number(0), kind(NONE), operand0(0), operand1(0), operand2(0)
 {
@@ -369,7 +298,6 @@ bool_e_datat::bool_e_datat(
       instruction, pc, identifier, arguments.size() + literals.size());
     add_unary_options(instruction, pc, identifier);
     add_binary_options(instruction, pc, identifier);
-    add_ternary_options(instruction, pc, identifier);
   }
 }
 
@@ -438,8 +366,6 @@ exprt bool_e_datat::instructiont::constraint(
       chain_predicate(option, results, result_expr);
       break;
     case bool_e_datat::instructiont::optiont::ITE:
-      chain_ternary(option, results, result_expr);
-      break;
     case bool_e_datat::instructiont::optiont::NONE:
       std::cout << "error: option kind: " << option.kind << std::endl;
       UNREACHABLE;
@@ -495,8 +421,6 @@ exprt bool_e_datat::get_function(
         result = decode_predicate(*o_it, results);
         break;
       case instructiont::optiont::ITE:
-        result = decode_ternary(*o_it, results);
-        break;
       case instructiont::optiont::NONE:
         UNREACHABLE;
       }
