@@ -22,6 +22,7 @@
   "(incremental)"                                                              \
   "(simplifying-solver)"                                                       \
   "(fm)"                                                                       \
+  "(local-search)"                                                            \
   "(no-bitwise)"                                                               \
   "(verbosity):"                                                               \
   "(smt)"                                                                      \
