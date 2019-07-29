@@ -28,6 +28,9 @@
 
 #include <chrono>
 
+/// Prefix that precedes each synthesised expression in C.
+#define C_EXPRESSION_PREFIX "EXPRESSION"
+
 int c_frontend(const cmdlinet &cmdline)
 {
   // Environment setup.
@@ -53,7 +56,8 @@ int c_frontend(const cmdlinet &cmdline)
   }
 
   // Modify GOTO model for synthesis.
-  std::set<irep_idt> expressions = find_expressions(goto_model.symbol_table);
+  std::set<irep_idt> expressions =
+    find_expressions(goto_model.symbol_table, C_EXPRESSION_PREFIX);
   print_expressions(message, expressions);
   instrument_expressions(expressions, goto_model);
   process_goto_model(goto_model);

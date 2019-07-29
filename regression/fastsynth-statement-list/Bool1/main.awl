@@ -1,0 +1,61 @@
+﻿FUNCTION "EXPRESSIONa" : Bool
+VERSION : 0.1
+   VAR_INPUT 
+      parameter0 : Bool;
+      parameter1 : Bool;
+   END_VAR
+
+BEGIN
+END_FUNCTION
+
+FUNCTION_BLOCK "Main"
+VERSION : 0.1
+   VAR_TEMP 
+      return : Bool;
+   END_VAR
+
+BEGIN
+NETWORK
+TITLE = 
+      CALL "EXPRESSIONa"
+      (  parameter0                  := FALSE , 
+         parameter1                  := FALSE , 
+         Ret_Val                     := #return
+      );
+      AN #return;
+      = #return;
+      CALL "__CPROVER_assert"
+      (  condition                   := #return
+      );
+
+      CALL "EXPRESSIONa"
+      (  parameter0                  := FALSE , 
+         parameter1                  := TRUE , 
+         Ret_Val                     := #return
+      );
+      CALL "__CPROVER_assert"
+      (  condition                   := #return
+      );
+
+      CALL "EXPRESSIONa"
+      (  parameter0                  := TRUE , 
+         parameter1                  := FALSE , 
+         Ret_Val                     := #return
+      );
+      CALL "__CPROVER_assert"
+      (  condition                   := #return
+      );
+
+      CALL "EXPRESSIONa"
+      (  parameter0                  := TRUE , 
+         parameter1                  := TRUE , 
+         Ret_Val                     := #return
+      );
+      AN #return;
+      = #return;
+      CALL "__CPROVER_assert"
+      (  condition                   := #return
+      );
+
+END_FUNCTION_BLOCK
+

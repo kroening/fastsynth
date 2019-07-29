@@ -27,8 +27,6 @@
 
 #include <iostream>
 
-/// Prefix that precedes each synthesised expression.
-#define EXPRESSION_PREFIX "EXPRESSION"
 /// Default logic for the CEGIS algorithm (SMT2 only).
 #define DEFAULT_CEGIS_LOGIC "BV"
 /// Default maximum size for the program to be synthesised.
@@ -36,7 +34,9 @@
 /// Max verbosity level (Numbers above that value are cut).
 #define MAX_VERBOSITY 10u
 
-std::set<irep_idt> find_expressions(const symbol_tablet &symbol_table)
+std::set<irep_idt> find_expressions(
+  const symbol_tablet &symbol_table,
+  const std::string &expression_prefix)
 {
   std::set<irep_idt> result;
 
@@ -45,7 +45,7 @@ std::set<irep_idt> find_expressions(const symbol_tablet &symbol_table)
     if(
       !symbol.second.is_state_var && symbol.second.type.id() == ID_code &&
       symbol.second.value.is_nil() &&
-      has_prefix(id2string(symbol.first), EXPRESSION_PREFIX))
+      has_prefix(id2string(symbol.first), expression_prefix))
       result.insert(symbol.first);
   }
 
