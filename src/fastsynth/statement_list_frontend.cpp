@@ -30,7 +30,7 @@
 #include <chrono>
 
 /// Prefix that precedes each synthesised expression in STL.
-#define STL_EXPRESSION_PREFIX "\"EXPRESSION"
+#define STL_EXPRESSION_PREFIX "EXPRESSION"
 
 int statement_list_frontend(const cmdlinet &cmdline)
 {
