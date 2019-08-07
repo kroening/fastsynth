@@ -1,0 +1,10 @@
+CORE
+main.awl
+--max-program-size 6
+activate-multi-line-match
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+^Result: EXPRESSIONb -> (A #parameter0;\nA #parameter1;\nX #parameter0;\nO #parameter2;\nX #parameter2;)|(O #parameter1;\nO #parameter2;\nX\(;\nO #parameter0;\nO #parameter1;\nO #parameter2;\n\);)|(AN #parameter1;\nAN #parameter2;\nA #parameter0;)$
+--
+^warning: ignoring

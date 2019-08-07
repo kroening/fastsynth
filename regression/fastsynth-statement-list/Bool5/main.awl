@@ -1,4 +1,4 @@
-﻿﻿FUNCTION "EXPRESSIONa" : Bool
+FUNCTION "EXPRESSIONc" : Bool
 VERSION : 0.1
    VAR_INPUT 
       parameter0 : Bool;
@@ -24,19 +24,19 @@ VERSION : 0.1
 BEGIN
 NETWORK
 TITLE = 
-      CALL "EXPRESSIONa" 
+      CALL "EXPRESSIONc" 
       ( parameter0 := #NONDET0, 
         parameter1 := #NONDET1, 
-        parameter2 := #NONDET2, 
+        parameter2 := #NONDET2,
         parameter3 := #NONDET3,
         Ret_Val := #return );
 
-      O #NONDET0;
-      O #NONDET1;
-      ON #NONDET2;
-      ON #NONDET3;
+      A #NONDET0;
+      A #NONDET1;
+      A #NONDET2;
+      A #NONDET3;
       X #return;
       = #expectedTrue;
-      
+
       CALL "__CPROVER_assert" (condition := #expectedTrue);
 END_FUNCTION_BLOCK

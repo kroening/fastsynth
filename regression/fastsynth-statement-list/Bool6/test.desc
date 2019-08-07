@@ -1,0 +1,10 @@
+CORE
+main.awl
+--max-program-size 5
+activate-multi-line-match
+^EXIT=0$
+^SIGNAL=0$
+^VERIFICATION SUCCESSFUL$
+^Result: EXPRESSIONd -> A #parameter0;\nA #parameter1;\nA #parameter2;$
+--
+^warning: ignoring
