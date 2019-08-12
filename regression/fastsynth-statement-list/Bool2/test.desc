@@ -1,9 +1,10 @@
 CORE
 main.awl
 --max-program-size 6
+activate-multi-line-match
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: \"EXPRESSIONa\" -> parameter1 == \(parameter2 == parameter1 || parameter0\)$
+^Result: EXPRESSIONa -> X #parameter1;\nX #parameter2;\nA #parameter0;\nX #parameter2;$
 --
 ^warning: ignoring

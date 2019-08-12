@@ -30,7 +30,7 @@
 #include <chrono>
 
 /// Prefix that precedes each synthesised expression in STL.
-#define STL_EXPRESSION_PREFIX "\"EXPRESSION"
+#define STL_EXPRESSION_PREFIX "EXPRESSION"
 
 int statement_list_frontend(const cmdlinet &cmdline)
 {
@@ -60,6 +60,7 @@ int statement_list_frontend(const cmdlinet &cmdline)
   std::set<irep_idt> expressions =
     find_expressions(goto_model.symbol_table, STL_EXPRESSION_PREFIX);
   print_expressions(message, expressions);
+  instrument_nondet_lokals(goto_model);
   instrument_expressions(expressions, goto_model);
   process_goto_model(goto_model);
 
