@@ -126,31 +126,6 @@ void instrument_expressions(
       }
 }
 
-void instrument_nondet_lokals(goto_modelt &goto_model)
-{
-  const symbol_tablet &symbols = goto_model.get_symbol_table();
-
-  for(std::pair<const irep_idt, goto_functionst::goto_functiont> &function :
-      goto_model.goto_functions.function_map)
-    for(auto it = begin(function.second.body.instructions);
-        it != end(function.second.body.instructions);
-        ++it)
-    {
-      const code_declt *const decl =
-        expr_try_dynamic_cast<code_declt>(it->code);
-
-      // Assert that each lhs of a declaration is inside the symbol table.
-      if(decl && !symbols.lookup_ref(decl->get_identifier()).is_static_lifetime)
-      {
-        goto_programt::instructiont instruction{ASSIGN};
-        const code_assignt nondet{
-          decl->symbol(), side_effect_expr_nondett{decl->symbol().type()}};
-        instruction.code = nondet;
-        it = function.second.body.instructions.emplace(++it, instruction);
-      }
-    }
-}
-
 void process_goto_model(goto_modelt &goto_model)
 {
   remove_returns(goto_model);

@@ -52,7 +52,8 @@ static const irep_idt unary_ops[] = {
 static const irep_idt binary_ops[] = {
   ID_or,
   ID_and,
-  ID_xor,
+  ID_equal,
+  ID_notequal,
 };
 
 /// Adds all arguments and constants of this expression to the given
