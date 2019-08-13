@@ -126,7 +126,7 @@ void instrument_expressions(
       }
 }
 
-void instrument_nondet_lokals(goto_modelt &goto_model)
+void instrument_nondet_locals(goto_modelt &goto_model)
 {
   const symbol_tablet &symbols = goto_model.get_symbol_table();
 
@@ -142,11 +142,11 @@ void instrument_nondet_lokals(goto_modelt &goto_model)
       // Assert that each lhs of a declaration is inside the symbol table.
       if(decl && !symbols.lookup_ref(decl->get_identifier()).is_static_lifetime)
       {
-        goto_programt::instructiont instruction{ASSIGN};
         const code_assignt nondet{
           decl->symbol(), side_effect_expr_nondett{decl->symbol().type()}};
-        instruction.code = nondet;
-        it = function.second.body.instructions.emplace(++it, instruction);
+        const goto_programt::instructiont instruction{
+          goto_programt::make_assignment(nondet)};
+        it = function.second.body.insert_after(it, instruction);
       }
     }
 }
