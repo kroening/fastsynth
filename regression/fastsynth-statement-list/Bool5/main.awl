@@ -5,6 +5,9 @@ VERSION : 0.1
       parameter1 : Bool;
       parameter2 : Bool;
       parameter3 : Bool;
+      parameter4 : Bool;
+      parameter5 : Bool;
+      parameter6 : Bool;
    END_VAR
 
 BEGIN
@@ -17,6 +20,9 @@ VERSION : 0.1
       NONDET1 : Bool;
       NONDET2 : Bool;
       NONDET3 : Bool;
+      NONDET4 : Bool;
+      NONDET5 : Bool;
+      NONDET6 : Bool;
       expectedTrue : Bool;
       return : Bool;
    END_VAR
@@ -29,12 +35,18 @@ TITLE =
         parameter1 := #NONDET1, 
         parameter2 := #NONDET2,
         parameter3 := #NONDET3,
+        parameter4 := #NONDET4,
+        parameter5 := #NONDET5,
+        parameter6 := #NONDET6,
         Ret_Val := #return );
 
       A #NONDET0;
       A #NONDET1;
       A #NONDET2;
       A #NONDET3;
+      A #NONDET4;
+      ON #NONDET5;
+      ON #NONDET6;
       X #return;
       = #expectedTrue;
 
