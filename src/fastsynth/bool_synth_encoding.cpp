@@ -13,7 +13,6 @@
 #include <util/std_types.h>
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 
 /// Used to indicate that the ID is a selector.
@@ -22,14 +21,11 @@
 /// Separates function name, selector ID and other tags from each other.
 #define SELECTOR_SEPARATOR '_'
 
-/// Prefix of a parameter, used in selector names.
-#define PARAMETER_PREFIX 'p'
+/// Prefix of a nullary instruction, used in selector names.
+#define NULLARY_PREFIX 'o'
 
 /// Prefix of a unary operation, used in selector names.
 #define UNARY_PREFIX 'u'
-
-/// Prefix of a binary operation, used in selector names.
-#define BINARY_PREFIX 'b'
 
 /// Prefix of a constant, used in selector names.
 #define CONSTANT_TAG "cval"
@@ -43,118 +39,158 @@
 /// Tag to indicate that the affected ID belongs to a result.
 #define RESULT_TAG "result"
 
-/// Names of all supported unary operations.
-static const irep_idt unary_ops[] = {
-  ID_not,
+/// Names of all supported unary instructions.
+static const std::vector<irep_idt> unary_instructions = {
+  ID_statement_list_and,
+  ID_statement_list_and_not,
+  ID_statement_list_or,
+  ID_statement_list_or_not,
+  ID_statement_list_xor,
+  ID_statement_list_xor_not,
 };
 
-/// Names of all supported binary operations.
-static const irep_idt binary_ops[] = {
-  ID_or,
-  ID_and,
-  ID_xor,
+/// Names of all supported nullary instructions.
+static const std::vector<irep_idt> nullary_instructions = {
+  ID_statement_list_not,
 };
 
-/// Adds all arguments and constants of this expression to the given
+void bool_synth_encodingt::clear()
+{
+  e_data_per_function.clear();
+  constraints.clear();
+}
+
+/// Either constructs a binary expression for the given ID in the case that
+/// the previous result is not nil or simply returns the operand of the
 /// instruction.
-/// \param [out] instruction: Instruction to add the options to.
-/// \param current_program_size: Maximum number of allowed operands for the
-///   current iteration.
-/// \param function_identifier: Name of the synthesised expression.
-/// \param argument_and_literal_count: Sum of the number of arguments and
-///   literals.
-static void add_arguments_and_constants(
-  bool_e_datat::instructiont &instruction,
-  const size_t &current_program_size,
-  const irep_idt &function_identifier,
-  const size_t argument_and_literal_count)
+/// \param target_expression: ID of the wanted binary expression.
+/// \param prev_result: Operand constructed by previous instructions. Can be
+///   nil to mark the beginning of a new bit string.
+/// \param op: Operand of the instruction to convert.
+/// \return: Binary expression or operand of the instruction.
+static exprt convert_boolean_instruction(
+  const irep_idt &target_expression,
+  const exprt &prev_result,
+  const exprt &op)
 {
-  for(std::size_t i = 0; i < argument_and_literal_count; ++i)
+  if(prev_result.is_nil())
+    return op;
+  else
+    return binary_exprt{prev_result, target_expression, op};
+}
+
+/// Converts the given option in its expression form based on the result of
+/// previous instructions.
+/// \param option: Instruction to convert.
+/// \param prev_result: Operand constructed by previous instructions. Can be
+///   nil to mark the beginning of a new bit string.
+/// \param operand: Operand of the instruction to convert.
+/// \return: Binary expression or operand of the instruction if this is a new
+///   bit string.
+static exprt convert_unary_to_exp(
+  const bool_e_datat::instructiont::optiont &option,
+  const exprt &prev_result,
+  const exprt &operand)
+{
+  if(ID_statement_list_and == option.operation)
+    return convert_boolean_instruction(ID_and, prev_result, operand);
+  else if(ID_statement_list_and_not == option.operation)
+    return convert_boolean_instruction(ID_and, prev_result, not_exprt{operand});
+  else if(ID_statement_list_or == option.operation)
+    return convert_boolean_instruction(ID_or, prev_result, operand);
+  else if(ID_statement_list_or_not == option.operation)
+    return convert_boolean_instruction(ID_or, prev_result, not_exprt{operand});
+  else if(ID_statement_list_xor == option.operation)
+    return convert_boolean_instruction(ID_xor, prev_result, operand);
+  else if(ID_statement_list_xor_not == option.operation)
+    return convert_boolean_instruction(ID_xor, prev_result, not_exprt{operand});
+  else
+    UNREACHABLE;
+}
+
+/// Converts the given option in its expression form based on the result of
+/// previous instructions.
+/// \param option: Instruction to convert.
+/// \param operand: Operand constructed by previous instructions. Can be
+///   nil to mark the beginning of a new bit string.
+/// \return: Unary expression or false_exprt if this is a new bit string.
+static exprt convert_nullary_to_exp(
+  const bool_e_datat::instructiont::optiont &option,
+  const exprt &operand)
+{
+  if(ID_statement_list_not == option.operation)
   {
-    const irep_idt param_sel_id{
-      id2string(function_identifier) + SELECTOR_SEPARATOR +
-      std::to_string(current_program_size) + SELECTOR_SEPARATOR +
-      PARAMETER_PREFIX + std::to_string(i) + SELECTOR_FLAG};
-    bool_e_datat::instructiont::optiont &option =
-      instruction.add_option(param_sel_id);
-    option.kind = bool_e_datat::instructiont::optiont::PARAMETER;
-    option.parameter_number = i;
+    if(operand.is_nil())
+      return false_exprt{};
+    else
+      return not_exprt{operand};
   }
+  else
+    UNREACHABLE;
 }
 
-/// Adds all unary options supported by this module to the given instruction.
-/// \param [out] instruction: Instruction to add the options to.
-/// \param current_program_size: Maximum number of allowed operands for the
-///   current iteration.
-/// \param function_identifier: Name of the synthesised expression.
-static void add_unary_options(
-  bool_e_datat::instructiont &instruction,
-  const size_t &current_program_size,
-  const irep_idt &function_identifier)
+symbol_exprt bool_e_datat::decode_parameter(const size_t parameter_number) const
 {
-  std::size_t unary_option_index = 0;
-
-  for(const irep_idt operation : unary_ops)
-    for(std::size_t operand0 = 0; operand0 < current_program_size; ++operand0)
-    {
-      const irep_idt sel_id{
-        id2string(function_identifier) + SELECTOR_SEPARATOR +
-        std::to_string(current_program_size) + SELECTOR_SEPARATOR +
-        UNARY_PREFIX + std::to_string(unary_option_index) + SELECTOR_FLAG};
-
-      bool_e_datat::instructiont::optiont &option =
-        instruction.add_option(sel_id);
-      option.operand0 = operand0;
-      option.operation = operation;
-      option.kind = bool_e_datat::instructiont::optiont::UNARY;
-      unary_option_index++;
-    }
+  PRECONDITION(parameter_number < function_arguments.size());
+  const irep_idt p_identifier{DECODED_PARAMETER_PREFIX +
+                              std::to_string(parameter_number)};
+  return symbol_exprt{p_identifier,
+                      function_arguments[parameter_number].type()};
 }
 
-/// Adds all binary options supported by this module to the given instruction.
-/// \param [out] instruction: Instruction to add the options to.
-/// \param current_program_size: Maximum number of allowed operands for the
-///   current iteration.
-/// \param function_identifier: Name of the synthesised expression.
-static void add_binary_options(
-  bool_e_datat::instructiont &instruction,
-  const size_t &current_program_size,
-  const irep_idt &function_identifier)
+exprt bool_e_datat::get_function(const decision_proceduret &solver) const
 {
-  std::size_t binary_option_index = 0;
+  PRECONDITION(!instructions.empty());
 
-  for(const irep_idt operation : binary_ops)
-    for(std::size_t operand0 = 0; operand0 < current_program_size; ++operand0)
-      for(std::size_t operand1 = 0; operand1 < current_program_size; ++operand1)
+  exprt rlo_bit = nil_exprt{};
+
+  for(std::size_t pc = 0; pc < instructions.size(); ++pc)
+  {
+    const instructiont &instruction = instructions[pc];
+    instructiont::optiont option{};
+
+    // Go backwards through the options because we have built the constraints
+    // from the inside-out. Break if a selector is true or the default case has
+    // been reached.
+    for(auto o_it = instruction.options.rbegin();
+        o_it != instruction.options.rend();
+        ++o_it)
+      if(
+        o_it->sel.get(ID_identifier) == ID_nil ||
+        solver.get(o_it->sel).is_true())
       {
-        // There is no point in applying a boolean binary operation if the
-        // operands are identical.
-        if(operand0 == operand1)
-          continue;
-
-        // Boolean binary operations are commutative, so there is no need
-        // to have both orderings.
-        if(operand0 > operand1)
-          continue;
-
-        irep_idt sel_id = id2string(function_identifier) + SELECTOR_SEPARATOR +
-                          std::to_string(current_program_size) +
-                          SELECTOR_SEPARATOR + BINARY_PREFIX +
-                          std::to_string(binary_option_index) + SELECTOR_FLAG;
-
-        bool_e_datat::instructiont::optiont &option =
-          instruction.add_option(sel_id);
-        option.operand0 = operand0;
-        option.operand1 = operand1;
-        option.operation = operation;
-
-        if(operation == ID_equal || operation == ID_notequal)
-          option.kind = bool_e_datat::instructiont::optiont::BINARY_PREDICATE;
-        else
-          option.kind = bool_e_datat::instructiont::optiont::BINARY;
-
-        binary_option_index++;
+        option = *o_it;
+        break;
       }
+
+    switch(option.kind)
+    {
+    case instructiont::optiont::NULLARY:
+      rlo_bit = convert_nullary_to_exp(option, rlo_bit);
+      break;
+    case instructiont::optiont::UNARY:
+      rlo_bit =
+        convert_unary_to_exp(option, rlo_bit, decode_parameter(option.operand));
+      break;
+    case instructiont::optiont::NONE:
+      UNREACHABLE;
+    }
+  }
+  return rlo_bit;
+}
+
+solutiont
+bool_synth_encodingt::get_solution(const decision_proceduret &solver) const
+{
+  solutiont result;
+  for(const std::pair<const symbol_exprt, bool_e_datat> &it :
+      e_data_per_function)
+  {
+    exprt function{it.second.get_function(solver)};
+    result.functions[it.first] = function;
+    result.s_functions[it.first] = function;
+  }
+  return result;
 }
 
 /// Creates a ternary if-then-else with the selector deciding which
@@ -173,203 +209,36 @@ static if_exprt chain(
   return if_exprt{selector, expr_true, expr_false};
 }
 
-/// Adds a selector for the given parameter to the current result.
-/// \param option: Option that includes a parameter.
-/// \param arguments: Parameters of the synthesised expression.
-/// \param [out] result_expr: Current result to which the option shall be
-///   added.
-static void chain_parameter(
-  const bool_e_datat::instructiont::optiont &option,
-  const std::vector<exprt> &arguments,
-  exprt &result_expr)
-{
-  result_expr =
-    chain(option.sel, arguments[option.parameter_number], result_expr);
-}
-
-/// Adds a selector for the given unary operation to the current result.
-/// \param option: Option that includes a parameter.
-/// \param results: Data structure holding the results of other instructions.
-/// \param [out] result_expr: Current result to which the option shall be
-///   added.
-static void chain_unary(
-  const bool_e_datat::instructiont::optiont &option,
-  const std::vector<exprt> &results,
-  exprt &result_expr)
-{
-  PRECONDITION(option.operand0 < results.size());
-  const exprt &op0 = results[option.operand0];
-  unary_exprt unary_expr(option.operation, op0, bool_typet{});
-  result_expr = chain(option.sel, unary_expr, result_expr);
-}
-
-/// Adds a selector for the given binary operation to the current result.
-/// \param option: Option that includes a parameter.
-/// \param results: Data structure holding the results of other instructions.
-/// \param [out] result_expr: Current result to which the option shall be
-///   added.
-static void chain_binary(
-  const bool_e_datat::instructiont::optiont &option,
-  const std::vector<exprt> &results,
-  exprt &result_expr)
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-
-  const exprt &op0 = results[option.operand0];
-  const exprt &op1 = results[option.operand1];
-  binary_exprt binary_expr(option.operation, bool_typet{});
-  binary_expr.op0() = op0;
-  binary_expr.op1() = op1;
-
-  result_expr = chain(option.sel, binary_expr, result_expr);
-}
-
-/// Adds a selector for the given binary predicate operation to the current
-/// result.
-/// \param option: Option that includes a parameter.
-/// \param results: Data structure holding the results of other instructions.
-/// \param [out] result_expr: Current result to which the option shall be
-///   added.
-static void chain_predicate(
-  const bool_e_datat::instructiont::optiont &option,
-  const std::vector<exprt> &results,
-  exprt &result_expr)
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-
-  const exprt &op0 = results[option.operand0];
-  const exprt &op1 = results[option.operand1];
-
-  binary_exprt binary_expr{option.operation, bool_typet()};
-  binary_expr.op0() = op0;
-  binary_expr.op1() = op1;
-
-  result_expr = chain(option.sel, binary_expr, result_expr);
-}
-
-bool_e_datat::instructiont::optiont::optiont()
-  : parameter_number(0), kind(NONE), operand0(0), operand1(0), operand2(0)
-{
-}
-
-bool_e_datat::instructiont::instructiont(std::size_t _pc) : pc(_pc)
-{
-}
-
-bool_e_datat::instructiont::optiont &
-bool_e_datat::instructiont::add_option(const irep_idt &sel_identifier)
-{
-  options.push_back(optiont());
-  options.back().sel = symbol_exprt(sel_identifier, bool_typet());
-  return options.back();
-}
-
-bool_e_datat::bool_e_datat(
-  const function_application_exprt &expression,
-  const std::size_t program_size)
-{
-  function_symbol = expression.function();
-  const irep_idt &identifier = function_symbol.get_identifier();
-
-  const auto &arguments = expression.arguments();
-  parameter_types.resize(arguments.size());
-  for(std::size_t i = 0; i < parameter_types.size(); ++i)
-    parameter_types[i] = arguments[i].type();
-
-  PRECONDITION(is_bool_word_type());
-  erase_unfitting_literals();
-
-  instructions.reserve(program_size);
-  for(std::size_t pc = 0; pc < program_size; ++pc)
-  {
-    instructions.push_back(instructiont{pc});
-    auto &instruction = instructions[pc];
-
-    // Constant (hard-wired default, not an option).
-    const irep_idt const_val_id{id2string(identifier) + SELECTOR_SEPARATOR +
-                                std::to_string(pc) + SELECTOR_SEPARATOR +
-                                CONSTANT_TAG};
-    instruction.constant_val = symbol_exprt{const_val_id, bool_typet{}};
-
-    add_arguments_and_constants(
-      instruction, pc, identifier, arguments.size() + literals.size());
-    add_unary_options(instruction, pc, identifier);
-    add_binary_options(instruction, pc, identifier);
-  }
-}
-
-bool bool_e_datat::is_bool_word_type()
-{
-  for(const typet &t : parameter_types)
-    if(t.id() != ID_bool)
-      return false;
-  return true;
-}
-
-exprt bool_e_datat::operator()(const argumentst &arguments)
-{
-  // Find out which instance this is.
-  std::size_t instance_number = this->instance_number(arguments);
-
-  std::vector<exprt> results;
-  results.resize(instructions.size(), nil_exprt{});
-
-  constraints.clear();
-
-  const irep_idt &identifier = function_symbol.get_identifier();
-
-  for(std::size_t pc = 0; pc < instructions.size(); ++pc)
-  {
-    argumentst args_with_consts(arguments);
-    copy(begin(literals), end(literals), back_inserter(args_with_consts));
-    exprt c = instructions[pc].constraint(args_with_consts, results);
-
-    // Results vary by instance.
-    const irep_idt result_identifier{
-      id2string(identifier) + SELECTOR_SEPARATOR + INSTANCE_PREFIX +
-      std::to_string(instance_number) + SELECTOR_SEPARATOR + RESULT_TAG +
-      SELECTOR_SEPARATOR + std::to_string(pc)};
-
-    results[pc] = symbol_exprt{result_identifier, c.type()};
-    constraints.push_back(equal_exprt(results[pc], c));
-  }
-
-  PRECONDITION(!results.empty());
-
-  return results.back();
-}
-
 exprt bool_e_datat::instructiont::constraint(
-  const std::vector<exprt> &arguments,
-  const std::vector<exprt> &results)
+  const argumentst &arguments,
+  const exprt &prev_result)
 {
-  // Constant (last resort).
-  exprt result_expr = constant_val;
-
-  for(const bool_e_datat::instructiont::optiont &option : options)
+  std::vector<exprt> converted_options;
+  converted_options.reserve(options.size());
+  for(const instructiont::optiont option : options)
   {
+    exprt converted{};
     switch(option.kind)
     {
-    case bool_e_datat::instructiont::optiont::PARAMETER:
-      chain_parameter(option, arguments, result_expr);
+    case bool_e_datat::instructiont::optiont::NULLARY:
+      converted = convert_nullary_to_exp(option, prev_result);
+      converted_options.push_back(std::move(converted));
       break;
     case optiont::UNARY:
-      chain_unary(option, results, result_expr);
+      converted =
+        convert_unary_to_exp(option, prev_result, arguments[option.operand]);
+      converted_options.push_back(std::move(converted));
       break;
-    case bool_e_datat::instructiont::optiont::BINARY:
-      chain_binary(option, results, result_expr);
-      break;
-    case bool_e_datat::instructiont::optiont::BINARY_PREDICATE:
-      chain_predicate(option, results, result_expr);
-      break;
-    case bool_e_datat::instructiont::optiont::ITE:
     case bool_e_datat::instructiont::optiont::NONE:
-      std::cout << "error: option kind: " << option.kind << std::endl;
       UNREACHABLE;
     }
   }
+
+  // Use first option as the default case.
+  exprt result_expr{converted_options.front()};
+
+  for(std::size_t i = 1; i < options.size(); ++i)
+    result_expr = chain(options[i].sel, converted_options[i], result_expr);
 
   return result_expr;
 }
@@ -382,60 +251,115 @@ std::size_t bool_e_datat::instance_number(const argumentst &arguments)
   return res.first->second;
 }
 
-exprt bool_e_datat::get_function(
-  const decision_proceduret &solver,
-  bool constant_variables) const
+exprt bool_e_datat::operator()(const argumentst &arguments)
 {
-  PRECONDITION(!instructions.empty());
-
+  // Find out which instance this is.
+  const std::size_t instance_number = this->instance_number(arguments);
+  const irep_idt &identifier = function_symbol.get_identifier();
   std::vector<exprt> results;
-  results.resize(instructions.size(), nil_exprt());
+  results.resize(instructions.size(), nil_exprt{});
+  exprt prev_result = nil_exprt{};
+
+  constraints.clear();
 
   for(std::size_t pc = 0; pc < instructions.size(); ++pc)
   {
-    const instructiont &instruction = instructions[pc];
-    exprt &result = results[pc];
-    result = nil_exprt{};
+    exprt c = instructions[pc].constraint(arguments, prev_result);
 
-    // Go backwards through the options because we have built the ite from the
-    // inside-out.
-    for(auto o_it = instruction.options.rbegin();
-        result.is_nil() && o_it != instruction.options.rend();
-        o_it++)
-    {
-      if(solver.get(o_it->sel).is_false())
-        continue;
-      switch(o_it->kind)
-      {
-      case instructiont::optiont::PARAMETER:
-        result = decode_parameter(o_it->parameter_number);
-        break;
-      case instructiont::optiont::UNARY:
-        result = decode_unary(*o_it, results);
-        break;
-      case instructiont::optiont::BINARY:
-        result = decode_binary(*o_it, results);
-        break;
-      case instructiont::optiont::BINARY_PREDICATE:
-        result = decode_predicate(*o_it, results);
-        break;
-      case instructiont::optiont::ITE:
-      case instructiont::optiont::NONE:
-        UNREACHABLE;
-      }
-    }
+    // Results vary by instance.
+    const irep_idt result_identifier{
+      id2string(identifier) + SELECTOR_SEPARATOR + INSTANCE_PREFIX +
+      std::to_string(instance_number) + SELECTOR_SEPARATOR + RESULT_TAG +
+      SELECTOR_SEPARATOR + std::to_string(pc)};
 
-    // Constant, this is the last resort when none of the selectors is true.
-    if(result.is_nil())
-    {
-      if(constant_variables)
-        result = instruction.constant_val;
-      else
-        result = solver.get(instruction.constant_val);
-    }
+    prev_result = symbol_exprt{result_identifier, c.type()};
+    results[pc] = prev_result;
+    constraints.push_back(equal_exprt(results[pc], c));
   }
 
+  PRECONDITION(!results.empty());
   return results.back();
+}
+
+/// Adds all unary instruction options supported by the encoding to the given
+/// instruction.
+/// \param [out] instruction: Instruction to add the options to.
+/// \param operand_pool: Total number of possible operands. When building an
+///   option, its operand is referenced by a number between zero and this
+///   parameter. The reference gets replaced during the decoding process.
+/// \param function_identifier: Name of the synthesised expression.
+static void add_unary_instructions(
+  bool_e_datat::instructiont &instruction,
+  const size_t &operand_pool,
+  const irep_idt &function_identifier)
+{
+  std::size_t unary_instruction_index = 0;
+
+  for(const irep_idt operation : unary_instructions)
+    for(std::size_t operand = 0; operand < operand_pool; ++operand)
+    {
+      const irep_idt sel_id{
+        id2string(function_identifier) + SELECTOR_SEPARATOR +
+        std::to_string(instruction.pc) + SELECTOR_SEPARATOR + UNARY_PREFIX +
+        std::to_string(unary_instruction_index) + SELECTOR_FLAG};
+
+      bool_e_datat::instructiont::optiont &option =
+        instruction.add_option(sel_id);
+      option.operand = operand;
+      option.operation = operation;
+      option.kind = bool_e_datat::instructiont::optiont::UNARY;
+      ++unary_instruction_index;
+    }
+}
+
+bool_e_datat::instructiont::optiont::optiont() : kind(NONE), operand(0)
+{
+}
+
+bool_e_datat::instructiont::optiont &
+bool_e_datat::instructiont::add_option(const irep_idt &sel_identifier)
+{
+  options.push_back(optiont{});
+  options.back().sel = symbol_exprt(sel_identifier, bool_typet());
+  return options.back();
+}
+
+/// Adds all instruction options without an operand to the given instruction.
+/// Note: The first option servers as the default case for the ITE later and
+/// and thus contains no selector.
+/// \param [out] instruction: Instruction to add the options to.
+/// \param function_identifier: Name of the synthesised expression.
+static void add_nullary_instructions(
+  bool_e_datat::instructiont &instruction,
+  const irep_idt &function_identifier)
+{
+  auto opt_it = begin(nullary_instructions);
+
+  // Add the default case.
+  bool_e_datat::instructiont::optiont &option = instruction.add_option(ID_nil);
+  option.operation = *opt_it;
+  option.kind = bool_e_datat::instructiont::optiont::NULLARY;
+
+  ++opt_it;
+
+  size_t nullary_option_index = 0;
+  for(; opt_it != end(nullary_instructions); ++opt_it)
+  {
+    const irep_idt sel_id{id2string(function_identifier) + SELECTOR_SEPARATOR +
+                          std::to_string(instruction.pc) + SELECTOR_SEPARATOR +
+                          NULLARY_PREFIX +
+                          std::to_string(nullary_option_index) + SELECTOR_FLAG};
+
+    bool_e_datat::instructiont::optiont &option =
+      instruction.add_option(sel_id);
+    option.operation = *opt_it;
+    option.kind = bool_e_datat::instructiont::optiont::NULLARY;
+    ++nullary_option_index;
+  }
+}
+
+bool_e_datat::instructiont::instructiont(std::size_t pc) : pc(pc)
+{
 }
 
 void bool_e_datat::erase_unfitting_literals()
@@ -447,67 +371,35 @@ void bool_e_datat::erase_unfitting_literals()
       ++it;
 }
 
-exprt bool_e_datat::decode_parameter(const size_t parameter_number) const
+bool bool_e_datat::is_bool_word_type()
 {
-  const size_t num_params = parameter_types.size();
-  if(parameter_number < num_params)
+  auto it = find_if(
+    begin(function_arguments), end(function_arguments), [](const exprt &arg) {
+      return arg.type().id() != ID_bool;
+    });
+  return it == end(function_arguments);
+}
+
+bool_e_datat::bool_e_datat(
+  const function_application_exprt &expression,
+  const std::size_t program_size)
+  : function_arguments(expression.arguments())
+{
+  function_symbol = expression.function();
+  const irep_idt &identifier = function_symbol.get_identifier();
+
+  PRECONDITION(is_bool_word_type());
+  erase_unfitting_literals();
+
+  instructions.reserve(program_size);
+  for(std::size_t pc = 0; pc < program_size; ++pc)
   {
-    const irep_idt p_identifier{DECODED_PARAMETER_PREFIX +
-                                std::to_string(parameter_number)};
-    return symbol_exprt{p_identifier, parameter_types[parameter_number]};
+    instructions.push_back(instructiont{pc});
+    auto &instruction = instructions[pc];
+
+    add_nullary_instructions(instruction, identifier);
+    add_unary_instructions(instruction, function_arguments.size(), identifier);
   }
-  else // Constant.
-  {
-    const size_t const_index = parameter_number - num_params;
-    return *next(begin(literals), const_index);
-  }
-}
-
-exprt bool_e_datat::decode_unary(
-  const bool_e_datat::instructiont::optiont option,
-  const std::vector<exprt> results) const
-{
-  PRECONDITION(option.operand0 < results.size());
-  exprt op0 = results[option.operand0];
-  return unary_exprt{option.operation, op0, bool_typet{}};
-}
-
-exprt bool_e_datat::decode_binary(
-  const bool_e_datat::instructiont::optiont option,
-  const std::vector<exprt> results) const
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-
-  exprt op0{results[option.operand0]};
-  exprt op1{results[option.operand1]};
-  return binary_exprt{op0, option.operation, op1, bool_typet{}};
-}
-
-exprt bool_e_datat::decode_predicate(
-  const bool_e_datat::instructiont::optiont option,
-  const std::vector<exprt> results) const
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-
-  return binary_exprt{results[option.operand0],
-                      option.operation,
-                      results[option.operand1],
-                      bool_typet{}};
-}
-
-exprt bool_e_datat::decode_ternary(
-  const bool_e_datat::instructiont::optiont option,
-  const std::vector<exprt> results) const
-{
-  PRECONDITION(option.operand0 < results.size());
-  PRECONDITION(option.operand1 < results.size());
-  PRECONDITION(option.operand2 < results.size());
-
-  return if_exprt{results[option.operand0],
-                  results[option.operand1],
-                  results[option.operand2]};
 }
 
 exprt bool_synth_encodingt::operator()(const exprt &expr)
@@ -533,24 +425,16 @@ exprt bool_synth_encodingt::operator()(const exprt &expr)
     bool_e_datat &e_data = map_it->second;
 
     exprt final_result = e_data(function_expr.arguments());
-
     for(const exprt &c : e_data.constraints)
       constraints.push_back(c);
     return final_result;
   }
-  else if(expr.id() == ID_symbol)
+  else if(expr.id() == ID_nondet_symbol || expr.id() == ID_symbol)
   {
     // Add the suffix.
-    symbol_exprt tmp = to_symbol_expr(expr);
-    tmp.set_identifier(id2string(tmp.get_identifier()) + suffix);
-    return std::move(tmp);
-  }
-  else if(expr.id() == ID_nondet_symbol)
-  {
-    // Add the suffix.
-    nondet_symbol_exprt tmp = to_nondet_symbol_expr(expr);
-    irep_idt identifier = tmp.get_identifier();
-    tmp.set_identifier(id2string(identifier) + suffix);
+    exprt tmp{expr};
+    irep_idt identifier = id2string(tmp.get(ID_identifier)) + suffix;
+    tmp.set(ID_identifier, identifier);
     return std::move(tmp);
   }
   else
@@ -563,24 +447,4 @@ exprt bool_synth_encodingt::operator()(const exprt &expr)
 
     return tmp;
   }
-}
-
-solutiont
-bool_synth_encodingt::get_solution(const decision_proceduret &solver) const
-{
-  solutiont result;
-
-  for(const std::pair<const symbol_exprt, bool_e_datat> &it :
-      e_data_per_function)
-  {
-    result.functions[it.first] = it.second.get_function(solver, false);
-    result.s_functions[it.first] = it.second.get_function(solver, true);
-  }
-  return result;
-}
-
-void bool_synth_encodingt::clear()
-{
-  e_data_per_function.clear();
-  constraints.clear();
 }
