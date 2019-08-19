@@ -67,7 +67,7 @@ void bool_synth_encodingt::clear()
 /// \param prev_result: Operand constructed by previous instructions. Can be
 ///   nil to mark the beginning of a new bit string.
 /// \param op: Operand of the instruction to convert.
-/// \return: Binary expression or operand of the instruction.
+/// \return Binary expression or operand of the instruction.
 static exprt convert_boolean_instruction(
   const irep_idt &target_expression,
   const exprt &prev_result,
@@ -85,7 +85,7 @@ static exprt convert_boolean_instruction(
 /// \param prev_result: Operand constructed by previous instructions. Can be
 ///   nil to mark the beginning of a new bit string.
 /// \param operand: Operand of the instruction to convert.
-/// \return: Binary expression or operand of the instruction if this is a new
+/// \return Binary expression or operand of the instruction if this is a new
 ///   bit string.
 static exprt convert_unary_to_exp(
   const bool_e_datat::instructiont::optiont &option,
@@ -113,7 +113,7 @@ static exprt convert_unary_to_exp(
 /// \param option: Instruction to convert.
 /// \param operand: Operand constructed by previous instructions. Can be
 ///   nil to mark the beginning of a new bit string.
-/// \return: Unary expression or false_exprt if this is a new bit string.
+/// \return Unary expression or false_exprt if this is a new bit string.
 static exprt convert_nullary_to_exp(
   const bool_e_datat::instructiont::optiont &option,
   const exprt &operand)
@@ -200,7 +200,7 @@ bool_synth_encodingt::get_solution(const decision_proceduret &solver) const
 /// \param expr_true: Expression to execute if the selector is set to true.
 /// \param expr_false: Expression to execute if the selector is set to
 ///   false.
-/// \return: If-expression for the given parameters.
+/// \return If-expression for the given parameters.
 static if_exprt chain(
   const symbol_exprt &selector,
   const exprt &expr_true,

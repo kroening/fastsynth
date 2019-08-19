@@ -75,7 +75,7 @@ public:
     /// Creates an option with the specified identifier and returns a reference
     /// to it to the caller.
     /// \param sel_identifier: Name of the option.
-    /// \return: Reference to the newly created option.
+    /// \return Reference to the newly created option.
     optiont &add_option(const irep_idt &sel_identifier);
 
     /// Generate a constraint for the instruction for a given set of arguments.
@@ -84,7 +84,7 @@ public:
     /// \param arguments: Arguments of the function.
     /// \param prev_result: Result of the previous instruction (Nil if there is
     ///   none).
-    /// \return: Result of the chaining process.
+    /// \return Result of the chaining process.
     exprt constraint(const argumentst &arguments, const exprt &prev_result);
   };
 
@@ -107,14 +107,14 @@ public:
   /// Computes the constraints for the given arguments with respect to the
   /// generated options by chaining them together.
   /// \param arguments: Arguments of the function that shall be synthesised.
-  /// \return: Encoded result.
+  /// \return Encoded result.
   exprt operator()(const argumentst &arguments);
 
   /// Returns one possible decoded result for the synthesised expression. This
   /// is based on the previously generated instructions.
   /// \param solver: Solver used by the synthesis, used for retrieving which
   ///   selectors are active.
-  /// \return: Possible solution for the synthesised expression.
+  /// \return Possible solution for the synthesised expression.
   exprt get_function(const decision_proceduret &solver) const;
 
   /// Checks if all parameters of the expression are of type bool.
@@ -125,7 +125,7 @@ public:
   /// Returns the instance number for a given set of arguments and adds a new
   /// instance entry if not already present.
   /// \param arguments: Arguments to perform the search for.
-  /// \return: Number of the instance.
+  /// \return Number of the instance.
   std::size_t instance_number(const argumentst &arguments);
 
 private:
@@ -150,7 +150,7 @@ private:
   /// \param option: Option to create the expression for.
   /// \param rlo_bit: Current state of the RLO. Can be interpreted as the
   /// intermediate result of the boolean operation.
-  /// \return: New RLO expression.
+  /// \return New RLO expression.
   exprt decode_unary(
     const bool_e_datat::instructiont::optiont &option,
     const exprt &rlo_bit) const;
@@ -159,7 +159,7 @@ private:
   /// \param option: Option to create the expression for.
   /// \param rlo_bit: Current state of the RLO. Can be interpreted as the
   /// intermediate result of the boolean operation.
-  /// \return: New RLO expression.
+  /// \return New RLO expression.
   exprt decode_nullary(
     const bool_e_datat::instructiont::optiont &option,
     const exprt &rlo_bit) const;
@@ -167,7 +167,7 @@ private:
   /// Constructs a parameter for the given parameter number.
   /// \param parameter_number: Number of the synthesised expression's
   ///   parameter.
-  /// \return: Expression containing the parameter.
+  /// \return Expression containing the parameter.
   symbol_exprt decode_parameter(const size_t parameter_number) const;
 };
 
@@ -179,12 +179,12 @@ public:
   /// Performs the encoding for the given expression by setting up possible
   /// candidates and computing constraints for them.
   /// \param expr: Expression that shall be encoded.
-  /// \return: Encoded result.
+  /// \return Encoded result.
   exprt operator()(const exprt &expr) override;
 
   /// Returns a set of solutions based on the encoded possibilities.
   /// \param solver: Solver used by the synthesis.
-  /// \return: Solution including possible candidates for the final result.
+  /// \return Solution including possible candidates for the final result.
   solutiont get_solution(const decision_proceduret &solver) const override;
 
   /// Clears the encoded variants and constraints.
