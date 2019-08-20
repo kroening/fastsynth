@@ -5,6 +5,6 @@ activate-multi-line-match
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSIONa -> X #parameter1;\nX #parameter2;\nA #parameter0;\nX #parameter2;$
+^Result: EXPRESSIONa -> (X #parameter1;\nX #parameter2;\nA #parameter0;\nX #parameter2;)|(XN #parameter2;\nX #parameter1;\nON #parameter0;\nXN #parameter2;)$
 --
 ^warning: ignoring

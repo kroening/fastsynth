@@ -53,7 +53,7 @@ void instrument_expressions(
 /// non-deterministic values are added to them right after their declarations.
 /// \param expressions: Set of synthesised expressions.
 /// \param goto_model: GOTO model that shall be modified.
-void instrument_nondet_lokals(goto_modelt &goto_model);
+void instrument_nondet_locals(goto_modelt &goto_model);
 
 /// Modifies the GOTO model in a way that it can be used for the synthesis.
 /// \param goto_model: GOTO model that shall be modified.

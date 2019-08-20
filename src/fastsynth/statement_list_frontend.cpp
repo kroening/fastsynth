@@ -60,7 +60,7 @@ int statement_list_frontend(const cmdlinet &cmdline)
   std::set<irep_idt> expressions =
     find_expressions(goto_model.symbol_table, STL_EXPRESSION_PREFIX);
   print_expressions(message, expressions);
-  instrument_nondet_lokals(goto_model);
+  instrument_nondet_locals(goto_model);
   instrument_expressions(expressions, goto_model);
   process_goto_model(goto_model);
 

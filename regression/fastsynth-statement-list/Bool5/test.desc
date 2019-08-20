@@ -1,10 +1,10 @@
 CORE
 main.awl
---max-program-size 8
+--max-program-size 7
 activate-multi-line-match
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSIONc -> ON #parameter0;\nON #parameter1;\nON #parameter2;\nON #parameter3;$
+^Result: EXPRESSIONc -> ON #parameter0;\nON #parameter1;\nON #parameter2;\nON #parameter3;\nON #parameter4;\nA #parameter5;\nA #parameter6;$
 --
 ^warning: ignoring
