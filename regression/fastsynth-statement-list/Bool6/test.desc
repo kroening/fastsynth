@@ -5,6 +5,7 @@ activate-multi-line-match
 ^EXIT=0$
 ^SIGNAL=0$
 ^VERIFICATION SUCCESSFUL$
-^Result: EXPRESSIONsimplified -> (X #parameter0;\nX #parameter1;)|(XN #parameter0;\nXN #parameter1;)$
+^Result: EXPRESSIONrepaired -> AN #parameter1;\nA #parameter0;\nO #parameter2;\nO #parameter3;
+$
 --
 ^warning: ignoring

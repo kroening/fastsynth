@@ -1,8 +1,10 @@
-FUNCTION "EXPRESSIONsimplified" : Bool
+FUNCTION "EXPRESSIONrepaired" : Bool
 VERSION : 0.1
    VAR_INPUT 
       parameter0 : Bool;
       parameter1 : Bool;
+      parameter2 : Bool;
+      parameter3 : Bool;
    END_VAR
 
 BEGIN
@@ -13,6 +15,9 @@ VERSION : 0.1
    VAR_TEMP 
       NONDET0 : Bool;
       NONDET1 : Bool;
+      NONDET2 : Bool;
+      NONDET3 : Bool;
+      prevResult : Bool;
       expectedTrue : Bool;
       return : Bool;
    END_VAR
@@ -20,19 +25,22 @@ VERSION : 0.1
 BEGIN
 NETWORK
 TITLE = 
-      CALL "EXPRESSIONsimplified" 
-      ( parameter0 := #NONDET0, 
-        parameter1 := #NONDET1, 
-        Ret_Val := #return );
 
-      O(;
       A #NONDET0;
       AN #NONDET1;
-      );
-      O(;
-      AN #NONDET0;
-      A #NONDET1;
-      );
+      AN #NONDET2;
+      = #prevResult;
+
+      CALL "EXPRESSIONrepaired" 
+      ( parameter0 := #NONDET0, 
+        parameter1 := #NONDET1,
+        parameter2 := #NONDET2,
+        parameter3 := #NONDET3,
+        Ret_Val := #return );
+
+      O #prevResult;
+      O #NONDET3;
+      O #NONDET2;
 
       XN #return;
       = #expectedTrue;
