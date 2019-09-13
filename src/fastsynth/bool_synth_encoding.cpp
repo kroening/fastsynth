@@ -435,7 +435,7 @@ exprt bool_synth_encodingt::operator()(const exprt &expr)
     exprt tmp{expr};
     irep_idt identifier = id2string(tmp.get(ID_identifier)) + suffix;
     tmp.set(ID_identifier, identifier);
-    return std::move(tmp);
+    return tmp;
   }
   else
   {
