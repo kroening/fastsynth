@@ -1098,8 +1098,27 @@ typet sygus_parsert::sort()
   case OPEN:
     if(next_token()!=SYMBOL)
       throw error("expected symbol after '(' in a sort");
+    if(buffer=="_")
+    {
+      // SyGuS-IF v2.0 now matches smt-lib syntax
+      if(next_token() != SYMBOL)
+        throw error("expected symbol after '_' in a sort");
 
-    if(buffer=="BitVec")
+      if(buffer == "BitVec")
+      {
+        if(next_token() != NUMERAL)
+          throw error("expected numeral as bit-width");
+
+        auto width = std::stoll(buffer);
+
+        // eat the ')'
+        if(next_token() != CLOSE)
+          throw error("expected ')' at end of sort");
+
+        return unsignedbv_typet(width);
+      }
+    }
+    else if(buffer=="BitVec")
     {
       // this has slightly different symtax compared to SMT-LIB2
       if(next_token()!=NUMERAL)
