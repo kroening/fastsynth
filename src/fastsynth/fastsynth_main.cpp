@@ -41,18 +41,64 @@
 /// shall be used.
 #define SYGUS_FILE_ENDING ".sl"
 
+
+void help(std::ostream &out)
+{
+  // clang-format off
+  out <<
+     "\n"
+     "* *                       Fastsynth                          * *\n "
+     "* *         CounterExample Guided Inductive Synthesis        * *\n ";
+  out  <<
+     "* *              Daniel Kroening, Pascal Kesseli             * *\n"
+     "* *           Elizabeth Polgreen, Cristina David             * *\n"
+     "* *      Oxford University, Computer Science Department      * *\n"
+     "* *                  kroening@kroening.com                   * *\n"
+     "* *                                                          * *\n"
+     "\n"
+     "Usage:                       Purpose:\n"
+     "\n"
+     " fastsynth [-?] [-h] [--help]      show help\n"
+     " fastsynth file.c ...              source file names\n"
+     " fastsynth file.sl ...             source file names\n"
+     "\n"
+     "Solver options:\n"
+     " --incremental                     use incremental minisat for synthesis\n" // NOLINT(*)
+     " --simplifying-solver              use incremental minisat with simplification for synthesis\n" // NOLINT(*)
+     " --smt                             use smt solver for synthesis and verification\n" // NOLINT(*)
+     " --local-search                    use local-search based verification\n" // NOLINT(*)
+     " --fm                              use fourier motzkin based verification\n\n" // NOLINT(*)
+     "Instruction set options:\n"
+     " --max-program-size N              maximum size of synthesised program\n" // NOLINT(*)
+     " --literals                        add literals from spec to instruction set\n" // NOLINT(*)
+     " --no-bitwise                      don't include any bit-wise instructions in instruction set\n" // NOLINT(*)
+     " --enable-division                 add division to instruction set\n" // NOLINT(*)
+     "\n";
+    // clang-format on
+}
+
+
+
 int main(int argc, const char *argv[])
 {
   cmdlinet cmdline;
   if(cmdline.parse(argc, argv, FASTSYNTH_OPTIONS))
   {
     std::cerr << "Usage error\n";
+    help(std::cerr);
     return 1;
   }
 
   if(cmdline.args.size() != 1)
   {
-    std::cerr << "Usage error\n";
+    std::cerr << "Usage error, file must be given\n";
+    help(std::cerr);
+    return 1;
+  }
+
+  if(cmdline.isset("help") || cmdline.isset("h") || cmdline.isset("?"))
+  {
+    help(std::cout);
     return 1;
   }
 
