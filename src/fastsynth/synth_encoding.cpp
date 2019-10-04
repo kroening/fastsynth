@@ -66,7 +66,7 @@ void e_datat::setup(
 
   enable_bitwise=_enable_bitwise;
 
-  function_symbol=e.function();
+  function_symbol=to_symbol_expr(e.function());
   const irep_idt &identifier=function_symbol.get_identifier();
 
   return_type=e.type();
@@ -551,10 +551,11 @@ exprt synth_encodingt::operator()(const exprt &expr)
     for(auto &op : tmp.arguments())
       op=(*this)(op);
 
-    e_datat &e_data=e_data_map[tmp.function()];
+    e_datat &e_data=e_data_map[to_symbol_expr(tmp.function())];
     if(e_data.word_type.id().empty())
       e_data.literals=literals;
-    exprt final_result=e_data(tmp, program_size, enable_bitwise, enable_division);
+    exprt final_result=e_data(
+        tmp, program_size, enable_bitwise, enable_division);
 
     for(const auto &c : e_data.constraints)
       constraints.push_back(c);
