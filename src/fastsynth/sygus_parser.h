@@ -71,12 +71,13 @@ public:
   unsigned let_counter;
 
 protected:
+  // commands
   void setup_commands();
 
+  // expressions
   exprt expression();
   exprt let_expression(bool first_in_chain);
   exprt::operandst operands();
-  signature_with_parameter_idst function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
   void fix_binary_operation_operand_types(exprt &expr);
   void fix_ite_operation_result_type(if_exprt &expr);
@@ -84,6 +85,10 @@ protected:
   exprt cast_bv_to_unsigned(exprt &expr);
   void check_bitvector_operands(exprt &expr);
 
+  // types
+  signature_with_parameter_idst function_signature();
+
+  // grammars
   void NTDef_seq();
   void GTerm_seq();
   void NTDef();
