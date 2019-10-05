@@ -680,8 +680,8 @@ void sygus_parsert::setup_commands()
 
     auto &f=function_map[id];
     f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=body;
+    f.parameters=signature.parameter_ids;
+    f.definition=body;
     local_variable_map.clear();
   };
 
@@ -708,8 +708,8 @@ void sygus_parsert::setup_commands()
 
     auto &f=function_map[id];
     f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=body;
+    f.parameters=signature.parameter_ids;
+    f.definition=body;
     local_variable_map.clear();
   };
 
@@ -729,8 +729,8 @@ void sygus_parsert::setup_commands()
 
     auto &f=function_map[id];
     f.type=signature.type;
-    f.parameter_ids=signature.parameter_ids;
-    f.body=nil_exprt();
+    f.parameters=signature.parameter_ids;
+    f.definition=nil_exprt();
 
     synth_fun_set.insert(id);
   };
@@ -850,12 +850,12 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   exprt::operandst arguments;
   arguments.resize(f.type.domain().size());
 
-  assert(f.parameter_ids.size()==f.type.domain().size());
+  assert(f.parameters.size()==f.type.domain().size());
 
   // get arguments
   for(std::size_t i = 0; i < f.type.domain().size(); i++)
   {
-    std::string var_id = id2string(f.parameter_ids[i]) + suffix;
+    std::string var_id = id2string(f.parameters[i]) + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
       throw error() << "use of undeclared variable `" << var_id << '\'';
@@ -1005,14 +1005,14 @@ void sygus_parsert::expand_function_applications(exprt &expr)
       for(std::size_t i=0; i<f.type.domain().size(); i++)
       {
         const auto &parameter_type = f.type.domain()[i];
-        const auto &parameter_id = f.parameter_ids[i];
+        const auto &parameter_id = f.parameters[i];
 
         replace_symbol.insert(
           symbol_exprt(parameter_id, parameter_type),
           app.arguments()[i]);
       }
 
-      exprt body=f.body;
+      exprt body=f.definition;
       replace_symbol(body);
       expand_function_applications(body);
       expr=body;

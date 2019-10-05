@@ -50,8 +50,8 @@ public:
   struct functiont
   {
     mathematical_function_typet type;
-    std::vector<irep_idt> parameter_ids;
-    exprt body;
+    std::vector<irep_idt> parameters;
+    exprt definition;
     functiont():type({}, empty_typet())
     {
     }
