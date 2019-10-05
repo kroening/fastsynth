@@ -105,18 +105,22 @@ exprt sygus_parsert::function_application(
 {
   const auto &f = function_map[identifier];
 
+  PRECONDITION(f.type.id() == ID_mathematical_function);
+
+  const auto &f_type = to_mathematical_function_type(f.type);
+
   function_application_exprt result(
     symbol_exprt(identifier, f.type),
     op,
-    f.type.codomain());
+    f_type.codomain());
 
   // check the arguments
-  if(op.size()!=f.type.domain().size())
+  if(op.size()!=f_type.domain().size())
     throw error("wrong number of arguments for function");
 
   for(std::size_t i=0; i<op.size(); i++)
   {
-    if(op[i].type() != f.type.domain()[i])
+    if(op[i].type() != f_type.domain()[i])
       throw error("wrong type for arguments for function");
   }
 
@@ -846,27 +850,30 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
     throw error() << "undeclared function `" << id << '\'';
 
   const auto &f = function_map[id];
+  DATA_INVARIANT(f.type.id() == ID_mathematical_function,
+    "functions must have function type");
+  const auto &f_type = to_mathematical_function_type(f.type);
 
   exprt::operandst arguments;
-  arguments.resize(f.type.domain().size());
+  arguments.resize(f_type.domain().size());
 
-  assert(f.parameters.size()==f.type.domain().size());
+  assert(f.parameters.size()==f_type.domain().size());
 
   // get arguments
-  for(std::size_t i = 0; i < f.type.domain().size(); i++)
+  for(std::size_t i = 0; i < f_type.domain().size(); i++)
   {
     std::string var_id = id2string(f.parameters[i]) + suffix;
 
     if(variable_map.find(var_id) == variable_map.end())
       throw error() << "use of undeclared variable `" << var_id << '\'';
 
-    arguments[i] = symbol_exprt(var_id, f.type.domain()[i]);
+    arguments[i] = symbol_exprt(var_id, f_type.domain()[i]);
   }
 
   return function_application_exprt(
     symbol_exprt(id, f.type),
     arguments,
-    f.type.codomain());
+    f_type.codomain());
 }
 
 void sygus_parsert::generate_invariant_constraints()
@@ -996,15 +1003,19 @@ void sygus_parsert::expand_function_applications(exprt &expr)
         return; // do not expand
       }
 
-      assert(f.type.domain().size()==
+      DATA_INVARIANT(f.type.id() == ID_mathematical_function,
+        "functions must have function type");
+      const auto &f_type = to_mathematical_function_type(f.type);
+
+      assert(f_type.domain().size()==
              app.arguments().size());
 
       replace_symbolt replace_symbol;
 
       std::map<irep_idt, exprt> parameter_map;
-      for(std::size_t i=0; i<f.type.domain().size(); i++)
+      for(std::size_t i=0; i<f_type.domain().size(); i++)
       {
-        const auto &parameter_type = f.type.domain()[i];
+        const auto &parameter_type = f_type.domain()[i];
         const auto &parameter_id = f.parameters[i];
 
         replace_symbol.insert(

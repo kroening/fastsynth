@@ -49,12 +49,9 @@ public:
 
   struct functiont
   {
-    mathematical_function_typet type;
+    typet type;
     std::vector<irep_idt> parameters;
     exprt definition;
-    functiont():type({}, empty_typet())
-    {
-    }
   };
 
   using function_mapt=std::map<irep_idt, functiont>;
