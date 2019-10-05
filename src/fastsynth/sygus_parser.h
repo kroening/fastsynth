@@ -47,11 +47,11 @@ public:
     invariant_constraint_functiont id,
     invariant_variablet variable_use);
 
-  struct functiont
+  struct functiont: public idt
   {
-    typet type;
-    std::vector<irep_idt> parameters;
-    exprt definition;
+    functiont(): idt(nil_exprt())
+    {
+    }
   };
 
   using function_mapt=std::map<irep_idt, functiont>;
