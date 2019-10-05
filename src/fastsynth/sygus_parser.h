@@ -1,36 +1,22 @@
 #include <set>
 
-#include <solvers/smt2/smt2_tokenizer.h>
+#include <solvers/smt2/smt2_parser.h>
 
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
 
-class sygus_parsert
+class sygus_parsert: public smt2_parsert
 {
 public:
   explicit sygus_parsert(std::istream &_in):
+    smt2_parsert(_in),
     id_counter(0),
-    let_counter(0),
-    smt2_tokenizer(_in)
+    let_counter(0)
   {
+    setup_commands();
   }
 
   using smt2_errort = smt2_tokenizert::smt2_errort;
-
-  smt2_tokenizert::smt2_errort error(const std::string &message)
-  {
-    return smt2_tokenizer.error(message);
-  }
-
-  smt2_tokenizert::smt2_errort error()
-  {
-    return smt2_tokenizer.error();
-  }
-
-  void parse()
-  {
-    command_sequence();
-  }
 
   enum invariant_variablet { PRIMED, UNPRIMED };
   enum invariant_constraint_functiont { PRE, INV, TRANS, POST };
@@ -83,21 +69,12 @@ public:
 
   unsigned id_counter;
   unsigned let_counter;
-  using renaming_mapt=std::map<irep_idt, irep_idt>;
-  renaming_mapt renaming_map;
 
 protected:
-  smt2_tokenizert smt2_tokenizer;
-
-  void command_sequence();
-
-  virtual void command(const std::string &);
-
-  void ignore_command();
+  void setup_commands();
 
   exprt expression();
   exprt let_expression(bool first_in_chain);
-  typet sort();
   exprt::operandst operands();
   signature_with_parameter_idst function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);

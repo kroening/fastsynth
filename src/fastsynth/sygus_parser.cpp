@@ -10,70 +10,6 @@
 #include <cassert>
 #include <fstream>
 
-void sygus_parsert::command_sequence()
-{
-  while(smt2_tokenizer.next_token()==smt2_tokenizert::OPEN)
-  {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected symbol as command");
-
-    command(smt2_tokenizer.get_buffer());
-
-    switch(smt2_tokenizer.next_token())
-    {
-    case smt2_tokenizert::END_OF_FILE:
-      throw error("expected closing parenthesis at end of command, but got EOF");
-
-    case smt2_tokenizert::CLOSE:
-      // what we expect
-      break;
-
-    case smt2_tokenizert::NONE:
-    case smt2_tokenizert::STRING_LITERAL:
-    case smt2_tokenizert::NUMERAL:
-    case smt2_tokenizert::SYMBOL:
-    case smt2_tokenizert::KEYWORD:
-    case smt2_tokenizert::OPEN:
-      throw error("expected end of command");
-    }
-  }
-
-  if(smt2_tokenizer.peek()!=smt2_tokenizert::END_OF_FILE)
-    throw error("unexpected token in command sequence");
-}
-
-void sygus_parsert::ignore_command()
-{
-  std::size_t parentheses=0;
-  while(true)
-  {
-    switch(smt2_tokenizer.peek())
-    {
-    case smt2_tokenizert::OPEN:
-      smt2_tokenizer.next_token();
-      parentheses++;
-      break;
-
-    case smt2_tokenizert::CLOSE:
-      if(parentheses==0)
-        return; // done
-
-      smt2_tokenizer.next_token();
-      parentheses--;
-      break;
-
-    case smt2_tokenizert::END_OF_FILE:
-      throw error("unexpected EOF in command");
-
-    case smt2_tokenizert::NONE:
-    case smt2_tokenizert::STRING_LITERAL:
-    case smt2_tokenizert::NUMERAL:
-    case smt2_tokenizert::SYMBOL:
-    case smt2_tokenizert::KEYWORD:
-      smt2_tokenizer.next_token();
-    }
-  }
-}
 exprt::operandst sygus_parsert::operands()
 {
   exprt::operandst result;
@@ -694,10 +630,9 @@ sygus_parsert::signature_with_parameter_idst sygus_parsert::function_signature()
   return signature_with_parameter_idst(type, parameter_ids);
 }
 
-void sygus_parsert::command(const std::string &c)
+void sygus_parsert::setup_commands()
 {
-  if(c=="declare-var")
-  {
+  commands["declare-var"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-var");
 
@@ -707,9 +642,9 @@ void sygus_parsert::command(const std::string &c)
       throw error("variable declared twice");
 
     variable_map[id]=sort();
-  }
-  else if(c=="define-fun")
-  {
+  };
+
+  commands["define-fun"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after define-fun");
 
@@ -748,16 +683,16 @@ void sygus_parsert::command(const std::string &c)
     f.parameter_ids=signature.parameter_ids;
     f.body=body;
     local_variable_map.clear();
-  }
-  else if(c=="set-logic")
-  {
+  };
+
+  commands["set-logic"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after set-logic");
 
     logic=smt2_tokenizer.get_buffer();
-  }
-  else if(c=="define-fun")
-  {
+  };
+
+  commands["define-fun"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after define-fun");
 
@@ -776,9 +711,9 @@ void sygus_parsert::command(const std::string &c)
     f.parameter_ids=signature.parameter_ids;
     f.body=body;
     local_variable_map.clear();
-  }
-  else if(c=="synth-fun" || c=="synth-inv")
-  {
+  };
+
+  commands["synth-fun"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after synth-fun");
 
@@ -798,9 +733,11 @@ void sygus_parsert::command(const std::string &c)
     f.body=nil_exprt();
 
     synth_fun_set.insert(id);
-  }
-  else if(c=="declare-var")
-  {
+  };
+
+  commands["synth-inv"] = commands["synth-fun"];
+
+  commands["declare-var"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-var");
 
@@ -810,9 +747,9 @@ void sygus_parsert::command(const std::string &c)
       throw error() << "variable `" << id << "' declared twice";
 
     variable_map[id]=sort();
-  }
-  else if(c=="declare-primed-var")
-  {
+  };
+
+  commands["declare-primed-var"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-primed-var");
 
@@ -828,26 +765,24 @@ void sygus_parsert::command(const std::string &c)
       throw error("variable declared twice");
 
     variable_map[id_prime]=variable_map[id];
-  }
-  else if(c=="constraint")
-  {
+  };
+
+  commands["constraint"] = [this] {
     constraints.push_back(expression());
-  }
-  else if(c=="inv-constraint")
-  {
+  };
+
+  commands["inv-constraint"] = [this] {
     ignore_command();
     generate_invariant_constraints();
-  }
-  else if(c=="set-options")
-  {
+  };
+
+  commands["set-options"] = [this] {
     ignore_command();
-  }
-  else if(c=="check-synth")
-  {
-    action=c;
-  }
-  else
-    ignore_command();
+  };
+
+  commands["check-synth"] = [this] {
+    action="check-synth";
+  };
 }
 
 sygus_parsert::signature_with_parameter_idst sygus_parsert::inv_function_signature()
@@ -1084,69 +1019,3 @@ void sygus_parsert::expand_function_applications(exprt &expr)
     }
   }
 }
-
-typet sygus_parsert::sort()
-{
-  switch(smt2_tokenizer.next_token())
-  {
-  case smt2_tokenizert::SYMBOL:
-    if(smt2_tokenizer.get_buffer()=="Bool")
-      return bool_typet();
-    else if(smt2_tokenizer.get_buffer()=="Int")
-      return integer_typet();
-    else if(smt2_tokenizer.get_buffer()=="Real")
-      return real_typet();
-    else
-      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
-
-  case smt2_tokenizert::OPEN:
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected symbol after '(' in a sort");
-
-    if(smt2_tokenizer.get_buffer()=="_")
-    {
-      // SyGuS-IF v2.0 now matches smt-lib syntax
-      if(smt2_tokenizer.next_token() != smt2_tokenizert::SYMBOL)
-        throw error("expected symbol after '_' in a sort");
-
-      if(smt2_tokenizer.get_buffer() == "BitVec")
-      {
-        if(smt2_tokenizer.next_token() != smt2_tokenizert::NUMERAL)
-          throw error("expected numeral as bit-width");
-
-        auto width = std::stoll(smt2_tokenizer.get_buffer());
-
-        // eat the ')'
-        if(smt2_tokenizer.next_token() != smt2_tokenizert::CLOSE)
-          throw error("expected ')' at end of sort");
-
-        return unsignedbv_typet(width);
-      }
-    }
-    else if(smt2_tokenizer.get_buffer()=="BitVec")
-    {
-      // this has slightly different symtax compared to SMT-LIB2
-      if(smt2_tokenizer.next_token()!=smt2_tokenizert::NUMERAL)
-        throw error("expected number after BitVec");
-
-      auto width=std::stoll(smt2_tokenizer.get_buffer());
-
-      if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
-        throw error("expected ')' after BitVec width");
-
-      return unsignedbv_typet(width);
-    }
-    else
-      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
-
-  case smt2_tokenizert::NONE:
-  case smt2_tokenizert::END_OF_FILE:
-  case smt2_tokenizert::STRING_LITERAL:
-  case smt2_tokenizert::NUMERAL:
-  case smt2_tokenizert::KEYWORD:
-  case smt2_tokenizert::CLOSE:
-  default:
-    throw error() << "unexpected token in a sort " << smt2_tokenizer.get_buffer();
-  }
-}
-
