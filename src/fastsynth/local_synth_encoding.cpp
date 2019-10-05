@@ -117,7 +117,9 @@ exprt local_synth_encodingt::operator()(const exprt &expr)
       actual_params.emplace(placeholder, (*this)(op));
     }
 
-    const irep_idt &identifier = func->function().get_identifier();
+    DATA_INVARIANT(func->function().id()==ID_symbol,
+      "function must be symbol");
+    const irep_idt &identifier = to_symbol_expr(func->function()).get_identifier();
     const std::map<symbol_exprt, exprt>::const_iterator it = find_if(
       begin(solution_template.functions),
       end(solution_template.functions),

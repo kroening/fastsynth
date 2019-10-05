@@ -385,7 +385,9 @@ bool_e_datat::bool_e_datat(
   const std::size_t program_size)
   : function_arguments(expression.arguments())
 {
-  function_symbol = expression.function();
+  DATA_INVARIANT(expression.function().id()==ID_symbol,
+    "function must be symbol");
+  function_symbol = to_symbol_expr(expression.function());
   const irep_idt &identifier = function_symbol.get_identifier();
 
   PRECONDITION(is_bool_word_type());
@@ -413,13 +415,15 @@ exprt bool_synth_encodingt::operator()(const exprt &expr)
     for(exprt &op : function_expr.arguments())
       op = (*this)(op);
 
-    auto map_it = e_data_per_function.find(function_expr.function());
+    DATA_INVARIANT(function_expr.function().id()==ID_symbol,
+      "function must be symbol");
+    auto map_it = e_data_per_function.find(to_symbol_expr(function_expr.function()));
     if(map_it == end(e_data_per_function))
     {
       bool_e_datat new_data{function_expr, program_size};
       new_data.literals = literals;
       map_it = e_data_per_function
-                 .emplace(function_expr.function(), std::move(new_data))
+                 .emplace(to_symbol_expr(function_expr.function()), std::move(new_data))
                  .first;
     }
     bool_e_datat &e_data = map_it->second;

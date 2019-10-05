@@ -70,6 +70,12 @@ exprt verify_encodingt::operator()(const exprt &expr) const
   {
     const auto &e=to_function_application_expr(expr);
 
+    DATA_INVARIANT(e.function().id() == ID_symbol,
+      "function applied must be symbol");
+
+    const auto &e_identifier =
+      to_symbol_expr(e.function()).get_identifier();
+
     #if 0
     auto f_it=functions.find(e.function());
     
@@ -81,7 +87,7 @@ exprt verify_encodingt::operator()(const exprt &expr) const
     for(const auto &f : functions)
       f_map[f.first.get_identifier()]=f.second;
 
-    auto f_it=f_map.find(e.function().get_identifier());
+    auto f_it=f_map.find(e_identifier);
 
     exprt result=f_it==f_map.end()?
       from_integer(0, e.type()):f_it->second;
