@@ -1,0 +1,8 @@
+CORE
+constants.sl
+
+^EXIT=0$
+^SIGNAL=0$
+^Result: someconst -> 32$
+--
+^warning: ignoring
