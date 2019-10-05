@@ -5,14 +5,26 @@
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
 
-class sygus_parsert:public smt2_tokenizert
+class sygus_parsert
 {
 public:
   explicit sygus_parsert(std::istream &_in):
-    smt2_tokenizert(_in),
     id_counter(0),
-    let_counter(0)
+    let_counter(0),
+    smt2_tokenizer(_in)
   {
+  }
+
+  using smt2_errort = smt2_tokenizert::smt2_errort;
+
+  smt2_tokenizert::smt2_errort error(const std::string &message)
+  {
+    return smt2_tokenizer.error(message);
+  }
+
+  smt2_tokenizert::smt2_errort error()
+  {
+    return smt2_tokenizer.error();
   }
 
   void parse()
@@ -75,6 +87,8 @@ public:
   renaming_mapt renaming_map;
 
 protected:
+  smt2_tokenizert smt2_tokenizer;
+
   void command_sequence();
 
   virtual void command(const std::string &);

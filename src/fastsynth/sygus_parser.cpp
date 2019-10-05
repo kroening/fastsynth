@@ -12,33 +12,33 @@
 
 void sygus_parsert::command_sequence()
 {
-  while(next_token()==OPEN)
+  while(smt2_tokenizer.next_token()==smt2_tokenizert::OPEN)
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol as command");
 
-    command(buffer);
+    command(smt2_tokenizer.get_buffer());
 
-    switch(next_token())
+    switch(smt2_tokenizer.next_token())
     {
-    case END_OF_FILE:
+    case smt2_tokenizert::END_OF_FILE:
       throw error("expected closing parenthesis at end of command, but got EOF");
 
-    case CLOSE:
+    case smt2_tokenizert::CLOSE:
       // what we expect
       break;
 
-    case NONE:
-    case STRING_LITERAL:
-    case NUMERAL:
-    case SYMBOL:
-    case KEYWORD:
-    case OPEN:
+    case smt2_tokenizert::NONE:
+    case smt2_tokenizert::STRING_LITERAL:
+    case smt2_tokenizert::NUMERAL:
+    case smt2_tokenizert::SYMBOL:
+    case smt2_tokenizert::KEYWORD:
+    case smt2_tokenizert::OPEN:
       throw error("expected end of command");
     }
   }
 
-  if(token!=END_OF_FILE)
+  if(smt2_tokenizer.peek()!=smt2_tokenizert::END_OF_FILE)
     throw error("unexpected token in command sequence");
 }
 
@@ -47,30 +47,30 @@ void sygus_parsert::ignore_command()
   std::size_t parentheses=0;
   while(true)
   {
-    switch(peek())
+    switch(smt2_tokenizer.peek())
     {
-    case OPEN:
-      next_token();
+    case smt2_tokenizert::OPEN:
+      smt2_tokenizer.next_token();
       parentheses++;
       break;
 
-    case CLOSE:
+    case smt2_tokenizert::CLOSE:
       if(parentheses==0)
         return; // done
 
-      next_token();
+      smt2_tokenizer.next_token();
       parentheses--;
       break;
 
-    case END_OF_FILE:
+    case smt2_tokenizert::END_OF_FILE:
       throw error("unexpected EOF in command");
 
-    case NONE:
-    case STRING_LITERAL:
-    case NUMERAL:
-    case SYMBOL:
-    case KEYWORD:
-      next_token();
+    case smt2_tokenizert::NONE:
+    case smt2_tokenizert::STRING_LITERAL:
+    case smt2_tokenizert::NUMERAL:
+    case smt2_tokenizert::SYMBOL:
+    case smt2_tokenizert::KEYWORD:
+      smt2_tokenizer.next_token();
     }
   }
 }
@@ -78,10 +78,10 @@ exprt::operandst sygus_parsert::operands()
 {
   exprt::operandst result;
 
-  while(peek()!=CLOSE)
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
     result.push_back(expression());
 
-  next_token(); // eat the ')'
+  smt2_tokenizer.next_token(); // eat the ')'
 
   return result;
 }
@@ -90,7 +90,7 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
 {
   let_counter++;
 
-  if(peek()!=OPEN && !first_in_chain)
+  if(smt2_tokenizer.peek()!=smt2_tokenizert::OPEN && !first_in_chain)
   {
     // no need for chaining, single let exprt.
     auto ops=operands();
@@ -104,17 +104,17 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
   }
   else
   {
-    if(peek()==OPEN && first_in_chain)
+    if(smt2_tokenizer.peek()==smt2_tokenizert::OPEN && first_in_chain)
     {
-      next_token(); // eat the '(' that starts the bindings list
+      smt2_tokenizer.next_token(); // eat the '(' that starts the bindings list
     }
 
-    next_token(); // eat the '(' that starts the next binding
+    smt2_tokenizer.next_token(); // eat the '(' that starts the next binding
 
     exprt symbol_expr, value_expr, where_expr;
 
     // get the symbol that is bound
-    if(next_token()==SYMBOL)
+    if(smt2_tokenizer.next_token()==smt2_tokenizert::SYMBOL)
     {
       std::string tmp_buffer;
       symbol_expr = symbol_exprt(tmp_buffer, sort());
@@ -124,7 +124,7 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
 
     // get value
     value_expr = expression();
-    next_token(); // eat the ')' that closes this binding
+    smt2_tokenizer.next_token(); // eat the ')' that closes this binding
 
     // now rename op0 -- this really happens at the very
     // end of the let, but that's hard with recursion
@@ -138,7 +138,7 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
     full_let_variable_map[new_id]=value_expr.type();
     renaming_map[old_id]=new_id;
 
-    if(peek()!=CLOSE) // we are still in a chain of bindings
+    if(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE) // we are still in a chain of bindings
     {
       // get op2
       where_expr = let_expression(false);
@@ -146,13 +146,13 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
     else
     {
       // we are at the end of the chain
-      next_token(); // eat the ')' that closes the bindings list
+      smt2_tokenizer.next_token(); // eat the ')' that closes the bindings list
 
-      if(peek()!=OPEN)
+      if(smt2_tokenizer.peek()!=smt2_tokenizert::OPEN)
         throw error("let expects where here");
 
       where_expr = expression();
-      next_token(); // eat the final ')' that closes the let exprt
+      smt2_tokenizer.next_token(); // eat the final ')' that closes the let exprt
     }
 
     // don't rename any longer
@@ -293,19 +293,19 @@ static bool is_negative_numeral(const std::string &s)
 
 exprt sygus_parsert::expression()
 {
-  switch(next_token())
+  switch(smt2_tokenizer.next_token())
   {
-  case SYMBOL:
+  case smt2_tokenizert::SYMBOL:
     // sugys allows negative numerals "-1",
-    // which are a SYMBOL in SMT-LIB2
-    if(is_negative_numeral(buffer))
+    // which are a smt2_tokenizert::SYMBOL in SMT-LIB2
+    if(is_negative_numeral(smt2_tokenizer.get_buffer()))
     {
-      return constant_exprt(buffer, integer_typet());
+      return constant_exprt(smt2_tokenizer.get_buffer(), integer_typet());
     }
     else
     {
       // hash it
-      irep_idt identifier=buffer;
+      irep_idt identifier=smt2_tokenizer.get_buffer();
 
       // renamed?
       const auto r_it=renaming_map.find(identifier);
@@ -340,38 +340,41 @@ exprt sygus_parsert::expression()
         return function_application(identifier, exprt::operandst());
       }
       else
-        throw error() << "unknown symbol `" << buffer << '\'';
+        throw error() << "unknown symbol `" << smt2_tokenizer.get_buffer() << '\'';
     }
 
-  case NUMERAL:
-    if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')
+  case smt2_tokenizert::NUMERAL:
     {
-      mp_integer value=
-        string2integer(std::string(buffer, 2, std::string::npos), 16);
-      const std::size_t width = 4*(buffer.length() - 2);
-      CHECK_RETURN(width!=0 && width%4==0);
-      unsignedbv_typet type(width);
-      return from_integer(value, type);
-    }
-    else if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='b')
-    {
-      mp_integer value=
-        string2integer(std::string(buffer, 2, std::string::npos), 2);
-      const std::size_t width = buffer.size() - 2;
-      CHECK_RETURN(width!=0 && width%2==0);
-      unsignedbv_typet type(width);
-      return from_integer(value, type);
-    }
-    else
-    {
-      return constant_exprt(buffer, integer_typet());
+      const auto &buffer = smt2_tokenizer.get_buffer();
+      if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='x')
+      {
+        mp_integer value=
+          string2integer(std::string(buffer, 2, std::string::npos), 16);
+        const std::size_t width = 4*(buffer.length() - 2);
+        CHECK_RETURN(width!=0 && width%4==0);
+        unsignedbv_typet type(width);
+        return from_integer(value, type);
+      }
+      else if(buffer.size()>=2 && buffer[0]=='#' && buffer[1]=='b')
+      {
+        mp_integer value=
+          string2integer(std::string(buffer, 2, std::string::npos), 2);
+        const std::size_t width = buffer.size() - 2;
+        CHECK_RETURN(width!=0 && width%2==0);
+        unsignedbv_typet type(width);
+        return from_integer(value, type);
+      }
+      else
+      {
+        return constant_exprt(buffer, integer_typet());
+      }
     }
 
-  case OPEN:
-    if(next_token()==SYMBOL)
+  case smt2_tokenizert::OPEN:
+    if(smt2_tokenizer.next_token()==smt2_tokenizert::SYMBOL)
     {
       // hash it
-      const irep_idt id=buffer;
+      const irep_idt id=smt2_tokenizer.get_buffer();
 
       if(id==ID_let)
       {
@@ -644,13 +647,13 @@ exprt sygus_parsert::expression()
     else
       throw error("expected symbol after '(' in an expression");
 
-  case END_OF_FILE:
+  case smt2_tokenizert::END_OF_FILE:
     throw error("EOF in an expression");
 
-  case NONE:
-  case STRING_LITERAL:
-  case KEYWORD:
-  case CLOSE:
+  case smt2_tokenizert::NONE:
+  case smt2_tokenizert::STRING_LITERAL:
+  case smt2_tokenizert::KEYWORD:
+  case smt2_tokenizert::CLOSE:
   default:
     throw error("unexpected token in an expression");
   }
@@ -658,32 +661,32 @@ exprt sygus_parsert::expression()
 
 sygus_parsert::signature_with_parameter_idst sygus_parsert::function_signature()
 {
-  if(next_token()!=OPEN)
+  if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
     throw error("expected '(' at beginning of signature");
 
   mathematical_function_typet::domaint domain;
   std::vector<irep_idt> parameter_ids;
 
-  while(peek()!=CLOSE)
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
   {
-    if(next_token()!=OPEN)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
       throw error("expected '(' at beginning of parameter");
 
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol in parameter");
 
-    const irep_idt id=buffer;
+    const irep_idt id=smt2_tokenizer.get_buffer();
 
     const auto parameter_type=sort();
     domain.push_back(parameter_type);
     parameter_ids.push_back(id);
     local_variable_map[id]=parameter_type;
 
-    if(next_token()!=CLOSE)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
       throw error("expected ')' at end of parameter");
   }
 
-  next_token(); // eat the ')'
+  smt2_tokenizer.next_token(); // eat the ')'
 
   auto codomain = sort();
 
@@ -695,10 +698,10 @@ void sygus_parsert::command(const std::string &c)
 {
   if(c=="declare-var")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-var");
 
-    irep_idt id=buffer;
+    irep_idt id=smt2_tokenizer.get_buffer();
 
     if(variable_map.find(id)!=variable_map.end())
       throw error("variable declared twice");
@@ -707,10 +710,10 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="define-fun")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after define-fun");
 
-    const irep_idt id=buffer;
+    const irep_idt id=smt2_tokenizer.get_buffer();
 
     if(function_map.find(id)!=function_map.end())
       throw error("function declared twice");
@@ -748,17 +751,17 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="set-logic")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after set-logic");
 
-    logic=buffer;
+    logic=smt2_tokenizer.get_buffer();
   }
   else if(c=="define-fun")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after define-fun");
 
-    irep_idt id=buffer;
+    irep_idt id=smt2_tokenizer.get_buffer();
 
     if(function_map.find(id)!=function_map.end())
       throw error() << "function `" << id << "' declared twice";
@@ -776,10 +779,10 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="synth-fun" || c=="synth-inv")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after synth-fun");
 
-    irep_idt id=buffer;
+    irep_idt id=smt2_tokenizer.get_buffer();
 
     if(function_map.find(id)!=function_map.end())
       throw error() << "function `" << id << "' declared twice";
@@ -798,10 +801,10 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="declare-var")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-var");
 
-    irep_idt id=buffer;
+    irep_idt id=smt2_tokenizer.get_buffer();
 
     if(variable_map.find(id)!=variable_map.end())
       throw error() << "variable `" << id << "' declared twice";
@@ -810,11 +813,11 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="declare-primed-var")
   {
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-primed-var");
 
-    irep_idt id=buffer;
-    irep_idt id_prime=buffer+"!";
+    irep_idt id=smt2_tokenizer.get_buffer();
+    irep_idt id_prime=smt2_tokenizer.get_buffer()+"!";
 
     if(variable_map.find(id)!=variable_map.end())
       throw error("variable declared twice");
@@ -849,31 +852,31 @@ void sygus_parsert::command(const std::string &c)
 
 sygus_parsert::signature_with_parameter_idst sygus_parsert::inv_function_signature()
 {
-  if(next_token()!=OPEN)
+  if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
     throw error("expected '(' at beginning of signature");
 
   mathematical_function_typet::domaint domain;
   std::vector<irep_idt> parameter_ids;
 
-  while(peek()!=CLOSE)
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
   {
-    if(next_token()!=OPEN)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
       throw error("expected '(' at beginning of parameter");
 
-    if(next_token()!=SYMBOL)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol in parameter");
 
-    const irep_idt id=buffer;
+    const irep_idt id=smt2_tokenizer.get_buffer();
     const auto parameter_type = sort();
     domain.push_back(parameter_type);
     parameter_ids.push_back(id);
     local_variable_map[id]=parameter_type;
 
-    if(next_token()!=CLOSE)
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
       throw error("expected ')' at end of parameter");
   }
 
-  next_token(); // eat the ')'
+  smt2_tokenizer.next_token(); // eat the ')'
 
   auto type = mathematical_function_typet(domain, bool_typet());
   return signature_with_parameter_idst(type, parameter_ids);
@@ -967,20 +970,20 @@ void sygus_parsert::generate_invariant_constraints()
 void sygus_parsert::NTDef_seq()
 {
   // it is not necessary to give a syntactic template
-  if(peek()!=OPEN)
+  if(smt2_tokenizer.peek()!=smt2_tokenizert::OPEN)
     return;
 
-  while(peek()!=CLOSE)
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
   {
     NTDef();
   }
 
-  next_token(); // eat the ')'
+  smt2_tokenizer.next_token(); // eat the ')'
 }
 
 void sygus_parsert::GTerm_seq()
 {
-  while(peek()!=CLOSE)
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
   {
     GTerm();
   }
@@ -989,20 +992,20 @@ void sygus_parsert::GTerm_seq()
 void sygus_parsert::NTDef()
 {
   // (Symbol Sort GTerm+)
-  if(next_token()!=OPEN)
+  if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
     throw error("NTDef must begin with '('");
 
-  if(peek()==OPEN)
-    next_token(); // symbol might be in another set of parenthesis
+  if(smt2_tokenizer.peek()==smt2_tokenizert::OPEN)
+    smt2_tokenizer.next_token(); // symbol might be in another set of parenthesis
 
-  if(next_token()!=SYMBOL)
+  if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
     throw error("NTDef must have a symbol");
 
   sort();
 
   GTerm_seq();
 
-  if(next_token()!=CLOSE)
+  if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
     throw error("NTDef must end with ')'");
 }
 
@@ -1010,26 +1013,26 @@ void sygus_parsert::GTerm()
 {
   // production rule
 
-  switch(next_token())
+  switch(smt2_tokenizer.next_token())
   {
-  case SYMBOL:
-  case NUMERAL:
-  case STRING_LITERAL:
+  case smt2_tokenizert::SYMBOL:
+  case smt2_tokenizert::NUMERAL:
+  case smt2_tokenizert::STRING_LITERAL:
     break;
 
-  case OPEN:
-    while(peek()!=CLOSE)
+  case smt2_tokenizert::OPEN:
+    while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
     {
       GTerm();
     }
 
-    next_token(); // eat ')'
+    smt2_tokenizer.next_token(); // eat ')'
     break;
 
-  case NONE:
-  case END_OF_FILE:
-  case KEYWORD:
-  case CLOSE:
+  case smt2_tokenizert::NONE:
+  case smt2_tokenizert::END_OF_FILE:
+  case smt2_tokenizert::KEYWORD:
+  case smt2_tokenizert::CLOSE:
     throw error("Unexpected GTerm");
   }
 }
@@ -1084,65 +1087,66 @@ void sygus_parsert::expand_function_applications(exprt &expr)
 
 typet sygus_parsert::sort()
 {
-  switch(next_token())
+  switch(smt2_tokenizer.next_token())
   {
-  case SYMBOL:
-    if(buffer=="Bool")
+  case smt2_tokenizert::SYMBOL:
+    if(smt2_tokenizer.get_buffer()=="Bool")
       return bool_typet();
-    else if(buffer=="Int")
+    else if(smt2_tokenizer.get_buffer()=="Int")
       return integer_typet();
-    else if(buffer=="Real")
+    else if(smt2_tokenizer.get_buffer()=="Real")
       return real_typet();
     else
-      throw error() << "unexpected sort: `" << buffer << '\'';
+      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
 
-  case OPEN:
-    if(next_token()!=SYMBOL)
+  case smt2_tokenizert::OPEN:
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol after '(' in a sort");
-    if(buffer=="_")
+
+    if(smt2_tokenizer.get_buffer()=="_")
     {
       // SyGuS-IF v2.0 now matches smt-lib syntax
-      if(next_token() != SYMBOL)
+      if(smt2_tokenizer.next_token() != smt2_tokenizert::SYMBOL)
         throw error("expected symbol after '_' in a sort");
 
-      if(buffer == "BitVec")
+      if(smt2_tokenizer.get_buffer() == "BitVec")
       {
-        if(next_token() != NUMERAL)
+        if(smt2_tokenizer.next_token() != smt2_tokenizert::NUMERAL)
           throw error("expected numeral as bit-width");
 
-        auto width = std::stoll(buffer);
+        auto width = std::stoll(smt2_tokenizer.get_buffer());
 
         // eat the ')'
-        if(next_token() != CLOSE)
+        if(smt2_tokenizer.next_token() != smt2_tokenizert::CLOSE)
           throw error("expected ')' at end of sort");
 
         return unsignedbv_typet(width);
       }
     }
-    else if(buffer=="BitVec")
+    else if(smt2_tokenizer.get_buffer()=="BitVec")
     {
       // this has slightly different symtax compared to SMT-LIB2
-      if(next_token()!=NUMERAL)
+      if(smt2_tokenizer.next_token()!=smt2_tokenizert::NUMERAL)
         throw error("expected number after BitVec");
 
-      auto width=std::stoll(buffer);
+      auto width=std::stoll(smt2_tokenizer.get_buffer());
 
-      if(next_token()!=CLOSE)
+      if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
         throw error("expected ')' after BitVec width");
 
       return unsignedbv_typet(width);
     }
     else
-      throw error() << "unexpected sort: `" << buffer << '\'';
+      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
 
-  case NONE:
-  case END_OF_FILE:
-  case STRING_LITERAL:
-  case NUMERAL:
-  case KEYWORD:
-  case CLOSE:
+  case smt2_tokenizert::NONE:
+  case smt2_tokenizert::END_OF_FILE:
+  case smt2_tokenizert::STRING_LITERAL:
+  case smt2_tokenizert::NUMERAL:
+  case smt2_tokenizert::KEYWORD:
+  case smt2_tokenizert::CLOSE:
   default:
-    throw error() << "unexpected token in a sort " << buffer;
+    throw error() << "unexpected token in a sort " << smt2_tokenizer.get_buffer();
   }
 }
 
