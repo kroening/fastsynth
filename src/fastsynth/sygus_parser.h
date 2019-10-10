@@ -21,19 +21,6 @@ public:
   enum invariant_variablet { PRIMED, UNPRIMED };
   enum invariant_constraint_functiont { PRE, INV, TRANS, POST };
 
-  struct signature_with_parameter_idst
-  {
-    mathematical_function_typet type;
-    std::vector<irep_idt> parameter_ids;
-
-    signature_with_parameter_idst(
-      const mathematical_function_typet &_type,
-      const std::vector<irep_idt> &_parameter_ids):
-      type(_type), parameter_ids(_parameter_ids)
-    {
-    }
-  };
-
   exprt::operandst constraints;
   std::string logic, action;
 

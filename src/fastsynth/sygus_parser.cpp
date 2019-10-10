@@ -688,7 +688,7 @@ void sygus_parsert::setup_commands()
     auto f_it = function_map.emplace(id, body);
 
     f_it.first->second.type = signature.type;
-    f_it.first->second.parameters = signature.parameter_ids;
+    f_it.first->second.parameters = signature.parameters;
 
     local_variable_map.clear();
   };
@@ -717,7 +717,7 @@ void sygus_parsert::setup_commands()
     auto f_it = function_map.emplace(id, body);
 
     f_it.first->second.type = signature.type;
-    f_it.first->second.parameters = signature.parameter_ids;
+    f_it.first->second.parameters = signature.parameters;
 
     local_variable_map.clear();
   };
@@ -739,7 +739,7 @@ void sygus_parsert::setup_commands()
     auto f_it = function_map.emplace(id, nil_exprt());
 
     f_it.first->second.type = signature.type;
-    f_it.first->second.parameters = signature.parameter_ids;
+    f_it.first->second.parameters = signature.parameters;
 
     synth_fun_set.insert(id);
   };
