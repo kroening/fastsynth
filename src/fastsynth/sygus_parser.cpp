@@ -103,8 +103,8 @@ exprt sygus_parsert::function_application(
   const irep_idt &identifier,
   const exprt::operandst &op)
 {
-  const auto f_it = function_map.find(identifier);
-  PRECONDITION(f_it!= function_map.end());
+  const auto f_it = id_map.find(identifier);
+  PRECONDITION(f_it!= id_map.end());
 
   const auto &f = f_it->second;
 
@@ -277,8 +277,8 @@ exprt sygus_parsert::expression()
         // search let variables, we clear let variables when done with parsing let
         return symbol_exprt(identifier, let_variable_map[identifier]);
       }
-      else if(function_map.find(identifier)!=
-              function_map.end())
+      else if(id_map.find(identifier)!=
+              id_map.end())
       {
         return function_application(identifier, exprt::operandst());
       }
@@ -564,7 +564,7 @@ exprt sygus_parsert::expression()
       }
       else
       {
-        if(function_map.count(id)!=0)
+        if(id_map.count(id)!=0)
         {
           return function_application(id, op);
         }
@@ -657,7 +657,7 @@ void sygus_parsert::setup_commands()
 
     const irep_idt id=smt2_tokenizer.get_buffer();
 
-    if(function_map.find(id)!=function_map.end())
+    if(id_map.find(id)!=id_map.end())
       throw error("function declared twice");
 
     local_variable_map.clear();
@@ -685,7 +685,7 @@ void sygus_parsert::setup_commands()
         << body.type().pretty() << '\'';
     }
 
-    auto f_it = function_map.emplace(id, body);
+    auto f_it = id_map.emplace(id, body);
 
     f_it.first->second.type = signature.type;
     f_it.first->second.parameters = signature.parameters;
@@ -706,7 +706,7 @@ void sygus_parsert::setup_commands()
 
     irep_idt id=smt2_tokenizer.get_buffer();
 
-    if(function_map.find(id)!=function_map.end())
+    if(id_map.find(id)!=id_map.end())
       throw error() << "function `" << id << "' declared twice";
 
     local_variable_map.clear();
@@ -714,7 +714,7 @@ void sygus_parsert::setup_commands()
     auto signature=function_signature();
     exprt body=expression();
 
-    auto f_it = function_map.emplace(id, body);
+    auto f_it = id_map.emplace(id, body);
 
     f_it.first->second.type = signature.type;
     f_it.first->second.parameters = signature.parameters;
@@ -728,7 +728,7 @@ void sygus_parsert::setup_commands()
 
     irep_idt id=smt2_tokenizer.get_buffer();
 
-    if(function_map.find(id)!=function_map.end())
+    if(id_map.find(id)!=id_map.end())
       throw error() << "function `" << id << "' declared twice";
 
     auto signature=(id=="inv-f")?
@@ -736,7 +736,7 @@ void sygus_parsert::setup_commands()
 
     NTDef_seq();
 
-    auto f_it = function_map.emplace(id, nil_exprt());
+    auto f_it = id_map.emplace(id, nil_exprt());
 
     f_it.first->second.type = signature.type;
     f_it.first->second.parameters = signature.parameters;
@@ -851,9 +851,9 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
     break;
   }
 
-  auto f_it = function_map.find(id);
+  auto f_it = id_map.find(id);
 
-  if(f_it == function_map.end())
+  if(f_it == id_map.end())
     throw error() << "undeclared function `" << id << '\'';
 
   const auto &f = f_it->second;
@@ -998,9 +998,9 @@ void sygus_parsert::expand_function_applications(exprt &expr)
     // look it up
     DATA_INVARIANT(app.function().id()==ID_symbol, "function must be symbol");
     irep_idt identifier=to_symbol_expr(app.function()).get_identifier();
-    auto f_it=function_map.find(identifier);
+    auto f_it=id_map.find(identifier);
 
-    if(f_it!=function_map.end())
+    if(f_it!=id_map.end())
     {
       const auto &f=f_it->second;
 
