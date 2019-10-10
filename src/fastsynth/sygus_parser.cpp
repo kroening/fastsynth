@@ -103,7 +103,10 @@ exprt sygus_parsert::function_application(
   const irep_idt &identifier,
   const exprt::operandst &op)
 {
-  const auto &f = function_map[identifier];
+  const auto f_it = function_map.find(identifier);
+  PRECONDITION(f_it!= function_map.end());
+
+  const auto &f = f_it->second;
 
   PRECONDITION(f.type.id() == ID_mathematical_function);
 
@@ -682,10 +685,11 @@ void sygus_parsert::setup_commands()
         << body.type().pretty() << '\'';
     }
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameters=signature.parameter_ids;
-    f.definition=body;
+    auto f_it = function_map.emplace(id, body);
+
+    f_it.first->second.type = signature.type;
+    f_it.first->second.parameters = signature.parameter_ids;
+
     local_variable_map.clear();
   };
 
@@ -710,10 +714,11 @@ void sygus_parsert::setup_commands()
     auto signature=function_signature();
     exprt body=expression();
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameters=signature.parameter_ids;
-    f.definition=body;
+    auto f_it = function_map.emplace(id, body);
+
+    f_it.first->second.type = signature.type;
+    f_it.first->second.parameters = signature.parameter_ids;
+
     local_variable_map.clear();
   };
 
@@ -731,10 +736,10 @@ void sygus_parsert::setup_commands()
 
     NTDef_seq();
 
-    auto &f=function_map[id];
-    f.type=signature.type;
-    f.parameters=signature.parameter_ids;
-    f.definition=nil_exprt();
+    auto f_it = function_map.emplace(id, nil_exprt());
+
+    f_it.first->second.type = signature.type;
+    f_it.first->second.parameters = signature.parameter_ids;
 
     synth_fun_set.insert(id);
   };
@@ -846,10 +851,12 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
     break;
   }
 
-  if(function_map.find(id) == function_map.end())
+  auto f_it = function_map.find(id);
+
+  if(f_it == function_map.end())
     throw error() << "undeclared function `" << id << '\'';
 
-  const auto &f = function_map[id];
+  const auto &f = f_it->second;
   DATA_INVARIANT(f.type.id() == ID_mathematical_function,
     "functions must have function type");
   const auto &f_type = to_mathematical_function_type(f.type);
