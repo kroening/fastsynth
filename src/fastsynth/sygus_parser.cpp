@@ -12,60 +12,6 @@
 
 void sygus_parsert::setup_commands()
 {
-  commands["declare-var"] = [this] {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected a symbol after declare-var");
-
-    irep_idt id=smt2_tokenizer.get_buffer();
-
-    if(variable_map.find(id)!=variable_map.end())
-      throw error("variable declared twice");
-
-    variable_map[id]=sort();
-  };
-
-  commands["define-fun"] = [this] {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected a symbol after define-fun");
-
-    const irep_idt id=smt2_tokenizer.get_buffer();
-
-    if(id_map.find(id)!=id_map.end())
-      throw error("function declared twice");
-
-    local_variable_map.clear();
-
-    auto signature=function_signature_definition();
-    exprt body=expression();
-
-    // check type of body
-    if(signature.type.id() == ID_mathematical_function)
-    {
-      const auto &f_signature = to_mathematical_function_type(signature.type);
-      if(body.type() != f_signature.codomain())
-      {
-        throw error()
-          << "type mismatch in function definition: expected `"
-          << f_signature.codomain().pretty() << "' but got `"
-          << body.type().pretty() << '\'';
-      }
-    }
-    else if(body.type() != signature.type)
-    {
-      throw error()
-        << "type mismatch in function definition: expected `"
-        << signature.type.pretty() << "' but got `"
-        << body.type().pretty() << '\'';
-    }
-
-    auto f_it = id_map.emplace(id, body);
-
-    f_it.first->second.type = signature.type;
-    f_it.first->second.parameters = signature.parameters;
-
-    local_variable_map.clear();
-  };
-
   commands["set-logic"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after set-logic");
@@ -97,34 +43,22 @@ void sygus_parsert::setup_commands()
 
   commands["synth-inv"] = commands["synth-fun"];
 
-  commands["declare-var"] = [this] {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected a symbol after declare-var");
-
-    irep_idt id=smt2_tokenizer.get_buffer();
-
-    if(variable_map.find(id)!=variable_map.end())
-      throw error() << "variable `" << id << "' declared twice";
-
-    variable_map[id]=sort();
-  };
-
   commands["declare-primed-var"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after declare-primed-var");
 
-    irep_idt id=smt2_tokenizer.get_buffer();
-    irep_idt id_prime=smt2_tokenizer.get_buffer()+"!";
+    irep_idt id = smt2_tokenizer.get_buffer();
+    irep_idt id_prime = smt2_tokenizer.get_buffer()+"!";
+    auto type = sort();
 
-    if(variable_map.find(id)!=variable_map.end())
+    if(id_map.find(id)!=id_map.end())
       throw error("variable declared twice");
 
-    variable_map[id]=sort();
-
-    if(variable_map.find(id_prime)!=variable_map.end())
+    if(id_map.find(id_prime)!=id_map.end())
       throw error("variable declared twice");
 
-    variable_map[id_prime]=variable_map[id];
+    id_map.emplace(id, exprt(ID_nil, type));
+    id_map.emplace(id_prime, exprt(ID_nil, type));
   };
 
   commands["constraint"] = [this] {
@@ -165,7 +99,6 @@ sygus_parsert::signature_with_parameter_idst sygus_parsert::inv_function_signatu
     const auto parameter_type = sort();
     domain.push_back(parameter_type);
     parameter_ids.push_back(id);
-    local_variable_map[id]=parameter_type;
 
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
       throw error("expected ')' at end of parameter");
@@ -222,7 +155,7 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   {
     std::string var_id = id2string(f.parameters[i]) + suffix;
 
-    if(variable_map.find(var_id) == variable_map.end())
+    if(id_map.find(var_id) == id_map.end())
       throw error() << "use of undeclared variable `" << var_id << '\'';
 
     arguments[i] = symbol_exprt(var_id, f_type.domain()[i]);

@@ -9,9 +9,7 @@ class sygus_parsert: public smt2_parsert
 {
 public:
   explicit sygus_parsert(std::istream &_in):
-    smt2_parsert(_in),
-    id_counter(0),
-    let_counter(0)
+    smt2_parsert(_in)
   {
     setup_commands();
   }
@@ -25,6 +23,7 @@ public:
   std::string logic, action;
 
   std::set<irep_idt> synth_fun_set;
+  std::set<irep_idt> variable_set;
 
   signature_with_parameter_idst inv_function_signature();
   void expand_function_applications(exprt &);
@@ -33,16 +32,6 @@ public:
   function_application_exprt apply_function_to_variables(
     invariant_constraint_functiont id,
     invariant_variablet variable_use);
-
-  using variable_mapt=std::map<irep_idt, typet>;
-
-  variable_mapt variable_map;
-  variable_mapt local_variable_map;
-  variable_mapt let_variable_map;
-  variable_mapt full_let_variable_map;
-
-  unsigned id_counter;
-  unsigned let_counter;
 
 protected:
   // commands

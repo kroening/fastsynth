@@ -93,11 +93,13 @@ int sygus_frontend(const cmdlinet &cmdline)
   problemt problem;
   problem.constraints=parser.constraints;
 
+/*
   for(const auto &v : parser.variable_map)
     problem.free_variables.insert(symbol_exprt(v.first, v.second));
 
   for(const auto &v: parser.full_let_variable_map)
     problem.free_variables.insert(symbol_exprt(v.first, v.second));
+*/
 
   for(auto &c : problem.constraints)
     parser.expand_function_applications(c);
