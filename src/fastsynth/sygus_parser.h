@@ -48,17 +48,6 @@ protected:
   // commands
   void setup_commands();
 
-  // expressions
-  exprt expression();
-  exprt let_expression(bool first_in_chain);
-  exprt::operandst operands();
-  exprt function_application(const irep_idt &identifier, const exprt::operandst &op);
-  void fix_binary_operation_operand_types(exprt &expr);
-  void fix_ite_operation_result_type(if_exprt &expr);
-  exprt cast_bv_to_signed(exprt &expr);
-  exprt cast_bv_to_unsigned(exprt &expr);
-  void check_bitvector_operands(exprt &expr);
-
   // grammars
   void NTDef_seq();
   void GTerm_seq();
