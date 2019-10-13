@@ -23,6 +23,9 @@ void sygus_parsert::setup_commands()
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after synth-fun");
 
+    // save the renaming map
+    renaming_mapt old_renaming_map = renaming_map;
+
     irep_idt id=smt2_tokenizer.get_buffer();
 
     if(id_map.find(id)!=id_map.end())
@@ -30,6 +33,9 @@ void sygus_parsert::setup_commands()
 
     auto signature=(id=="inv-f")?
       inv_function_signature() : function_signature_definition();
+
+    // restore renamings
+    std::swap(renaming_map, old_renaming_map);
 
     // we'll tweak the type in case there are no parameters
     if(signature.type.id() != ID_mathematical_function)
