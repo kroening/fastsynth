@@ -327,4 +327,28 @@ void sygus_parsert::expand_function_applications(exprt &expr)
       expr=body;
     }
   }
+  else if(expr.id()==ID_symbol)
+  {
+    // deal with defined symbols
+
+    // look it up
+    irep_idt identifier=to_symbol_expr(expr).get_identifier();
+    auto f_it=id_map.find(identifier);
+
+    if(f_it!=id_map.end())
+    {
+      if(synth_fun_set.find(identifier)!=synth_fun_set.end())
+        return; // do not expand
+
+      const auto &f=f_it->second;
+
+      if(f.definition.is_not_nil() &&
+         f.type.id() != ID_mathematical_function)
+      {
+        expr = f.definition;
+        // recursively!
+        expand_function_applications(expr);
+      }
+    }
+  }
 }
