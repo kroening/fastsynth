@@ -674,28 +674,6 @@ void sygus_parsert::setup_commands()
     logic=smt2_tokenizer.get_buffer();
   };
 
-  commands["define-fun"] = [this] {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected a symbol after define-fun");
-
-    irep_idt id=smt2_tokenizer.get_buffer();
-
-    if(id_map.find(id)!=id_map.end())
-      throw error() << "function `" << id << "' declared twice";
-
-    local_variable_map.clear();
-
-    auto signature=function_signature_definition();
-    exprt body=expression();
-
-    auto f_it = id_map.emplace(id, body);
-
-    f_it.first->second.type = signature.type;
-    f_it.first->second.parameters = signature.parameters;
-
-    local_variable_map.clear();
-  };
-
   commands["synth-fun"] = [this] {
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after synth-fun");
