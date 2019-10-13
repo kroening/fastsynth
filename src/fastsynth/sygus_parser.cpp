@@ -108,26 +108,35 @@ exprt sygus_parsert::function_application(
 
   const auto &f = f_it->second;
 
-  PRECONDITION(f.type.id() == ID_mathematical_function);
-
-  const auto &f_type = to_mathematical_function_type(f.type);
-
-  function_application_exprt result(
-    symbol_exprt(identifier, f.type),
-    op,
-    f_type.codomain());
-
-  // check the arguments
-  if(op.size()!=f_type.domain().size())
-    throw error("wrong number of arguments for function");
-
-  for(std::size_t i=0; i<op.size(); i++)
+  if(f.type.id() == ID_mathematical_function)
   {
-    if(op[i].type() != f_type.domain()[i])
-      throw error("wrong type for arguments for function");
-  }
+    const auto &f_type = to_mathematical_function_type(f.type);
 
-  return std::move(result);
+    function_application_exprt result(
+      symbol_exprt(identifier, f.type),
+      op,
+      f_type.codomain());
+
+    // check the arguments
+    if(op.size()!=f_type.domain().size())
+      throw error("wrong number of arguments for function");
+
+    for(std::size_t i=0; i<op.size(); i++)
+    {
+      if(op[i].type() != f_type.domain()[i])
+        throw error("wrong type for arguments for function");
+    }
+
+    return std::move(result);
+  }
+  else
+  {
+    // check that there are no arguments
+    if(!op.empty())
+      throw error("constant does not take arguments");
+
+    return symbol_exprt(identifier, f.type);
+  }
 }
 
 void sygus_parsert::fix_ite_operation_result_type(if_exprt &expr)
@@ -602,41 +611,6 @@ exprt sygus_parsert::expression()
   }
 }
 
-sygus_parsert::signature_with_parameter_idst sygus_parsert::function_signature()
-{
-  if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
-    throw error("expected '(' at beginning of signature");
-
-  mathematical_function_typet::domaint domain;
-  std::vector<irep_idt> parameter_ids;
-
-  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
-  {
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::OPEN)
-      throw error("expected '(' at beginning of parameter");
-
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
-      throw error("expected symbol in parameter");
-
-    const irep_idt id=smt2_tokenizer.get_buffer();
-
-    const auto parameter_type=sort();
-    domain.push_back(parameter_type);
-    parameter_ids.push_back(id);
-    local_variable_map[id]=parameter_type;
-
-    if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
-      throw error("expected ')' at end of parameter");
-  }
-
-  smt2_tokenizer.next_token(); // eat the ')'
-
-  auto codomain = sort();
-
-  auto type=mathematical_function_typet(domain, codomain);
-  return signature_with_parameter_idst(type, parameter_ids);
-}
-
 void sygus_parsert::setup_commands()
 {
   commands["declare-var"] = [this] {
@@ -662,7 +636,7 @@ void sygus_parsert::setup_commands()
 
     local_variable_map.clear();
 
-    auto signature=function_signature();
+    auto signature=function_signature_definition();
     exprt body=expression();
 
     // check type of body
@@ -711,7 +685,7 @@ void sygus_parsert::setup_commands()
 
     local_variable_map.clear();
 
-    auto signature=function_signature();
+    auto signature=function_signature_definition();
     exprt body=expression();
 
     auto f_it = id_map.emplace(id, body);
@@ -732,7 +706,7 @@ void sygus_parsert::setup_commands()
       throw error() << "function `" << id << "' declared twice";
 
     auto signature=(id=="inv-f")?
-      inv_function_signature() : function_signature();
+      inv_function_signature() : function_signature_definition();
 
     NTDef_seq();
 

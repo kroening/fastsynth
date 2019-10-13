@@ -59,9 +59,6 @@ protected:
   exprt cast_bv_to_unsigned(exprt &expr);
   void check_bitvector_operands(exprt &expr);
 
-  // types
-  signature_with_parameter_idst function_signature();
-
   // grammars
   void NTDef_seq();
   void GTerm_seq();
