@@ -31,6 +31,13 @@ void sygus_parsert::setup_commands()
     auto signature=(id=="inv-f")?
       inv_function_signature() : function_signature_definition();
 
+    // we'll tweak the type in case there are no parameters
+    if(signature.type.id() != ID_mathematical_function)
+    {
+      // turn into () -> signature.type
+      signature.type = mathematical_function_typet({}, signature.type);
+    }
+
     NTDef_seq();
 
     auto f_it = id_map.emplace(id, nil_exprt());
