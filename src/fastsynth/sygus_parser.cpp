@@ -40,7 +40,10 @@ void sygus_parsert::setup_commands()
 
     NTDef_seq();
 
-    auto f_it = id_map.emplace(id, nil_exprt());
+    auto f_it = id_map.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(idt::VARIABLE, nil_exprt()));
 
     f_it.first->second.type = signature.type;
     f_it.first->second.parameters = signature.parameters;
@@ -64,8 +67,15 @@ void sygus_parsert::setup_commands()
     if(id_map.find(id_prime)!=id_map.end())
       throw error("variable declared twice");
 
-    id_map.emplace(id, exprt(ID_nil, type));
-    id_map.emplace(id_prime, exprt(ID_nil, type));
+    id_map.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(idt::VARIABLE, exprt(ID_nil, type)));
+
+    id_map.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id_prime),
+      std::forward_as_tuple(idt::VARIABLE, exprt(ID_nil, type)));
   };
 
   commands["constraint"] = [this] {
