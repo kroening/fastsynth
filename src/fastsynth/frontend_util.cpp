@@ -172,6 +172,7 @@ void set_cegis_cmdline_properties(const cmdlinet &cmdline, cegist &cegis)
   cegis.enable_bitwise = !cmdline.isset("no-bitwise");
   cegis.use_smt = cmdline.isset("smt");
   cegis.enable_division = cmdline.isset("enable-division");
+  cegis.use_local_search=cmdline.isset("local-search");
   cegis.logic = DEFAULT_CEGIS_LOGIC;
 }
 
