@@ -12,6 +12,7 @@ jobs:
       run: sudo apt-get install ccache flex bison
 
     - uses: actions/cache@v1
+      name: Setup cache
       with:
         path: ~/.ccache
         key: ${{ runner.os }}-ccache
@@ -49,6 +50,7 @@ jobs:
         brew install --HEAD ccache
 
     - uses: actions/cache@v1
+      name: Setup cache
       with:
         path: ~/.ccache
         key: ${{ runner.os }}-ccache
@@ -69,7 +71,7 @@ jobs:
 
     - name: cbmc build
       run: |
-        make -C lib/cbmc/src -j2 CXX="ccache g++"
+        make -C lib/cbmc/src -j2 CXX="ccache clang++"
 
     - name: make
       run: make -C src -j2 CXX="ccache clang++"
