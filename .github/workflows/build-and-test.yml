@@ -75,3 +75,32 @@ jobs:
 
     - name: make
       run: make -C src -j2 CXX="ccache clang++"
+
+  Windows:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Install Packages
+      run: |
+        choco install cyg-get -y --no-progress
+        cyg-get bash patch bison flex make wget perl jq
+
+    - uses: actions/checkout@v1
+
+    - name: cbmc submodule checkout
+      run: |
+        git submodule update --init lib/cbmc
+
+    - name: minisat2-download
+      env:
+        PATH: c:\\tools\\cygwin\\bin;${PATH}
+      run: make -C lib/cbmc/src minisat2-download DOWNLOADER="wget"
+
+    - name: cbmc build
+      run: |
+        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC " '
+
+    - name: make
+      run: |
+        cmd.exe /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C src BUILD_ENV=MSVC" '
