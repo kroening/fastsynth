@@ -85,7 +85,7 @@ jobs:
       run: |
         choco install cyg-get -y --no-progress
         cyg-get bash patch bison flex make wget perl jq
-        wget https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg
+        cmd /c 'set PATH=c:\tools\cygwin\bin && wget https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg '
         choco install clcache --source=.
 
     - uses: actions/cache@v1
