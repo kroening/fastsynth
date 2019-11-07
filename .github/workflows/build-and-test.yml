@@ -85,7 +85,7 @@ jobs:
       run: |
         choco install cyg-get -y --no-progress
         cyg-get bash patch bison flex make wget perl jq
-        curl -L https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg --output clcache.4.2.0.nupkg
+        wget https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg
         choco install clcache --source=.
 
     - uses: actions/cache@v1
@@ -94,7 +94,7 @@ jobs:
         path: c:\\clcache
         key: ${{ runner.os }}-clcache
         restore-keys: |
-          ${{ runner.os }}-c;cache
+          ${{ runner.os }}-clcache
 
     - uses: actions/checkout@v1
 
