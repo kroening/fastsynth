@@ -1,0 +1,75 @@
+name: Build and Test
+
+on: [push]
+
+jobs:
+  Linux:
+
+    runs-on: ubuntu-18.04
+    
+    steps:
+    - name: Install Packages
+      run: sudo apt-get install ccache flex bison
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/.ccache
+        key: ${{ runner.os }}-ccache
+        restore-keys: |
+          ${{ runner.os }}-ccache
+
+    - name: ccache stats
+      run: ccache -s --max-size=390MB
+
+    - uses: actions/checkout@v1
+
+    - name: cbmc submodule checkout
+      run: |
+        git submodule update --init lib/cbmc
+
+    - name: minisat2-download
+      run: make -C lib/cbmc/src minisat2-download
+
+    - name: cbmc build
+      run: |
+        make -C lib/cbmc/src -j2 CXX="ccache g++"
+
+    - name: make
+      run: make -C src -j2 CXX="ccache g++"
+
+  OSX:
+
+    runs-on: macOS-10.14
+
+    steps:
+    - name: Install Packages
+      run: |
+        brew install libb2
+        brew install zstd
+        brew install --HEAD ccache
+
+    - uses: actions/cache@v1
+      with:
+        path: ~/.ccache
+        key: ${{ runner.os }}-ccache
+        restore-keys: |
+          ${{ runner.os }}-ccache
+
+    - name: ccache stats
+      run: ccache -s --max-size=390MB
+
+    - uses: actions/checkout@v1
+
+    - name: cbmc submodule checkout
+      run: |
+        git submodule update --init lib/cbmc
+
+    - name: minisat2-download
+      run: make -C lib/cbmc/src minisat2-download
+
+    - name: cbmc build
+      run: |
+        make -C lib/cbmc/src -j2 CXX="ccache g++"
+
+    - name: make
+      run: make -C src -j2 CXX="ccache clang++"
