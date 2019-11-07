@@ -1,5 +1,8 @@
 # fastsynth
 
+![Build !Badge](https://github.com/kroening/fastsynth/workflows/Build%20and%20Test/badge.svg)
+
+
 ## Compilation instructions
 Clone the repo
 ~~~
