@@ -81,12 +81,15 @@ jobs:
     runs-on: windows-latest
 
     steps:
+
+    - name: Setup Nuget.exe
+      uses: warrenbuckley/Setup-Nuget@v1
+
     - name: Install Packages
       run: |
         choco install cyg-get -y --no-progress
         cyg-get bash patch bison flex make wget perl jq
-        cmd.exe /c 'set PATH=c:\tools\cygwin\bin;%PATH% && wget https://github.com/frerich/clcache/releases/download/v4.2.0/clcache.4.2.0.nupkg '
-        choco install clcache --source=.
+        nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.2.0
 
     - uses: actions/cache@v1
       name: Setup cache
@@ -109,8 +112,8 @@ jobs:
 
     - name: cbmc build
       run: |
-        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
+        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;C:\tools;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
 
     - name: make
       run: |
-        cmd.exe /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C src BUILD_ENV=MSVC CXX=clcache.exe" '
+        cmd.exe /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C src BUILD_ENV=MSVC" '
