@@ -33,9 +33,9 @@ jobs:
         git submodule update --init lib/cbmc
 
     - name: minisat2-download
-      env:
-        PATH: c:\\tools\\cygwin\\bin;${PATH}
-      run: make -C lib/cbmc/src minisat2-download DOWNLOADER="wget"
+      run: |
+        $env:Path = "C:\tools\cygwin\bin;$env:Path"
+        make -C lib/cbmc/src minisat2-download DOWNLOADER="wget"
 
     - name: cbmc build
       run: |
