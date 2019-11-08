@@ -39,7 +39,7 @@ jobs:
 
     - name: cbmc build
       run: |
-        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;C:\tools;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
+        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;C:\tools\clcache;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
 
     - name: make
       run: |
