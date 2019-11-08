@@ -89,7 +89,7 @@ jobs:
       run: |
         choco install cyg-get -y --no-progress
         cyg-get bash patch bison flex make wget perl jq
-        nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.2.0
+        nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.1.0
 
     - uses: actions/cache@v1
       name: Setup cache
@@ -106,13 +106,16 @@ jobs:
         git submodule update --init lib/cbmc
 
     - name: minisat2-download
-      env:
-        PATH: c:\\tools\\cygwin\\bin;${PATH}
-      run: make -C lib/cbmc/src minisat2-download DOWNLOADER="wget"
+      run: |
+        $env:Path = "C:\tools\cygwin\bin;$env:Path"
+        make -C lib/cbmc/src minisat2-download DOWNLOADER="wget"
 
     - name: cbmc build
       run: |
-        cmd.exe /c 'set PATH=C:\tools\cygwin\bin;C:\tools;%PATH% && call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
+        $env:Path = "C:\tools\cygwin\bin;c:\tools\clcache\clcache-4.1.0;$env:Path"
+        $env:CLCACHE_DIR = "C:\clcache"
+        $env:CLCACHE_BASEDIR = (Get-Item -Path ".\").FullName
+        cmd.exe /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 && bash -c "make -j4 -C lib/cbmc/src BUILD_ENV=MSVC CXX=clcache.exe " '
 
     - name: make
       run: |
