@@ -12,7 +12,8 @@ git submodule init
 git submodule update
 
 ~~~
-compile the CBMC submodule (in `fastsynth/lib/cbmc`) by following these instructions: http://www.cprover.org/svn/cbmc/trunk/COMPILING
+compile the CBMC submodule (in `fastsynth/lib/cbmc`) by following these instructions:
+https://github.com/diffblue/cbmc/blob/develop/COMPILING.md
 
 Finally, to compile fastsynth run `make` from the dir `fastsynth/src`
 
