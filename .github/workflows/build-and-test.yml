@@ -18,7 +18,7 @@ jobs:
         cyg-get bash patch bison flex make wget perl jq
         nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.1.0
         cmd.exe /c 'dir c:\tools'
-        cmd.exe /c 'dir c:\tools\clcace'
+        cmd.exe /c 'dir c:\tools\clcache'
 
     - uses: actions/cache@v1
       name: Setup cache
