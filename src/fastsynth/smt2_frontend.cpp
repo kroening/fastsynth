@@ -19,23 +19,23 @@ public:
     smt2_parsert(_in),
     solver(_solver)
   {
+    setup_commands();
   }
 
 protected:
   decision_proceduret &solver;
 
-  void command(const std::string &) override;
+  void setup_commands();
 };
 
-void smt2_frontendt::command(const std::string &c)
+void smt2_frontendt::setup_commands()
 {
-  if(c=="assert")
-  {
+  commands["assert"] = [this] {
     exprt e=expression();
     solver.set_to_true(e);
-  }
-  else if(c=="check-sat")
-  {
+  };
+
+  commands["check-sat"] = [this] {
     switch(solver())
     {
     case decision_proceduret::resultt::D_SATISFIABLE:
@@ -49,9 +49,7 @@ void smt2_frontendt::command(const std::string &c)
     case decision_proceduret::resultt::D_ERROR:
       std::cout << "(error)\n";
     }
-  }
-  else
-    smt2_parsert::command(c);
+  };
 }
 
 int smt2_frontend(const cmdlinet &cmdline)

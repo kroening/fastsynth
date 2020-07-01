@@ -1,5 +1,5 @@
-CORE
-constants.sl
+KNOWNBUG
+element0.sl
 
 ^EXIT=0$
 ^SIGNAL=0$
