@@ -1,0 +1,9 @@
+CORE
+sygus-v2.sl
+
+^EXIT=0$
+^SIGNAL=0$
+^Result: fb -> -10$
+^Result: fc -> 0$
+--
+^warning: ignoring

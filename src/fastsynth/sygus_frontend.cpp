@@ -5,6 +5,7 @@
 #include "synth_encoding.h"
 #include "verify_encoding.h"
 
+#include <util/arith_tools.h>
 #include <util/cout_message.h>
 #include <util/expr_initializer.h>
 #include <util/namespace.h>
@@ -20,6 +21,22 @@
 
 #include <fstream>
 #include <chrono>
+
+/// Helper to provide a zero value for the given type printable by smt2_convt.
+/// Serves as a wrapper for zero_initializer, which does not support integer
+/// types at the current CBMC submodule version.
+/// \param expression: Expression for whose type a zero value should be
+///                    generated.
+/// \param ns: Namespace to use with zero_initializer.
+/// \return Zero-valued expression for the given expression's type.
+static exprt get_smt2_zero(const exprt &expression, const namespacet &ns)
+{
+  const typet &type = expression.type();
+  if(ID_integer == type.id())
+    return from_integer(0, type);
+  else
+    return *zero_initializer(type, expression.source_location(), ns);
+}
 
 int sygus_frontend(const cmdlinet &cmdline)
 {
@@ -131,9 +148,7 @@ int sygus_frontend(const cmdlinet &cmdline)
       if(ID_bool == f.second.type().id())
         smt.handle(f.second);
       else
-        smt.handle(equal_exprt(
-          *zero_initializer(f.second.type(), f.second.source_location(), ns),
-          f.second));
+        smt.handle(equal_exprt(get_smt2_zero(f.second, ns), f.second));
 
       message.result() << '\n';
     }
