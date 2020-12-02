@@ -3,8 +3,14 @@
 .settings
 .clang-format
 src/fastsynth/fastsynth
+tasks.json
+*.code-workspace
 *.d
+*.idb
+*.ilk
 *.o
+*.obj
 *.out
+*.pdb
 *.log
 *.exe
