@@ -921,11 +921,11 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   for(std::size_t i = 0; i < f.type.domain().size(); i++)
   {
     std::string var_id = id2string(f.parameter_ids[i]) + suffix;
+    const typet &var_type = f.type.domain()[i];
+    // Allow implicit variable declaration in `inv-constraint`
+    variable_map.emplace(var_id, var_type);
 
-    if(variable_map.find(var_id) == variable_map.end())
-      throw error() << "use of undeclared variable `" << var_id << '\'';
-
-    arguments[i] = symbol_exprt(var_id, f.type.domain()[i]);
+    arguments[i] = symbol_exprt(var_id, var_type);
   }
 
   return function_application_exprt(
