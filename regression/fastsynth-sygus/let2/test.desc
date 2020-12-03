@@ -1,0 +1,8 @@
+CORE
+input.sl
+
+^EXIT=0$
+^SIGNAL=0$
+^Result: someconst -> 2$
+--
+^warning: ignoring

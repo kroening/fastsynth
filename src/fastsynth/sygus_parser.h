@@ -5,6 +5,13 @@
 #include <util/mathematical_expr.h>
 #include <util/mathematical_types.h>
 
+/// Default invariant function names unless explicitly overriden using
+/// `inv-constraint`.
+#define DEFAULT_PRE "pre-f"
+#define DEFAULT_INV "inv-f"
+#define DEFAULT_TRANS "trans-f"
+#define DEFAULT_POST "post-f"
+
 class sygus_parsert
 {
 public:
@@ -34,6 +41,10 @@ public:
 
   enum invariant_variablet { PRIMED, UNPRIMED };
   enum invariant_constraint_functiont { PRE, INV, TRANS, POST };
+  std::string pre_name = DEFAULT_PRE;
+  std::string inv_name = DEFAULT_INV;
+  std::string trans_name = DEFAULT_TRANS;
+  std::string post_name = DEFAULT_POST;
 
   struct signature_with_parameter_idst
   {
@@ -95,9 +106,19 @@ protected:
 
   void ignore_command();
 
+  /// Helper to retrieve a symbol as a string from smt2_tokenizer.
+  /// \throws error() if the next token is not a symbol
+  /// \return Buffer content of the next symbol token.
+  const std::string &symbol();
   exprt expression();
   exprt let_expression(bool first_in_chain);
   typet sort();
+  /// Handles parametric sorts.
+  /// \return typet representing the next sort.
+  typet parametric_sort();
+  /// Handles unary sorts.
+  /// \return typet representing the next sort.
+  typet unary_sort();
   exprt::operandst operands();
   signature_with_parameter_idst function_signature();
   exprt function_application(const irep_idt &identifier, const exprt::operandst &op);

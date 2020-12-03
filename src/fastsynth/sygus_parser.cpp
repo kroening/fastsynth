@@ -114,16 +114,30 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
     exprt symbol_expr, value_expr, where_expr;
 
     // get the symbol that is bound
-    if(smt2_tokenizer.next_token()==smt2_tokenizert::SYMBOL)
-    {
-      std::string tmp_buffer;
-      symbol_expr = symbol_exprt(tmp_buffer, sort());
-    }
-    else
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol in let expression");
+    const irep_idt symbol_name(smt2_tokenizer.get_buffer());
 
     // get value
-    value_expr = expression();
+    const bool has_open = smt2_tokenizert::OPEN == smt2_tokenizer.peek();
+    try
+    {
+      value_expr = expression();
+      symbol_expr = symbol_exprt(std::move(symbol_name), value_expr.type());
+    }
+    catch(const smt2_errort &error)
+    {
+      // SyGuS IF 2.0 does not allow explict sorts in var bindings,
+      // for backwards compatibility only:
+      typet type;
+      if(has_open)
+        type = parametric_sort();
+      else
+        type = unary_sort();
+
+      symbol_expr = symbol_exprt(std::move(symbol_name), type);
+      value_expr = expression();
+    }
     smt2_tokenizer.next_token(); // eat the ')' that closes this binding
 
     // now rename op0 -- this really happens at the very
@@ -147,9 +161,6 @@ exprt sygus_parsert::let_expression(bool first_in_chain)
     {
       // we are at the end of the chain
       smt2_tokenizer.next_token(); // eat the ')' that closes the bindings list
-
-      if(smt2_tokenizer.peek()!=smt2_tokenizert::OPEN)
-        throw error("let expects where here");
 
       where_expr = expression();
       smt2_tokenizer.next_token(); // eat the final ')' that closes the let exprt
@@ -382,33 +393,33 @@ exprt sygus_parsert::expression()
         return let_expression(true);
       }
 
-      auto op=operands();
-
       if(id==ID_and)
       {
         and_exprt result;
-        result.operands()=op;
+        result.operands()=operands();
         return std::move(result);
       }
       else if(id==ID_or)
       {
         or_exprt result;
-        result.operands()=op;
+        result.operands()=operands();
         return std::move(result);
       }
       else if(id==ID_xor)
       {
+        const exprt::operandst op(operands());
         notequal_exprt result(op.front(), op.back());
         return std::move(result);
       }
       else if(id==ID_not)
       {
         not_exprt result;
-        result.operands()=op;
+        result.operands()=operands();
         return std::move(result);
       }
       else if(id=="=")
       {
+        const exprt::operandst op(operands());
         equal_exprt result(op.front(), op.back());
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
@@ -417,7 +428,7 @@ exprt sygus_parsert::expression()
       else if(id=="<=" || id=="bvule" || id=="bvsle")
       {
         binary_predicate_exprt result(ID_le);
-        result.operands()=op;
+        result.operands()=operands();
 
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
@@ -432,7 +443,7 @@ exprt sygus_parsert::expression()
       else if(id==">=" || id=="bvuge" || id=="bvsge")
       {
         binary_predicate_exprt result(ID_ge);
-        result.operands()=op;
+        result.operands()=operands();
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
 
@@ -447,7 +458,7 @@ exprt sygus_parsert::expression()
       else if(id=="<" || id=="bvult" || id=="bvslt")
       {
         binary_predicate_exprt result(ID_lt);
-        result.operands()=op;
+        result.operands()=operands();
 
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
@@ -462,7 +473,7 @@ exprt sygus_parsert::expression()
       else if(id==">" || id=="bvugt" || id=="bvsgt")
       {
         binary_predicate_exprt result(ID_gt);
-        result.operands()=op;
+        result.operands()=operands();
         fix_binary_operation_operand_types(result);
         result.type()=bool_typet();
 
@@ -475,6 +486,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvashr")
       {
+        const exprt::operandst op(operands());
         if(op.size()!=2)
           throw error("bit shift must have 2 operands");
 
@@ -484,6 +496,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvlshr" || id=="bvshr")
       {
+        const exprt::operandst op(operands());
         if(op.size()!=2)
           throw error("bit shift must have two operands");
 
@@ -493,6 +506,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvlshr" || id=="bvashl" || id=="bvshl")
       {
+        const exprt::operandst op(operands());
         if(op.size()!=2)
           throw error("bit shift must have two operands");
 
@@ -502,6 +516,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvand")
       {
+        const exprt::operandst op(operands());
         bitand_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
@@ -510,6 +525,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvor")
       {
+        const exprt::operandst op(operands());
         bitor_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
@@ -517,6 +533,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvxor")
       {
+        const exprt::operandst op(operands());
         bitxor_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         result.type()=result.op0().type();
@@ -524,14 +541,17 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvnot")
       {
+        const exprt::operandst op(operands());
         return bitnot_exprt(op.front());
       }
       else if(id=="bvneg")
       {
+        const exprt::operandst op(operands());
         return unary_minus_exprt(op.front());
       }
       else if(id=="bvadd" || id=="+")
       {
+        exprt::operandst op(operands());
         typet type(op.front().type());
         plus_exprt result(move(op), std::move(type));
         fix_binary_operation_operand_types(result);
@@ -539,6 +559,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvsub" || id=="-")
       {
+        const exprt::operandst op(operands());
         if(op.size() == 1u)
           return unary_minus_exprt(op.front());
 
@@ -548,12 +569,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvmul" || id=="*")
       {
+        const exprt::operandst op(operands());
         mult_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         return std::move(result);
       }
       else if(id=="bvudiv")
       {
+        const exprt::operandst op(operands());
         div_exprt div_res(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(div_res);
 
@@ -572,6 +595,7 @@ exprt sygus_parsert::expression()
       }
       else if(id == "bvsdiv")
       {
+        const exprt::operandst op(operands());
         div_exprt div_res(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(div_res);
 
@@ -591,12 +615,14 @@ exprt sygus_parsert::expression()
       }
       else if(id=="/" || id=="div")
       {
+        const exprt::operandst op(operands());
         div_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         return std::move(result);
       }
       else if(id=="bvsrem" || id=="bvurem" || id=="%")
       {
+        const exprt::operandst op(operands());
         mod_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
 
@@ -611,6 +637,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="ite")
       {
+        const exprt::operandst op(operands());
         if(op.size()!=3)
           throw error("ITE must have three operands");
         if_exprt result(op[0], op[1], op[2]);
@@ -619,6 +646,7 @@ exprt sygus_parsert::expression()
       }
       else if(id=="=>" || id=="implies")
       {
+        const exprt::operandst op(operands());
         implies_exprt result(std::move(op.front()), std::move(op.back()));
         return std::move(result);
       }
@@ -626,6 +654,7 @@ exprt sygus_parsert::expression()
       {
         if(function_map.count(id)!=0)
         {
+          const exprt::operandst op(operands());
           return function_application(id, op);
         }
         else if(local_variable_map.find(id)!=local_variable_map.end())
@@ -695,6 +724,30 @@ sygus_parsert::signature_with_parameter_idst sygus_parsert::function_signature()
 
   auto type=mathematical_function_typet(domain, codomain);
   return signature_with_parameter_idst(type, parameter_ids);
+}
+
+/// Helper to decide whether we need to execute `inv-constraint` commands or
+/// or whether the specification adheres to the default names for invariants.
+/// \param function_map: Used to check whether default invariant functions are
+///                      present.
+/// \return <code>true</code> if `inv-constraint` command can be ignored,
+///         <code>false</code> otherwise.
+static bool has_default_inv_constraint(
+  const sygus_parsert::function_mapt &function_map)
+{
+  const sygus_parsert::function_mapt::const_iterator end(std::end(function_map));
+  return end != function_map.find(DEFAULT_PRE) &&
+         end != function_map.find(DEFAULT_INV) &&
+         end != function_map.find(DEFAULT_TRANS) &&
+         end != function_map.find(DEFAULT_POST);
+}
+
+const std::string &sygus_parsert::symbol()
+{
+  if(smt2_tokenizert::SYMBOL != smt2_tokenizer.next_token())
+    throw error("expected a symbol");
+
+  return smt2_tokenizer.get_buffer();
 }
 
 void sygus_parsert::command(const std::string &c)
@@ -782,6 +835,7 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="synth-fun" || c=="synth-inv")
   {
+    const bool is_invariant_command = c=="synth-inv";
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected a symbol after synth-fun");
 
@@ -790,7 +844,8 @@ void sygus_parsert::command(const std::string &c)
     if(function_map.find(id)!=function_map.end())
       throw error() << "function `" << id << "' declared twice";
 
-    auto signature=(id=="inv-f")?
+    const bool is_invariant = is_invariant_command || id=="inv-f";
+    auto signature=is_invariant ?
       inv_function_signature() : function_signature();
 
     NTDef_seq();
@@ -838,7 +893,15 @@ void sygus_parsert::command(const std::string &c)
   }
   else if(c=="inv-constraint")
   {
-    ignore_command();
+    if (has_default_inv_constraint(function_map))
+      ignore_command();
+    else
+    {
+      inv_name = symbol();
+      pre_name = symbol();
+      trans_name = symbol();
+      post_name = symbol();
+    }
     generate_invariant_constraints();
   }
   else if(c=="set-options")
@@ -897,16 +960,16 @@ function_application_exprt sygus_parsert::apply_function_to_variables(
   switch(function_type)
   {
   case PRE:
-    id = "pre-f";
+    id = pre_name;
     break;
   case INV:
-    id = "inv-f";
+    id = inv_name;
     break;
   case TRANS:
-    id = "trans-f";
+    id = trans_name;
     break;
   case POST:
-    id = "post-f";
+    id = post_name;
     break;
   }
 
@@ -1104,54 +1167,13 @@ typet sygus_parsert::sort()
   switch(smt2_tokenizer.next_token())
   {
   case smt2_tokenizert::SYMBOL:
-    if(smt2_tokenizer.get_buffer()=="Bool")
-      return bool_typet();
-    else if(smt2_tokenizer.get_buffer()=="Int")
-      return integer_typet();
-    else if(smt2_tokenizer.get_buffer()=="Real")
-      return real_typet();
-    else
-      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
+    return unary_sort();
 
   case smt2_tokenizert::OPEN:
     if(smt2_tokenizer.next_token()!=smt2_tokenizert::SYMBOL)
       throw error("expected symbol after '(' in a sort");
 
-    if(smt2_tokenizer.get_buffer()=="_")
-    {
-      // SyGuS-IF v2.0 now matches smt-lib syntax
-      if(smt2_tokenizer.next_token() != smt2_tokenizert::SYMBOL)
-        throw error("expected symbol after '_' in a sort");
-
-      if(smt2_tokenizer.get_buffer() == "BitVec")
-      {
-        if(smt2_tokenizer.next_token() != smt2_tokenizert::NUMERAL)
-          throw error("expected numeral as bit-width");
-
-        auto width = std::stoll(smt2_tokenizer.get_buffer());
-
-        // eat the ')'
-        if(smt2_tokenizer.next_token() != smt2_tokenizert::CLOSE)
-          throw error("expected ')' at end of sort");
-
-        return unsignedbv_typet(width);
-      }
-    }
-    else if(smt2_tokenizer.get_buffer()=="BitVec")
-    {
-      // this has slightly different symtax compared to SMT-LIB2
-      if(smt2_tokenizer.next_token()!=smt2_tokenizert::NUMERAL)
-        throw error("expected number after BitVec");
-
-      auto width=std::stoll(smt2_tokenizer.get_buffer());
-
-      if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
-        throw error("expected ')' after BitVec width");
-
-      return unsignedbv_typet(width);
-    }
-    else
-      throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
+    return parametric_sort();
 
   case smt2_tokenizert::NONE:
   case smt2_tokenizert::END_OF_FILE:
@@ -1164,3 +1186,54 @@ typet sygus_parsert::sort()
   }
 }
 
+typet sygus_parsert::parametric_sort()
+{
+  if(smt2_tokenizer.get_buffer()=="_")
+  {
+    // SyGuS-IF v2.0 now matches smt-lib syntax
+    if(smt2_tokenizer.next_token() != smt2_tokenizert::SYMBOL)
+      throw error("expected symbol after '_' in a sort");
+
+    if(smt2_tokenizer.get_buffer() == "BitVec")
+    {
+      if(smt2_tokenizer.next_token() != smt2_tokenizert::NUMERAL)
+        throw error("expected numeral as bit-width");
+
+      auto width = std::stoll(smt2_tokenizer.get_buffer());
+
+      // eat the ')'
+      if(smt2_tokenizer.next_token() != smt2_tokenizert::CLOSE)
+        throw error("expected ')' at end of sort");
+
+      return unsignedbv_typet(width);
+    }
+    throw error() << "unexpected indexed sort: `" << smt2_tokenizer.get_buffer() << '\'';
+  }
+  else if(smt2_tokenizer.get_buffer()=="BitVec")
+  {
+    // this has slightly different symtax compared to SMT-LIB2
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::NUMERAL)
+      throw error("expected number after BitVec");
+
+    auto width=std::stoll(smt2_tokenizer.get_buffer());
+
+    if(smt2_tokenizer.next_token()!=smt2_tokenizert::CLOSE)
+      throw error("expected ')' after BitVec width");
+
+    return unsignedbv_typet(width);
+  }
+  else
+    throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
+}
+
+typet sygus_parsert::unary_sort()
+{
+  if(smt2_tokenizer.get_buffer()=="Bool")
+    return bool_typet();
+  else if(smt2_tokenizer.get_buffer()=="Int")
+    return integer_typet();
+  else if(smt2_tokenizer.get_buffer()=="Real")
+    return real_typet();
+  else
+    throw error() << "unexpected sort: `" << smt2_tokenizer.get_buffer() << '\'';
+}
