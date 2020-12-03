@@ -539,6 +539,9 @@ exprt sygus_parsert::expression()
       }
       else if(id=="bvsub" || id=="-")
       {
+        if(op.size() == 1u)
+          return unary_minus_exprt(op.front());
+
         minus_exprt result(std::move(op.front()), std::move(op.back()));
         fix_binary_operation_operand_types(result);
         return std::move(result);
