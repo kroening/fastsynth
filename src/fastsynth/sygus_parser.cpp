@@ -969,16 +969,27 @@ void sygus_parsert::generate_invariant_constraints()
 
 void sygus_parsert::NTDef_seq()
 {
-  // it is not necessary to give a syntactic template
-  if(smt2_tokenizer.peek()!=smt2_tokenizert::OPEN)
-    return;
-
-  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE)
+  uint8_t openCount = 0u;
+  while(smt2_tokenizer.peek()!=smt2_tokenizert::CLOSE || openCount)
   {
-    NTDef();
+    switch(smt2_tokenizer.next_token())
+    {
+      case smt2_tokenizert::OPEN:
+      ++openCount;
+      break;
+      case smt2_tokenizert::CLOSE:
+      --openCount;
+      break;
+      case smt2_tokenizert::END_OF_FILE:
+      case smt2_tokenizert::KEYWORD:
+      case smt2_tokenizert::NONE:
+      case smt2_tokenizert::NUMERAL:
+      case smt2_tokenizert::STRING_LITERAL:
+      case smt2_tokenizert::SYMBOL:
+      // Ignore grammar.
+      break;
+    }
   }
-
-  smt2_tokenizer.next_token(); // eat the ')'
 }
 
 void sygus_parsert::GTerm_seq()

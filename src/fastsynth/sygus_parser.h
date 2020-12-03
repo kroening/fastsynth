@@ -107,6 +107,7 @@ protected:
   exprt cast_bv_to_unsigned(exprt &expr);
   void check_bitvector_operands(exprt &expr);
 
+  /// Helper to consume and ignore SyGuS V2 grammars.
   void NTDef_seq();
   void GTerm_seq();
   void NTDef();
